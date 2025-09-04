@@ -10,10 +10,6 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 
-
-// daftar ikon yang mau dipakai
-library.add(faUser, faLock, faHome)
-
 const app = createApp(App)
 
 app.use(createPinia())
