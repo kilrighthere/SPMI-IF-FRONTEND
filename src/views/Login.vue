@@ -49,6 +49,7 @@ async function loginHandler(e) {
 
 <template>
   <div class="all-contain">
+    <Header variant="login" />
     <div class="container-login">
       <div class="login-part">
         <div class="card-login">
@@ -93,11 +94,12 @@ async function loginHandler(e) {
         <img src="../assets/if.png" alt="informatika" />
       </div>
     </div>
-    <Footer/>
+    <Footer variant="login" />
   </div>
 </template>
 
 <style>
+
 .all-contain{
   display: flex;
   flex-direction: column;
