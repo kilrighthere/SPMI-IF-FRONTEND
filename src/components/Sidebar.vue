@@ -1,3 +1,10 @@
+<script setup>
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
+const isLoginPage = route.path.toLowerCase() === '/login';
+</script>
+
 <template>
   <div class="sidebar">
     <div class="headline">
@@ -6,14 +13,22 @@
     </div>
 
     <div class="menu">
-      <RouterLink to="/Dashboard" class="menu-sidebar">
-        <i class="ri-dashboard-2-fill"></i>
-        <span class="menu-title 1">Dashboard</span>
-      </RouterLink>
-      <RouterLink to="/Kurikulum" class="menu-sidebar">
-        <i class="ri-folder-2-fill"></i>
-        <span class="menu-title 2">Kurikulum</span>
-      </RouterLink>
+      <template v-if="isLoginPage">
+        <RouterLink to="/Login" class="menu-sidebar">
+          <i class="ri-user-fill"></i>
+          <span class="menu-title">User Login</span>
+        </RouterLink>
+      </template>
+      <template v-else>
+        <RouterLink to="/Dashboard" class="menu-sidebar">
+          <i class="ri-dashboard-2-fill"></i>
+          <span class="menu-title">Dashboard</span>
+        </RouterLink>
+        <RouterLink to="/Kurikulum" class="menu-sidebar">
+          <i class="ri-folder-2-fill"></i>
+          <span class="menu-title">Kurikulum</span>
+        </RouterLink>
+      </template>
     </div>
   </div>
 </template>

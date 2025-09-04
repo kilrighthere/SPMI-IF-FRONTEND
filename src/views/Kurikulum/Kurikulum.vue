@@ -30,64 +30,62 @@ function goToPage(page) {
 </script>
 
 <template>
-  <Sidebar />
-  <Header />
-  <div class="container-Kurikulum">
-    <div class="title">
-      <h2>Data Kurikulum Program Studi</h2>
+  <div class="app-layout">
+    <Sidebar />
+    <div class="main-content">
+      <Header />
+      <div class="container-Kurikulum">
+        <div class="title">
+          <h2>Data Kurikulum Program Studi</h2>
 
-      <p><RouterLink to="/Dashboard" >Dashboard</RouterLink> / Data Kurikulum Program Studi</p>
-    </div>
-    <div class="tabel">
-      <div class="header-tabel">
-        <div class="button">
-          <button id="add" type="button" class="btn btn-primary" @submit="addKur">Tambah Kurikulum</button>
-          <button id="excel" type="button" class="btn btn-secondary">Excel</button>
-          <button id="print" type="button" class="btn btn-secondary">Print</button>
+          <p><RouterLink to="/Dashboard" >Dashboard</RouterLink> / Data Kurikulum Program Studi</p>
         </div>
-        <form @submit="searchKur" class="search">
-          <label for="search">Search: </label>
-          <input type="search" class="rounded"/>
-        </form>
-      </div>
-      <div class="table-data border">
-        <table class="table table-bordered border-secondary m-0">
-          <thead>
-            <tr>
-              <th>No.</th>
-              <th>Nama Kurikulum</th>
-              <th>Tahun Mulai Berlaku</th>
-              <th>Jumlah SKS Minimal</th>
-              <th>Opsi</th>
-            </tr>
-
-            
-          </thead>
-          <tbody>
-            <tr>
-                <th>1</th>
-                <td>ayam</td>
-                <td>nasi oadang</td>
-                <td>nasi oadang</td>
-                <td class="opsi-btn">
+        <div class="tabel">
+          <div class="header-tabel">
+            <div class="button">
+              <button id="add" type="button" class="btn btn-primary" @submit="addKur">Tambah Kurikulum</button>
+              <button id="excel" type="button" class="btn btn-secondary">Excel</button>
+              <button id="print" type="button" class="btn btn-secondary">Print</button>
+            </div>
+            <form @submit="searchKur" class="search">
+              <label for="search">Search: </label>
+              <input type="search" class="rounded"/>
+            </form>
+          </div>
+          <div class="table-data border">
+            <table class="table table-bordered border-secondary m-0">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Nama Kurikulum</th>
+                  <th>Tahun Mulai Berlaku</th>
+                  <th>Jumlah SKS Minimal</th>
+                  <th>Opsi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th>1</th>
+                  <td>ayam</td>
+                  <td>nasi oadang</td>
+                  <td>nasi oadang</td>
+                  <td class="opsi-btn">
                     <RouterLink to="">
-                        <button id="detail-kr" type="button" class="btn btn-success" @submit="addKur">Detail</button>
+                      <button id="detail-kr" type="button" class="btn btn-success" @submit="addKur">Detail</button>
                     </RouterLink>
                     <button id="edit-kr" type="button" class="btn btn-warning" @submit="addKur">Ubah</button>
                     <button id="delete-kr" type="button" class="btn btn-danger" @submit="addKur">Hapus</button>
-
-                </td>
-
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="footer-table">
-        <div class="pagination">
-          <p>Showing {{ startEntry }} to {{ endEntry }} of {{ totalData }} entries</p>
-        </div>
-        <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
-            <div class="btn-group me-2" role="group" aria-label="First group">
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="footer-table">
+            <div class="pagination">
+              <p>Showing {{ startEntry }} to {{ endEntry }} of {{ totalData }} entries</p>
+            </div>
+            <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+              <div class="btn-group me-2" role="group" aria-label="First group">
                 <button @click="goToPage(currentPage - 1)" :disabled="currentPage === 1" type="button" class="btn btn-disable">Previous</button>
                 <button
                   v-for="page in totalPages"
@@ -101,28 +99,39 @@ function goToPage(page) {
                 <button @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages " type="button" class="btn btn-disable">
                   Next
                 </button>
+              </div>
             </div>
+          </div>
         </div>
       </div>
+      <Footer />
     </div>
   </div>
-  <Footer />
 </template>
 
 <style>
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 256px; /* Same as sidebar width */
+  display: flex;
+  flex-direction: column;
+}
+
 .container-Kurikulum{
   padding-top: 80px;
-  margin-left: 310px;
-  padding-left: 0;
+  padding-left: 30px;
   padding-right: 30px;
-  min-width: 100vh;
   min-height: 100vh;
   display: flex;
   box-sizing: border-box;
   flex-direction: column;
   justify-content: flex-start;
   gap: 50px;
-  /* display: none; */
 }
 
 .tabel {

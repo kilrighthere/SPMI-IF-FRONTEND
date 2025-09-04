@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Footer from '../components/Footer.vue'
 import Header from '@/components/Header.vue'
+import Sidebar from '@/components/Sidebar.vue'
 
 const username = ref('')
 const password = ref('')
@@ -48,123 +49,75 @@ async function loginHandler(e) {
 </script>
 
 <template>
-  <Header />
-  <div class="container">
-    <div class="sidebar1">
-      <div class="headline">
-        <span class="title">SPMI-IF</span>
-        <img src="../assets/Undip.png" alt="logo undip" />
-      </div>
-      <div class="menu">
-        <RouterLink to="/Login" class="menu-sidebar">
-          <font-awesome-icon :icon="['fas', 'user']" />
-          <span class="menu-title">User Login</span>
-        </RouterLink>
-      </div>
-    </div>
+  <div class="app-layout">
+    <Sidebar />
 
-    <div class="main">
-      <div class="card login-form">
-        <form @submit="loginHandler" class="form-login">
-          <div class="header-form">
-            <h2>User Login</h2>
-          </div>
-          <div class="main-form">
-            <div class="uname">
-              <label for="Username">Username</label>
-              <div class="uname-col">
-                <input v-model="username" type="text" name="Username" id="Username" />
-              </div>
+    <div class="main-content">
+      <Header />
+      <div class="login-container">
+        <div class="card login-form">
+          <form @submit="loginHandler" class="form-login">
+            <div class="header-form">
+              <h2>User Login</h2>
             </div>
-            <div class="pass">
-              <label for="Password">Password</label>
-              <div class="pass-col">
-                <input v-model="password" type="password" name="Password" id="Password" />
+            <div class="main-form">
+              <div class="uname">
+                <label for="Username">Username</label>
+                <div class="uname-col">
+                  <input v-model="username" type="text" name="Username" id="Username" />
+                </div>
               </div>
+              <div class="pass">
+                <label for="Password">Password</label>
+                <div class="pass-col">
+                  <input v-model="password" type="password" name="Password" id="Password" />
+                </div>
+              </div>
+              <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
             </div>
-            <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
-          </div>
-          <div class="submit">
-            <button type="submit">Sign In</button>
-          </div>
-        </form>
+            <div class="submit">
+              <button type="submit">Sign In</button>
+            </div>
+          </form>
+        </div>
       </div>
+      <Footer />
     </div>
   </div>
-  <Footer />
 </template>
 
 <style>
-.container {
-  min-width: 100vh;
+.app-layout {
+  display: flex;
   min-height: 100vh;
-  /* max-height: screen; */
-  display: flex;
-  flex-basis: 0;
-  box-sizing: border-box;
-  flex-direction: row;
-  /* border: 5px solid black; */
-  /* padding-top: 50px; */
-}
-.sidebar1 {
-  background-color: white;
-  width: 256px;
-  box-shadow: 10px 0px 20px 3px rgba(52, 52, 52, 0.322);
-  z-index: 3;
-  /* display: none; */
 }
 
-.headline {
-  padding: 13px 8px;
-  /* margin-bottom: 20px; */
-  border-bottom: 0.8px solid rgb(222, 226, 230);
-  display: flex;
-  justify-content: flex-start;
-  gap: 10px;
-  align-items: center;
-  box-sizing: border-box;
-  /* background-color: white; */
-  /* background-color: #2D2D2D; */
-}
-
-.headline .title {
-  font-size: 20px;
-  order: 2;
-}
-.headline .img {
-  order: 1;
-}
-
-.menu {
-  margin-left: 15px;
-  padding-top: 15px;
+.main-content {
+  flex: 1;
+  margin-left: 256px; /* Same as sidebar width */
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  /* align-items: first baseline; */
-  gap: 20px;
 }
 
-.menu-sidebar {
-  text-decoration: none;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 15px;
-  color: var(--color-text);
-}
-
-.main {
+.login-container {
   flex: 1;
-  box-sizing: border-box;
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 30px;
 }
+
+
 
 .headline img {
   width: 50px;
+}
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 150px); /* Account for header and footer */
 }
 
 .form-login {
