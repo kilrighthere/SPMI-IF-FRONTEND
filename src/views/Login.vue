@@ -48,53 +48,62 @@ async function loginHandler(e) {
 </script>
 
 <template>
-  <div class="container-login">
-    <div class="login-part">
-      <div class="card-login">
-        <form @submit="loginHandler" class="form-login">
-          <div class="header-form">
-            <h2>User Login</h2>
-          </div>
-          <div class="main-form">
-            <div class="uname">
-              <!-- <label for="Username">Username</label> -->
-              <div class="uname-col">
-                <input
-                  v-model="username"
-                  type="text"
-                  name="Username"
-                  id="Username"
-                  placeholder="Username"
-                />
-              </div>
+  <div class="all-contain">
+    <div class="container-login">
+      <div class="login-part">
+        <div class="card-login">
+          <form @submit="loginHandler" class="form-login">
+            <div class="header-form">
+              <h2>User Login</h2>
             </div>
-            <div class="pass">
-              <!-- <label for="Password">Password</label> -->
-              <div class="pass-col">
-                <input
-                  v-model="password"
-                  type="password"
-                  name="Password"
-                  id="Password"
-                  placeholder="Password"
-                />
+            <div class="main-form">
+              <div class="uname">
+                <!-- <label for="Username">Username</label> -->
+                <div class="uname-col">
+                  <input
+                    v-model="username"
+                    type="text"
+                    name="Username"
+                    id="Username"
+                    placeholder="Username"
+                  />
+                </div>
               </div>
+              <div class="pass">
+                <!-- <label for="Password">Password</label> -->
+                <div class="pass-col">
+                  <input
+                    v-model="password"
+                    type="password"
+                    name="Password"
+                    id="Password"
+                    placeholder="Password"
+                  />
+                </div>
+              </div>
+              <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
             </div>
-            <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
-          </div>
-          <div class="submit">
-            <button type="submit" class="btn btn-primary">Sign In</button>
-          </div>
-        </form>
+            <div class="submit">
+              <button type="submit" class="btn btn-primary">Sign In</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="image">
+        <img src="../assets/if.png" alt="informatika" />
       </div>
     </div>
-    <div class="image">
-      <img src="../assets/if.png" alt="informatika" />
-    </div>
+    <Footer/>
   </div>
 </template>
 
 <style>
+.all-contain{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100vh;
+}
 .container-login {
   display: flex;
   height: 100vh;
@@ -128,17 +137,17 @@ async function loginHandler(e) {
 }
 .form-login {
   flex: 1;
-  /* background-color: #2d2d2d; */
+  background-color: white;
   color: var(--color-text);
   padding: 80px 50px;
   border-radius: 20px;
-  /* box-shadow: 0px 0px 20px 2px rgba(87, 87, 87, 0.596); */
+  box-shadow: 10px 10px 15px 2px rgba(87, 87, 87, 0.183);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 30px;
+  gap: 50px;
 }
 .form-login .header-form {
   font-size: 40px;

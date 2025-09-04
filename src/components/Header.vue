@@ -49,6 +49,7 @@
         font-size: 16px;
         letter-spacing: 0.2px;
         font-weight: 500;
+        font-family: 'Montserrat';
     }
 
 </style>

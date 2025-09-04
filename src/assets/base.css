@@ -66,7 +66,7 @@ q:before, q:after {
   --color-button:var(--spmi-c-red);
   --color-button-hover:var(--spmi-c-red2);
   --color-buttonsec:var(--spmi-c-dgray);
-  --color-footer:var(--spmi-c-red);
+  --color-footer:var(--spmi-c-red2);
   --color-border:var(--spmi-c-dustygray);
   --color-text:var(--spmi-c-dgray);
   --color-text-light:var(--spmi-c-white);
