@@ -1,6 +1,6 @@
 <template>
     <div class="Footer">
-        <p>Copyright &copy; 2025 Departemen Informatika. All rights reserved.</p>
+        <p class="F-content">Copyright &copy; 2025 Departemen Informatika. All rights reserved.</p>
     </div>
 </template>
 
@@ -9,7 +9,7 @@
         height: 50px;
         padding: 15px 20px;
         margin-top: 20px;  /* Add top margin for spacing from content */
-        background-color: #2d2d2d;
+        background-color: var(--color-footer);
         position: relative;  /* Changed from fixed to allow normal document flow */
         left: 0;
         right: 0;
@@ -21,7 +21,7 @@
         justify-content: center;  /* Center the copyright text */
     }
 
-    .Footer p{
+    .Footer .F-content{
         font-style: italic;
         color: cornsilk;
         font-size: 12px;

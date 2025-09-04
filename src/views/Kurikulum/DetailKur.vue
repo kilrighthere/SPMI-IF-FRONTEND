@@ -3,6 +3,7 @@
 import Footer from '@/components/Footer.vue'
 import Header from '@/components/Header.vue'
 import Sidebar from '@/components/Sidebar.vue'
+
 </script>
 
 <template>
@@ -11,7 +12,7 @@ import Sidebar from '@/components/Sidebar.vue'
         <div class="main-content">
             <Header/>
             <div class="container dashboard">
-                
+
             </div>
             <Footer/>
         </div>
