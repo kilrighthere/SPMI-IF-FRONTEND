@@ -70,7 +70,7 @@ function goToPage(page) {
                   <td>nasi oadang</td>
                   <td>nasi oadang</td>
                   <td class="opsi-btn">
-                    <RouterLink to="">
+                    <RouterLink to="/DetailKur">
                       <button id="detail-kr" type="button" class="btn btn-success" @submit="addKur">Detail</button>
                     </RouterLink>
                     <button id="edit-kr" type="button" class="btn btn-warning" @submit="addKur">Ubah</button>

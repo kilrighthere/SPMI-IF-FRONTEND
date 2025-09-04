@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Login from '@/views/Login.vue'
 import Dashboard from '@/views/Dashboard.vue'
 import Kurikulum from '@/views/Kurikulum/Kurikulum.vue'
+import DetailKur from '@/views/Kurikulum/DetailKur.vue'
 
 // import HomeView from '../views/HomeView.vue'
 
@@ -10,6 +11,7 @@ const routes = [
   { path: '/login', component: Login, meta: { title: 'Login - Sistem Informasi' } },
   { path: '/dashboard', component: Dashboard, meta: { title: 'Dashboard - Sistem Informasi' } },
   { path: '/kurikulum', component: Kurikulum, meta: { title: 'Kurikulum - Sistem Informasi' } },
+  { path: '/Detail-Kurikulum', component: DetailKur, meta: {title: 'Detail Kurikulum - Sistem Informasi'}},
   
 ]
 

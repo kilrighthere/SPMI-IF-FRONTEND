@@ -73,8 +73,7 @@ const isLoginPage = route.path.toLowerCase() === '/login';
   order: 1;
 }
 
-.sidebar .menu {
-  margin-top: 70px; /* Match headline height */
+.sidebar .menu {/* Match headline height */
   padding: 15px 0;
   display: flex;
   flex-direction: column;
@@ -109,4 +108,5 @@ const isLoginPage = route.path.toLowerCase() === '/login';
 .menu-sidebar i {
   font-size: 18px;
 }
+
 </style>
