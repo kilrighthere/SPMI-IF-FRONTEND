@@ -94,7 +94,9 @@ async function loginHandler(e) {
   justify-content: center;
   align-items: center;
   padding: 30px;
-  min-height: calc(100vh - 150px); /* Account for header and footer */
+  padding-top: 90px; /* Increased for new header */
+  padding-bottom: 50px; /* Add more padding at the bottom for footer */
+  min-height: calc(100vh - 170px); /* Account for header and footer */
 }
 
 .headline img {

@@ -1,43 +1,54 @@
-<!-- <script>
-    import '../assets/base.css'
-</script> -->
+<script setup>
+// No import needed as we're using the global CSS
+</script>
 
 <template>
-    <div class="gap"></div>
     <div class="Header">
-        <h3>Sistem Penjamin Mutu Internal Departemen Informatika</h3>
+        <div class="header-content">
+            <img src="../assets/Undip.png" alt="Logo Undip" class="header-logo" />
+            <h2>Sistem Penjaminan Mutu Internal Departemen Informatika</h2>
+        </div>
     </div>
 </template>
 
 <style>
-    .Header{
-        height: 64px;
-        padding: 10px;
-        /* padding-left: 50px; */
-        /* padding-right: 500px; */
+    .Header {
+        height: 70px;
+        padding: 0;
         background-color: white;
         position: fixed;
-        left: 0px;
+        left: 0;
         right: 0;
         top: 0;
-        /* display: flex;
-        justify-content: flex-start;
-        gap: 256px; */
-        /* margin-left: 256px; */
-        /* align-items: center; */
+        z-index: 100;
         display: flex;
         align-items: center;
+        justify-content: center;
         box-sizing: border-box;
-        border-bottom: 0.8px solid rgb(222, 226, 230);
+        border-bottom: 1px solid rgb(222, 226, 230);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
 
-    .Header h3{
-        /* font-style: italic; */
-        color:var(--color-text-light2);
-        font-size: 16px;
-        padding-left: 300px;
-        size-adjust: 100%;
-        
+    .header-content {
+        width: 100%;
+        max-width: 1200px;
+        display: flex;
+        align-items: center;
+        padding: 0 30px;
+    }
+
+    .header-logo {
+        width: 45px;
+        height: auto;
+        margin-right: 15px;
+    }
+
+    .Header h2 {
+        margin: 0;
+        color: var(--color-text);
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
     }
 
 </style>

@@ -7,24 +7,26 @@
 <style>
     .Footer{
         height: 50px;
-        padding: 10px;
+        padding: 15px 20px;
+        margin-top: 20px;  /* Add top margin for spacing from content */
         background-color: #2d2d2d;
-        position: fixed;
+        position: relative;  /* Changed from fixed to allow normal document flow */
         left: 0;
         right: 0;
         bottom: 0;
-        /* margin-left: 256px; */
+        width: 100%;
         box-sizing: border-box;
         display: flex;
         align-items: center;
-
+        justify-content: center;  /* Center the copyright text */
     }
 
     .Footer p{
         font-style: italic;
         color: cornsilk;
         font-size: 12px;
-        /* text-indent: 290px; */
+        margin: 0;  /* Remove default paragraph margin */
+        padding: 0;
     }
 
 </style>

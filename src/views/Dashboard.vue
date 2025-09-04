@@ -27,13 +27,16 @@ import Sidebar from '@/components/Sidebar.vue';
 .main-content {
     flex: 1;
     margin-left: 256px; /* Same as sidebar width */
+    margin-top: 0; /* No need for margin-top as we have padding-top in .dashboard */
     display: flex;
     flex-direction: column;
 }
 
 .dashboard {
-    padding-top: 80px;
+    flex: 1; /* Take up available space */
+    padding-top: 90px; /* Adjusted for new header height */
     padding-left: 30px;
     padding-right: 30px;
+    padding-bottom: 50px; /* Add bottom padding for footer space */
 }
 </style>
