@@ -3,7 +3,6 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Footer from '../components/Footer.vue'
 import Header from '@/components/Header.vue'
-import Sidebar from '@/components/Sidebar.vue'
 
 const username = ref('')
 const password = ref('')
@@ -49,54 +48,44 @@ async function loginHandler(e) {
 </script>
 
 <template>
-  <div class="app-layout">
-    <Sidebar />
-
-    <div class="main-content">
-      <Header />
-      <div class="login-container">
-        <div class="card login-form">
-          <form @submit="loginHandler" class="form-login">
-            <div class="header-form">
-              <h2>User Login</h2>
-            </div>
-            <div class="main-form">
-              <div class="uname">
-                <label for="Username">Username</label>
-                <div class="uname-col">
-                  <input v-model="username" type="text" name="Username" id="Username" />
-                </div>
+  <div class="login-layout">
+    <Header />
+    <div class="login-container">
+      <div class="card login-form">
+        <form @submit="loginHandler" class="form-login">
+          <div class="header-form">
+            <h2>User Login</h2>
+          </div>
+          <div class="main-form">
+            <div class="uname">
+              <label for="Username">Username</label>
+              <div class="uname-col">
+                <input v-model="username" type="text" name="Username" id="Username" />
               </div>
-              <div class="pass">
-                <label for="Password">Password</label>
-                <div class="pass-col">
-                  <input v-model="password" type="password" name="Password" id="Password" />
-                </div>
+            </div>
+            <div class="pass">
+              <label for="Password">Password</label>
+              <div class="pass-col">
+                <input v-model="password" type="password" name="Password" id="Password" />
               </div>
-              <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
             </div>
-            <div class="submit">
-              <button type="submit">Sign In</button>
-            </div>
-          </form>
-        </div>
+            <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
+          </div>
+          <div class="submit">
+            <button type="submit">Sign In</button>
+          </div>
+        </form>
       </div>
-      <Footer />
     </div>
+    <Footer />
   </div>
 </template>
 
 <style>
-.app-layout {
-  display: flex;
-  min-height: 100vh;
-}
-
-.main-content {
-  flex: 1;
-  margin-left: 256px; /* Same as sidebar width */
+.login-layout {
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
 
 .login-container {
@@ -105,19 +94,11 @@ async function loginHandler(e) {
   justify-content: center;
   align-items: center;
   padding: 30px;
+  min-height: calc(100vh - 150px); /* Account for header and footer */
 }
-
-
 
 .headline img {
   width: 50px;
-}
-
-.login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: calc(100vh - 150px); /* Account for header and footer */
 }
 
 .form-login {
