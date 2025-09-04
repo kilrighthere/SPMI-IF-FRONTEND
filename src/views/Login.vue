@@ -111,6 +111,7 @@ async function loginHandler(e) {
   width: 256px;
   box-shadow: 10px 0px 20px 3px rgba(52, 52, 52, 0.322);
   z-index: 3;
+  /* display: none; */
 }
 
 .headline {
