@@ -1,8 +1,5 @@
 // import './assets/main.css'
 import './assets/base.css'
-import "@fontsource/inter"
-import "@fontsource/inter/400.css"; // Specify weight
-import "@fontsource/inter/400-italic.css"; // Specify weight and style
 import 'remixicon/fonts/remixicon.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
