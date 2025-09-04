@@ -24,7 +24,6 @@
         font-style: italic;
         color: cornsilk;
         font-size: 12px;
-        padding-left: 300px;
         /* text-indent: 290px; */
     }
 
