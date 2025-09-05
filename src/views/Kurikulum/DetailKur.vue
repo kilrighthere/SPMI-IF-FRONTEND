@@ -14,9 +14,9 @@ import Sidebar from '@/components/Sidebar.vue'
             <div class="container dashboard">
 
             </div>
-            <Footer/>
         </div>
     </div>
+    <Footer/>
 </template>
 
 <style>

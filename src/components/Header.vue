@@ -29,8 +29,8 @@
 
 <style>
     .header-default{
-        height: 50px;
-        padding: 30px 20px;
+        height: 60px;
+        padding: 25px 20px;
         background-color: var(--color-header);
         position: fixed;
         left: 0;
@@ -54,8 +54,8 @@
     }
 
     .header-login{
-        height: 50px;
-        padding: 30px 20px;
+        height: 60px;
+        padding: 25px 20px;
         background-color: var(--color-header);
         position: relative;
         left: 0;
@@ -65,9 +65,9 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        box-sizing: border-box;
         /* border-bottom: 1px solid var(--color-border); */
         box-shadow: 0 3px 10px rgba(0, 0, 0, 0.119);
+        box-sizing: border-box;
     }
     
     .header-logo {

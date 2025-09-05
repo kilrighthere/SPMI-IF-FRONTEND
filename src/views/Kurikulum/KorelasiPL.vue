@@ -11,7 +11,7 @@ import Sidebar from '@/components/Sidebar.vue';
         <div class="main-content">
             <Header/>
             <div class="dashboard">
-                <h1>Hello </h1>
+                <h1>INI KORELASI PL </h1>
             </div>
         </div>
     </div>

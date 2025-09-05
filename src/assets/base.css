@@ -53,6 +53,7 @@ q:before, q:after {
   --spmi-c-darkvoid: rgb(20,21,25);
   --spmi-c-red: #da2a2d;
   --spmi-c-red2: #b92527;
+  --spmi-c-red3:#D3191C;
 
 
 
@@ -61,8 +62,9 @@ q:before, q:after {
 }
 
 :root{
-  --color-background:var(--spmi-c-lgray);
+  --color-background:var(--spmi-c-white);
   --color-header:var(--spmi-c-white);
+  --color-sidebar:var(--spmi-c-red3);
   --color-button:var(--spmi-c-red);
   --color-button-hover:var(--spmi-c-red2);
   --color-buttonsec:var(--spmi-c-dgray);

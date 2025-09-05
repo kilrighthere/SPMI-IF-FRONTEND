@@ -104,9 +104,9 @@ function goToPage(page) {
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   </div>
+  <Footer />
 </template>
 
 <style>
