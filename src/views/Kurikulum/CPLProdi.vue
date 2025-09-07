@@ -5,7 +5,7 @@ import Header from '@/components/Header.vue'
 import Sidebar from '@/components/Sidebar.vue';
 </script>
 
-<template>
+<!-- <template>
     <div class="dash-container">
         <Sidebar/>
         <div class="main-content">
@@ -16,7 +16,7 @@ import Sidebar from '@/components/Sidebar.vue';
         </div>
     </div>
     <Footer/>
-</template>
+</template> -->
 
 <style>
 .dash-container {

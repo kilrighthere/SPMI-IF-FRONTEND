@@ -7,8 +7,8 @@ const route = useRoute()
 const isLoginPage = computed(() => route.path.toLowerCase() === '/login')
 
 // cek kurikulum
-const showKur = computed(() => route.path.toLowerCase().startsWith('/kurikulum'))
 const isKurikulumActive = computed(() => route.path.toLowerCase().startsWith('/kurikulum'))
+const kurikulumId = computed(() => route.params.id)
 </script>
 
 <template>
@@ -33,29 +33,30 @@ const isKurikulumActive = computed(() => route.path.toLowerCase().startsWith('/k
           <i class="ri-folder-2-fill"></i>
           <span class="menu-title">Kurikulum</span>
         </RouterLink>
-        <div class="submenu" v-if="showKur">
-          <RouterLink to="/kurikulum/Profil-Lulusan" class="menu-kurikulum">
+
+        <div class="submenu" v-if="kurikulumId">
+          <RouterLink :to="`/kurikulum/${kurikulumId}/profil-lulusan`" class="menu-kurikulum">
             <span class="submenu-title">Profil Lulusan</span>
           </RouterLink>
-          <RouterLink to="/kurikulum/CPL-Prodi" class="menu-kurikulum">
+          <RouterLink :to="`/kurikulum/${kurikulumId}/cpl-prodi`" class="menu-kurikulum">
             <span class="submenu-title">CPL Prodi</span>
           </RouterLink>
-          <RouterLink to="/kurikulum/Korelasi-PL" class="menu-kurikulum">
+          <RouterLink :to="`/kurikulum/${kurikulumId}/korelasi-pl`" class="menu-kurikulum">
             <span class="submenu-title">Korelasi PL-CPL</span>
           </RouterLink>
-          <RouterLink to="/kurikulum/CPMK" class="menu-kurikulum">
+          <RouterLink :to="`/kurikulum/${kurikulumId}/cpmk`" class="menu-kurikulum">
             <span class="submenu-title">CPMK</span>
           </RouterLink>
-          <RouterLink to="/kurikulum/Struktur-Matkul" class="menu-kurikulum">
+          <RouterLink :to="`/kurikulum/${kurikulumId}/struktur-matkul`" class="menu-kurikulum">
             <span class="submenu-title">Struktur Mata Kuliah</span>
           </RouterLink>
-          <RouterLink to="/kurikulum/RPS" class="menu-kurikulum">
+          <RouterLink :to="`/kurikulum/${kurikulumId}/rps`" class="menu-kurikulum">
             <span class="submenu-title">RPS Mata Kuliah</span>
           </RouterLink>
-          <RouterLink to="/kurikulum/Nilai-Matkul" class="menu-kurikulum">
+          <RouterLink :to="`/kurikulum/${kurikulumId}/nilai-matkul`" class="menu-kurikulum">
             <span class="submenu-title">Nilai Mata Kuliah</span>
           </RouterLink>
-          <RouterLink to="/kurikulum/Ukur-CPL" class="menu-kurikulum">
+          <RouterLink :to="`/kurikulum/${kurikulumId}/ukur-cpl`" class="menu-kurikulum">
             <span class="submenu-title">Pengukuran CPL Mahasiswa</span>
           </RouterLink>
         </div>
@@ -64,7 +65,7 @@ const isKurikulumActive = computed(() => route.path.toLowerCase().startsWith('/k
   </div>
 </template>
 
-<style>
+<style scoped>
 .sidebar {
   background-color: var(--color-sidebar);
   width: 230px;
@@ -85,6 +86,7 @@ const isKurikulumActive = computed(() => route.path.toLowerCase().startsWith('/k
   flex-direction: column;
   justify-content: space-evenly;
   margin-left: 41px;
+  gap: 3px;
   flex-wrap: wrap;
   box-sizing: border-box;
 }
@@ -93,9 +95,14 @@ const isKurikulumActive = computed(() => route.path.toLowerCase().startsWith('/k
   text-decoration: none;
   color: var(--color-text-light);
   font-size: 13px;
-  padding: 8px 10px;
+  padding: 7px 10px;
   box-sizing: border-box;
   transition: all 0.2s ease;
+}
+
+.submenu-title {
+  font-size: 13px; /* Ensure this is consistent with the menu-kurikulum font size */
+  font-weight: normal;
 }
 
 .sidebar .menu {

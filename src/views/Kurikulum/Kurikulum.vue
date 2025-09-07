@@ -1,59 +1,45 @@
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Footer from '@/components/Footer.vue'
 import Header from '@/components/Header.vue'
 import Sidebar from '@/components/Sidebar.vue'
+import { computed } from 'vue'
+import { kurikulumId, kurikulumData } from '@/stores/kurikulum'
 
-import { ref, computed} from 'vue'
+const router = useRouter()
 
-// === Data dan Logika Pagination ===
-const kurikulumData = ref([]) // Untuk menyimpan data kurikulum dari backend
-const isLoading = ref(true) // Untuk indikator loading
-const error = ref(null) // Untuk penanganan error
+// No loading needed for static data
+const isLoading = ref(false)
 
-const currentPage = ref(1) // halaman aktif
-const perPage = 10 // jumlah data per halaman
-const totalData = ref(1) // total data (misalnya dari API)
+// Use the static data as an array for v-for rendering
+const kurikulumDataArray = ref([kurikulumData])
 
-// Hitung index awal & akhir data yang ditampilkan
-const startEntry = computed(() => (currentPage.value - 1) * perPage + 1)
-const endEntry = computed(() => Math.min(currentPage.value * perPage, totalData.value))
-
-// Hitung total halaman
-const totalPages = computed(() => Math.ceil(totalData.value / perPage))
-
-function goToPage(page) {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page
-  }
+// Handler tombol
+const handleDetail = () => {
+  router.push(`/kurikulum/${kurikulumId}/profil-lulusan`)
 }
 </script>
 
 <template>
-  <div class="app-layout">
+  <div class="dash-container">
     <Sidebar />
+    <Header />
     <div class="main-content">
-      <Header />
-      <div class="container-Kurikulum">
-        <div class="title">
+      <div class="kur-content">
+        <div class="page-title">
           <h2>Data Kurikulum Program Studi</h2>
-
-          <p><RouterLink to="/Dashboard" >Dashboard</RouterLink> / Data Kurikulum Program Studi</p>
+          <p><RouterLink to="/Dashboard">Dashboard</RouterLink> / Data Kurikulum Program Studi</p>
         </div>
         <div class="tabel">
           <div class="header-tabel">
             <div class="button">
-              <button id="add" type="button" class="btn btn-primary" @submit="addKur">Tambah Kurikulum</button>
-              <button id="excel" type="button" class="btn btn-secondary">Excel</button>
-              <button id="print" type="button" class="btn btn-secondary">Print</button>
+              <button id="excel" type="button" class="btn-secondary">Excel</button>
+              <button id="print" type="button" class="btn-secondary">Print</button>
             </div>
-            <form @submit="searchKur" class="search">
-              <label for="search">Search: </label>
-              <input type="search" class="rounded"/>
-            </form>
           </div>
-          <div class="table-data border">
-            <table class="table table-bordered border-secondary m-0">
+          <div class="data-tabel">
+            <table class="data-kurikulum">
               <thead>
                 <tr>
                   <th>No.</th>
@@ -64,77 +50,51 @@ function goToPage(page) {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <th>1</th>
-                  <td>ayam</td>
-                  <td>nasi oadang</td>
-                  <td>nasi oadang</td>
-                  <td class="opsi-btn">
-                    <RouterLink to="/Detail-Kurikulum">
-                      <button id="detail-kr" type="button" class="btn btn-success" @submit="addKur">Detail</button>
-                    </RouterLink>
-                    <button id="edit-kr" type="button" class="btn btn-warning" @submit="addKur">Ubah</button>
-                    <button id="delete-kr" type="button" class="btn btn-danger" @submit="addKur">Hapus</button>
+                <tr v-for="(kurikulum, index) in kurikulumDataArray" :key="kurikulum.id">
+                  <td>{{ index + 1 }}</td>
+                  <td>{{ kurikulum.nama }}</td>
+                  <td>{{ kurikulum.tahun_berlaku }}</td>
+                  <td>{{ kurikulum.min_sks }}</td>
+                  <td>
+                    <button class="btn-info" @click="handleDetail()">Detail</button>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
-          <div class="footer-table">
-            <div class="pagination">
-              <p>Showing {{ startEntry }} to {{ endEntry }} of {{ totalData }} entries</p>
-            </div>
-            <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
-              <div class="btn-group me-2" role="group" aria-label="First group">
-                <button @click="goToPage(currentPage - 1)" :disabled="currentPage === 1" type="button" class="btn btn-disable">Previous</button>
-                <button
-                  v-for="page in totalPages"
-                  :key="page"
-                  @click="goToPage(page)"
-                  :class="{ active: currentPage === page }"
-                  type="button" class="btn btn-primary"
-                >
-                  {{ page }}
-                </button>
-                <button @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages " type="button" class="btn btn-disable">
-                  Next
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
+    <Footer />
   </div>
-  <Footer />
 </template>
 
-<style>
-.app-layout {
+<style scoped>
+.dash-container {
   display: flex;
-  min-height: 100vh;
+  flex-direction: column;
+  /* min-height: 100vh; */
 }
 
 .main-content {
   flex: 1;
   margin-left: 256px; /* Same as sidebar width */
-  margin-top: 0; /* No need for margin-top as we have padding-top in .container-Kurikulum */
+  margin-top: 0; /* No need for margin-top as we have padding-top in .dashboard */
   display: flex;
   flex-direction: column;
+  /* border: 3px solid brown; */
+  padding: 0px 20px;
 }
 
-.container-Kurikulum{
+.kur-content {
   flex: 1; /* Take up available space */
-  padding-top: 90px; /* Adjusted for new header height */
+  margin-top: 80px; /* Adjusted for new header height */
+  padding-top: 30px;
   padding-left: 30px;
   padding-right: 30px;
-  padding-bottom: 70px; /* Add more bottom padding for footer */
-  min-height: 100vh;
-  display: flex;
-  box-sizing: border-box;
-  flex-direction: column;
-  justify-content: flex-start;
-  gap: 50px;
+  padding-bottom: 50px; /* Add bottom padding for footer space */
+  border-radius: 20px;
+  border: 2px solid var(--color-border2);
 }
 
 .tabel {
@@ -144,9 +104,43 @@ function goToPage(page) {
   box-sizing: border-box;
   justify-content: space-around;
   /* align-items: flex-start; */
-
 }
 
+.tabel-data {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.data-kurikulum {
+  width: 100%;
+  border-collapse: collapse; /* biar border rapi */
+  table-layout: fixed; /* kolom proporsional, nggak ngepas isi */
+}
+
+.data-kurikulum th,
+.data-kurikulum td {
+  border: 1px solid #ddd;
+  padding: 12px 15px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.opsi-cell {
+  margin-right: 5px;
+}
+
+.data-kurikulum thead {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+.data-kurikulum tbody tr:nth-child(even) {
+  background-color: #fafafa; /* zebra striping */
+}
+
+.data-kurikulum tbody tr:hover {
+  background-color: #f1f1f1; /* hover effect */
+}
 
 .title {
   padding: 0;
@@ -160,47 +154,74 @@ function goToPage(page) {
   font-size: 25px;
 }
 
+.page-title {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.page-title h2 {
+  font-weight: bold;
+  font-size: 25px;
+  margin-bottom: 5px;
+}
+
+.page-title p {
+  color: var(--color-border);
+  font-size: 16px;
+}
+
+.page-title p a {
+  color: var(--color-button);
+  text-decoration: none;
+}
+
 .button {
   display: flex;
+  gap: 5px;
 }
+
 .header-tabel {
   display: flex;
   justify-content: space-between;
   margin-bottom: 20px;
 }
 
-.button{
-    gap: 5px;
-
+.search {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
 }
 
-/* .button#add #excel #print{
-    background-color: var(--color-button);
-    border: 1px solid var(--color-border);
-    border-radius: 5px;
-
-} */
-
-th, td{
-    text-align: center;
+.footer-table {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
 }
 
-.search{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 15px;
-
+.btn-info {
+  background-color: var(--color-button);
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
-.opsi-btn{
-    display: flex;
-    justify-content: center;
-    gap: 5px;
+.btn-info:hover {
+  background-color: var(--color-button-hover);
 }
-.footer-table{
-    display: flex;
-    justify-content: space-between;
-    margin-top: 30px;
+
+.btn-secondary {
+  background-color: var(--color-buttonsec);
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
 }
 </style>

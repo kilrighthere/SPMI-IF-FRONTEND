@@ -1,42 +1,84 @@
 <script setup>
-// import { useRouter } from 'vue-router'
-import Footer from '@/components/Footer.vue';
-import Header from '@/components/Header.vue'
-import Sidebar from '@/components/Sidebar.vue';
+// Import kurikulum data from store
+import { kurikulumData } from '@/stores/kurikulum'
+import { ref } from 'vue'
+
+// Sample data for profil lulusan
+const profilLulusan = ref([
+  {
+    id: 1,
+    title: 'Software Engineer',
+    description: 'Mampu mengembangkan perangkat lunak dengan menerapkan prinsip-prinsip rekayasa.',
+  },
+  {
+    id: 2,
+    title: 'System Analyst',
+    description: 'Mampu menganalisis kebutuhan sistem dan mendesain solusi teknologi informasi.',
+  },
+  {
+    id: 3,
+    title: 'Data Scientist',
+    description: 'Mampu melakukan analisis data dan membuat model prediktif.',
+  },
+  {
+    id: 4,
+    title: 'Network Engineer',
+    description: 'Mampu merancang, mengimplementasikan dan mengelola jaringan komputer.',
+  },
+])
 </script>
 
 <template>
-    <div class="dash-container">
-        <Sidebar/>
-        <div class="main-content">
-            <Header/>
-            <div class="dashboard">
-                <h1>INI PL </h1>
-            </div>
-        </div>
+  <div class="profil-lulusan-container">
+    <div class="section-box">
+      <h3>Profil Lulusan Program Studi</h3>
+      <div class="pl-content">
+        <p>
+          Profil lulusan untuk {{ kurikulumData.nama }} mencakup beberapa bidang keahlian yang
+          diharapkan setelah menyelesaikan program studi.
+        </p>
+        <ul>
+          <li v-for="profil in profilLulusan" :key="profil.id">
+            <strong>{{ profil.title }}:</strong> {{ profil.description }}
+          </li>
+        </ul>
+      </div>
     </div>
-    <Footer/>
+  </div>
 </template>
 
-<style>
-.dash-container {
-    display: flex;
-    min-height: 100vh;
+<style scoped>
+
+
+.section-box {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 20px;
+  background-color: #fff;
 }
 
-.main-content {
-    flex: 1;
-    margin-left: 256px; /* Same as sidebar width */
-    margin-top: 0; /* No need for margin-top as we have padding-top in .dashboard */
-    display: flex;
-    flex-direction: column;
+.section-box h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: var(--color-button);
 }
 
-.dashboard {
-    flex: 1; /* Take up available space */
-    padding-top: 90px; /* Adjusted for new header height */
-    padding-left: 30px;
-    padding-right: 30px;
-    padding-bottom: 50px; /* Add bottom padding for footer space */
+.pl-content {
+  line-height: 1.6;
+}
+
+.pl-content p {
+  margin-bottom: 15px;
+}
+
+ul {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin-bottom: 15px;
+}
+
+li {
+  margin-bottom: 8px;
 }
 </style>

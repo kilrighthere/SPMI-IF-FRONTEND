@@ -48,7 +48,7 @@ q:before, q:after {
   --spmi-c-dgray:#333333;
   --spmi-c-blue:rgb(176, 225, 255);
   --spmi-c-white: #FBFBFB;
-  --spmi-c-lgray:#f3f3f3;
+  --spmi-c-lgray:#d8d8d8;
   --spmi-c-dustygray:#878787;
   --spmi-c-darkvoid: rgb(20,21,25);
   --spmi-c-red: #da2a2d;
@@ -70,6 +70,7 @@ q:before, q:after {
   --color-buttonsec:var(--spmi-c-dgray);
   --color-footer:var(--spmi-c-red2);
   --color-border:var(--spmi-c-dustygray);
+  --color-border2:var(--spmi-c-lgray);
   --color-text:var(--spmi-c-dgray);
   --color-text-light:var(--spmi-c-white);
   --color-text-light2:var(--spmi-c-white);

@@ -17,16 +17,30 @@ const routes = [
   { path: '/login', component: Login, meta: { title: 'Login - Sistem Informasi' } },
   { path: '/dashboard', component: Dashboard, meta: { title: 'Dashboard - Sistem Informasi' } },
   { path: '/kurikulum', component: Kurikulum, meta: { title: 'Kurikulum - Sistem Informasi' } },
-  { path: '/Detail-Kurikulum', component: DetailKur, meta: {title: 'Detail Kurikulum - Sistem Informasi'}},
-  {path: '/kurikulum/CPL-Prodi', component:CPLProdi, meta:{title:'CPL Prodi - Sistem Informasi'}},
-  {path: '/kurikulum/CPMK', component:CPMK, meta:{title:'CPMK - Sistem Informasi'}},
-  {path: '/kurikulum/Korelasi-PL', component:KorelasiPL, meta:{title:'Korelasi PL - Sistem Informasi'}},
-  {path: '/kurikulum/Nilai-Matkul', component:NilMatkul, meta:{title:'Nilai Mata Kuliah - Sistem Informasi'}},
-  {path: '/kurikulum/RPS', component:RPS, meta:{title:'RPS - Sistem Informasi'}},
-  {path: '/kurikulum/Struktur-Matkul', component:StrukMatkul, meta:{title:'Struktur Mata Kuliah - Sistem Informasi'}},
-  {path: '/kurikulum/Ukur-CPL', component:UkurCPL, meta:{title:'Ukur CPL - Sistem Informasi'}},
-  {path: '/kurikulum/Profil-Lulusan', component:ProfilLulusan, meta:{title:'Profil Lulusan - Sistem Informasi'}},
-  
+  {
+    path: '/kurikulum/:id',
+    component: DetailKur,
+    meta: { title: 'Detail Kurikulum - Sistem Informasi' },
+    children: [
+      { path: '', redirect: 'profil-lulusan' },
+      { path: 'profil-lulusan', component: ProfilLulusan, meta: { title: 'Profil Lulusan' } },
+      { path: 'cpl-prodi', component: CPLProdi, meta: { title: 'CPL Prodi' } },
+      { path: 'cpmk', component: CPMK, meta: { title: 'CPMK' } },
+      { path: 'korelasi-pl', component: KorelasiPL, meta: { title: 'Korelasi PL-CPL' } },
+      { path: 'struktur-matkul', component: StrukMatkul, meta: { title: 'Struktur Mata Kuliah' } },
+      { path: 'rps', component: RPS, meta: { title: 'RPS Mata Kuliah' } },
+      { path: 'nilai-matkul', component: NilMatkul, meta: { title: 'Nilai Mata Kuliah' } },
+      { path: 'ukur-cpl', component: UkurCPL, meta: { title: 'Pengukuran CPL Mahasiswa' } },
+    ],
+  },
+  // Redirect for direct access to kurikulum details without ID
+  {
+    path: '/kurikulum-detail',
+    redirect: (to) => {
+      const kurikulumId = import.meta.env.VITE_DEFAULT_KURIKULUM_ID || '2020'
+      return `/kurikulum/${kurikulumId}/profil-lulusan`
+    },
+  },
 ]
 
 const router = createRouter({
@@ -34,10 +48,10 @@ const router = createRouter({
   routes,
 })
 
+// ganti title tab browser sesuai route
 router.beforeEach((to, from, next) => {
-  document.title = to.meta.title || 'Sistem Informasi'
+  document.title = to.meta.title ? `${to.meta.title} - Sistem Informasi` : 'Sistem Informasi'
   next()
 })
-
 
 export default router
