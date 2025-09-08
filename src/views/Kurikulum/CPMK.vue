@@ -22,7 +22,7 @@ const error = computed(() => cpmkStore.error || cplStore.error)
 const form = ref({
   id_cpmk: '',
   deskripsi: '',
-  id_cpl: ''
+  id_cpl: '',
 })
 
 const isEditing = ref(false)
@@ -75,7 +75,7 @@ const resetForm = () => {
 
 // Mendapatkan nama CPL berdasarkan ID
 const getCPLName = (cplId) => {
-  const cpl = cplList.value.find(item => item.id === cplId || item.kode === cplId)
+  const cpl = cplList.value.find((item) => item.id === cplId || item.kode === cplId)
   return cpl ? `${cpl.kode} - ${cpl.deskripsi.substring(0, 30)}...` : 'N/A'
 }
 
@@ -87,118 +87,82 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="dash-container">
-    <Sidebar />
-    <div class="main-content">
-      <Header />
-      <div class="dashboard">
-        <div class="cpmk-container">
-          <div class="section-box">
-            <div class="section-header">
-              <h3>Capaian Pembelajaran Mata Kuliah (CPMK)</h3>
-              <button class="btn-add" @click="showForm = !showForm">
-                {{ showForm ? 'Batal' : 'Tambah CPMK' }}
-              </button>
-            </div>
-            
-            <!-- Form tambah/edit CPMK -->
-            <div v-if="showForm" class="form-container">
-              <div class="form-group">
-                <label>ID CPMK</label>
-                <input type="text" v-model="form.id_cpmk" placeholder="ID CPMK" />
-              </div>
-              <div class="form-group">
-                <label>Deskripsi</label>
-                <textarea v-model="form.deskripsi" placeholder="Deskripsi CPMK"></textarea>
-              </div>
-              <div class="form-group">
-                <label>CPL</label>
-                <select v-model="form.id_cpl">
-                  <option value="">Pilih CPL</option>
-                  <option v-for="cpl in cplList" :key="cpl.id" :value="cpl.id">
-                    {{ cpl.kode }} - {{ cpl.deskripsi }}
-                  </option>
-                </select>
-              </div>
-              <div class="form-actions">
-                <button class="btn-save" @click="saveCPMK">
-                  {{ isEditing ? 'Update' : 'Simpan' }}
-                </button>
-                <button v-if="isEditing" class="btn-cancel" @click="resetForm">Batal</button>
-              </div>
-            </div>
+  <div class="cpmk-container">
+    <div class="section-box">
+      <div class="section-header">
+        <h3>Capaian Pembelajaran Mata Kuliah (CPMK)</h3>
+        <button class="btn-add" @click="showForm = !showForm">
+          {{ showForm ? 'Batal' : 'Tambah CPMK' }}
+        </button>
+      </div>
 
-            <!-- Loading indicator -->
-            <div v-if="isLoading" class="loading">Loading...</div>
-            
-            <!-- Error message -->
-            <div v-if="error" class="error-message">{{ error }}</div>
-
-            <!-- CPMK Table -->
-            <div v-if="!isLoading && !error">
-              <div v-if="cpmkList.length === 0" class="empty-state">
-                Belum ada data CPMK.
-              </div>
-              
-              <table v-else class="cpmk-table">
-                <thead>
-                  <tr>
-                    <th>ID CPMK</th>
-                    <th>Deskripsi</th>
-                    <th>CPL</th>
-                    <th>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="cpmk in cpmkList" :key="cpmk.id_cpmk">
-                    <td>{{ cpmk.id_cpmk }}</td>
-                    <td>{{ cpmk.deskripsi }}</td>
-                    <td>{{ getCPLName(cpmk.id_cpl) }}</td>
-                    <td class="action-buttons">
-                      <button class="btn-edit" @click="editCPMK(cpmk)">Edit</button>
-                      <button class="btn-delete" @click="removeCPMK(cpmk.id_cpmk)">Hapus</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+      <!-- Form tambah/edit CPMK -->
+      <div v-if="showForm" class="form-container">
+        <div class="form-group">
+          <label>ID CPMK</label>
+          <input type="text" v-model="form.id_cpmk" placeholder="ID CPMK" />
         </div>
+        <div class="form-group">
+          <label>Deskripsi</label>
+          <textarea v-model="form.deskripsi" placeholder="Deskripsi CPMK"></textarea>
+        </div>
+        <div class="form-group">
+          <label>CPL</label>
+          <select v-model="form.id_cpl">
+            <option value="">Pilih CPL</option>
+            <option v-for="cpl in cplList" :key="cpl.id" :value="cpl.id">
+              {{ cpl.kode }} - {{ cpl.deskripsi }}
+            </option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button class="btn-save" @click="saveCPMK">
+            {{ isEditing ? 'Update' : 'Simpan' }}
+          </button>
+          <button v-if="isEditing" class="btn-cancel" @click="resetForm">Batal</button>
+        </div>
+      </div>
+
+      <!-- Loading indicator -->
+      <div v-if="isLoading" class="loading">Loading...</div>
+
+      <!-- Error message -->
+      <div v-if="error" class="error-message">{{ error }}</div>
+
+      <!-- CPMK List -->
+      <div v-else class="cpmk-content">
+        <p>
+          Capaian Pembelajaran Mata Kuliah (CPMK) adalah kemampuan yang diharapkan dimiliki oleh
+          mahasiswa setelah menyelesaikan suatu mata kuliah.
+        </p>
+
+        <div v-if="cpmkList.length === 0" class="empty-state">Belum ada data CPMK.</div>
+
+        <ul v-else class="cpmk-list">
+          <li v-for="cpmk in cpmkList" :key="cpmk.id_cpmk" class="cpmk-item">
+            <div class="cpmk-content">
+              <strong>{{ cpmk.id_cpmk }}:</strong> {{ cpmk.deskripsi }}
+              <div class="cpmk-cpl">
+                <span class="cpl-tag">CPL: {{ getCPLName(cpmk.id_cpl) }}</span>
+              </div>
+            </div>
+            <div class="cpmk-actions">
+              <button class="btn-edit" @click="editCPMK(cpmk)">Edit</button>
+              <button class="btn-delete" @click="removeCPMK(cpmk.id_cpmk)">Hapus</button>
+            </div>
+          </li>
+        </ul>
       </div>
     </div>
   </div>
-  <Footer />
 </template>
 
 <style scoped>
-.dash-container {
-  display: flex;
-  min-height: 100vh;
-}
-
-.main-content {
-  flex: 1;
-  margin-left: 256px; /* Same as sidebar width */
-  display: flex;
-  flex-direction: column;
-}
-
-.dashboard {
-  padding: 20px;
-  flex: 1;
-}
-
-.cpmk-container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
 .section-box {
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 20px;
   background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .section-header {
@@ -213,6 +177,53 @@ onMounted(() => {
   font-weight: bold;
   margin-bottom: 0;
   color: var(--color-button);
+}
+
+.cpmk-content {
+  line-height: 1.6;
+}
+
+.cpmk-content p {
+  margin-bottom: 15px;
+}
+
+.cpmk-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin-bottom: 15px;
+}
+
+.cpmk-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.cpmk-item:hover {
+  background-color: #f9f9f9;
+}
+
+.cpmk-cpl {
+  margin-top: 5px;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.cpl-tag {
+  display: inline-block;
+  background-color: #e3f2fd;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+.cpmk-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .form-container {
@@ -250,33 +261,6 @@ onMounted(() => {
   gap: 10px;
 }
 
-.cpmk-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
-}
-
-.cpmk-table th,
-.cpmk-table td {
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid #eee;
-}
-
-.cpmk-table th {
-  background-color: #f5f5f5;
-  font-weight: 600;
-}
-
-.cpmk-table tr:hover {
-  background-color: #f9f9f9;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 8px;
-}
-
 .btn-add {
   background-color: var(--color-button);
   color: white;
@@ -306,7 +290,7 @@ onMounted(() => {
 }
 
 .btn-edit {
-  background-color: #2196F3;
+  background-color: #2196f3;
   color: white;
   border: none;
   padding: 5px 10px;
