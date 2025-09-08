@@ -1,8 +1,5 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import Footer from '@/components/Footer.vue'
-import Header from '@/components/Header.vue'
-import Sidebar from '@/components/Sidebar.vue'
 
 // Import stores
 import { useCPMKStore } from '@/stores/cpmk'
@@ -75,8 +72,8 @@ const resetForm = () => {
 
 // Mendapatkan nama CPL berdasarkan ID
 const getCPLName = (cplId) => {
-  const cpl = cplList.value.find((item) => item.id === cplId || item.kode === cplId)
-  return cpl ? `${cpl.kode} - ${cpl.deskripsi.substring(0, 30)}...` : 'N/A'
+  const cpl = cplList.value.find((item) => item.id === cplId || item.id_cpl === cplId)
+  return cpl ? `${cpl.id_cpl}` : 'N/A'
 }
 
 // Load data saat komponen dimuat
@@ -110,8 +107,8 @@ onMounted(() => {
           <label>CPL</label>
           <select v-model="form.id_cpl">
             <option value="">Pilih CPL</option>
-            <option v-for="cpl in cplList" :key="cpl.id" :value="cpl.id">
-              {{ cpl.kode }} - {{ cpl.deskripsi }}
+            <option v-for="cpl in cplList" :key="cpl.id_cpl" :value="cpl.id_cpl">
+              {{ cpl.id_cpl }} - {{ cpl.deskripsi }}
             </option>
           </select>
         </div>

@@ -1,89 +1,159 @@
 /* color palette from <https://github.com/vuejs/theme> */
 
-html, body, div, span, applet, object, iframe,
-h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-a, abbr, acronym, address, big, cite, code,
-del, dfn, em, img, ins, kbd, q, s, samp,
-small, strike, strong, sub, sup, tt, var,
-b, u, i, center,
-dl, dt, dd, ol, ul, li,
-fieldset, form, label, legend, caption,
-article, aside, canvas, details, embed, 
-figure, figcaption, footer, header, hgroup, 
-menu, nav, output, ruby, section, summary,
-time, mark, audio, video {
-	margin: 0;
-	padding: 0;
-	border: 0;
-	font-size: 100%;
-	font: inherit;
-	vertical-align: baseline;
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+caption,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+footer,
+header,
+hgroup,
+menu,
+nav,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
 }
 /* HTML5 display-role reset for older browsers */
-article, aside, details, figcaption, figure, 
-footer, header, hgroup, menu, nav, section {
-	display: block;
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
+  display: block;
 }
 body {
-	line-height: 1;
+  line-height: 1;
 }
-ol, ul {
-	list-style: none;
+ol,
+ul {
+  list-style: none;
 }
-blockquote, q {
-	quotes: none;
+blockquote,
+q {
+  quotes: none;
 }
-blockquote:before, blockquote:after,
-q:before, q:after {
-	content: '';
-	content: none;
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+  content: '';
+  content: none;
 }
 /* table {
 	border-collapse: collapse;
 	border-spacing: 0;
 }  */
 
-
-:root{
-  --spmi-c-dgray:#333333;
-  --spmi-c-blue:rgb(176, 225, 255);
-  --spmi-c-white: #FBFBFB;
-  --spmi-c-lgray:#d8d8d8;
-  --spmi-c-dustygray:#878787;
-  --spmi-c-darkvoid: rgb(20,21,25);
+:root {
+  --spmi-c-dgray: #333333;
+  --spmi-c-blue: rgb(176, 225, 255);
+  --spmi-c-white: #fbfbfb;
+  --spmi-c-lgray: #f7f7f7;
+  --spmi-c-dustygray: #878787;
+  --spmi-c-darkvoid: rgb(20, 21, 25);
   --spmi-c-red: #da2a2d;
   --spmi-c-red2: #b92527;
-  --spmi-c-red3:#D3191C;
-
-
-
-
-
+  --spmi-c-red3: #d3191c;
+  --spmi-c-blue: #3aa6ff;
 }
 
-:root{
-  --color-background:var(--spmi-c-white);
-  --color-header:var(--spmi-c-white);
-  --color-sidebar:var(--spmi-c-red3);
-  --color-button:var(--spmi-c-red);
-  --color-button-hover:var(--spmi-c-red2);
-  --color-buttonsec:var(--spmi-c-dgray);
-  --color-footer:var(--spmi-c-red2);
-  --color-border:var(--spmi-c-dustygray);
-  --color-border2:var(--spmi-c-lgray);
-  --color-text:var(--spmi-c-dgray);
-  --color-text-light:var(--spmi-c-white);
-  --color-text-light2:var(--spmi-c-white);
+:root {
+  --color-background: var(--spmi-c-white);
+  --color-header: var(--spmi-c-white);
+  --color-sidebar: var(--spmi-c-red3);
+  --color-button: var(--spmi-c-red);
+  --color-button-hover: var(--spmi-c-red2);
+  --color-buttonsec: var(--spmi-c-dgray);
+  --color-buttonter: var(--spmi-c-blue);
+  --color-footer: var(--spmi-c-red2);
+  --color-border: var(--spmi-c-dustygray);
+  --color-border2: var(--spmi-c-lgray);
+  --color-text: var(--spmi-c-dgray);
+  --color-text-light: var(--spmi-c-white);
+  --color-text-light2: var(--spmi-c-white);
 }
 
-body{
+body {
   color: var(--color-text);
   line-height: 1.5;
-  font-family:'Inter', Arial, Helvetica, sans-serif;
+  font-family: var(--font-primary);
   font-size: 16px;
   background-color: var(--color-background);
 }
-
 
 /* :root {
   --vt-c-white: #ffffff;
@@ -163,5 +233,3 @@ body {
    v2.0 | 20110126
    License: none (public domain)
 */
-
-

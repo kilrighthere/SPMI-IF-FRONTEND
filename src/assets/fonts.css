@@ -1,0 +1,34 @@
+/**
+ * Fonts Configuration
+ * This file defines font families used throughout the application
+ */
+
+:root {
+  /* Font family variables */
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-secondary: 'Montserrat', Arial, Helvetica, sans-serif;
+}
+
+/* Apply Inter as the default font */
+body {
+  font-family: var(--font-primary);
+}
+
+/* Headings use Montserrat */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-secondary);
+}
+
+/* Class-based font family selections */
+.font-inter {
+  font-family: var(--font-primary) !important;
+}
+
+.font-montserrat {
+  font-family: var(--font-secondary) !important;
+}

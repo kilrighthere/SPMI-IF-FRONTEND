@@ -15,19 +15,52 @@ const error = computed(() => plStore.error)
 // Form untuk tambah/edit profil lulusan - sesuai format API baru
 const form = ref({
   id_pl: '',
-  deskripsi: ''
+  deskripsi: '',
 })
 const isEditing = ref(false)
 const showForm = ref(false)
+
+// Form validation state
+const formErrors = ref({
+  id_pl: '',
+  deskripsi: ''
+})
+
 
 // Fetch data profil lulusan dari store
 const fetchProfilLulusan = async () => {
   await plStore.fetchAllPL()
 }
 
+const validateForm = () => {
+  let isValid = true
+  formErrors.value = { id_pl: '', deskripsi: '' }
+  
+  if (!form.value.id_pl.trim()) {
+    formErrors.value.id_pl = 'ID Profil Lulusan tidak boleh kosong'
+    isValid = false
+  }
+  
+  if (!form.value.deskripsi.trim()) {
+    formErrors.value.deskripsi = 'Deskripsi tidak boleh kosong'
+    isValid = false
+  }
+  
+  return isValid
+}
+
+
 // Tambah profil lulusan baru
 const savePL = async () => {
   try {
+    // Reset error message first
+    error.value = ''
+    
+    // Validate form before submission
+    if (!validateForm()) {
+      return // Stop if validation fails
+    }
+    
     if (isEditing.value) {
       await plStore.editPL(form.value.id_pl, form.value)
     } else {
@@ -45,6 +78,12 @@ const editPL = (profil) => {
   form.value = { ...profil }
   isEditing.value = true
   showForm.value = true
+
+  // Scroll ke bagian atas halaman dimana form berada
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth',
+  })
 }
 
 // Hapus profil lulusan
@@ -54,12 +93,20 @@ const removePL = async (id) => {
   }
 }
 
-// Reset form
+// Reset form and error messages
 const resetForm = () => {
   form.value = { id_pl: '', deskripsi: '' }
+  formErrors.value = { id_pl: '', deskripsi: '' }
+  error.value = ''
   isEditing.value = false
   showForm.value = false
 }
+
+// Clear error message only (keep form data)
+const clearError = () => {
+  error.value = ''
+}
+
 
 // Load data saat komponen dimuat
 onMounted(() => {
@@ -69,37 +116,50 @@ onMounted(() => {
 
 <template>
   <div class="profil-lulusan-container">
-    <div class="section-box">
+    <div id="form-section" class="section-box">
       <div class="section-header">
         <h3>Profil Lulusan Program Studi</h3>
-        <button class="btn-add" @click="showForm = !showForm">
+        <button class="btn-add" @click="showForm ? resetForm() : (showForm = true)">
           {{ showForm ? 'Batal' : 'Tambah Profil Lulusan' }}
         </button>
       </div>
-      
+
       <!-- Form tambah/edit profil lulusan -->
       <div v-if="showForm" class="form-container">
         <div class="form-group">
-          <label>Kode PL</label>
-          <input type="text" v-model="form.id_pl" placeholder="Kode Profil Lulusan (contoh: PL001)" />
+          <label>ID PL</label>
+          <input
+            type="text"
+            v-model="form.id_pl"
+            placeholder="Kode Profil Lulusan (contoh: PL001)"
+            :class="{ 'input-error': formErrors.id_pl }"
+          />
+          <div v-if="formErrors.id_pl" class="error-text">{{ formErrors.id_pl }}</div>
         </div>
         <div class="form-group">
           <label>Deskripsi</label>
-          <textarea v-model="form.deskripsi" placeholder="Deskripsi profil lulusan"></textarea>
+          <textarea v-model="form.deskripsi" 
+          placeholder="Deskripsi profil lulusan"
+          :class="{ 'input-error': formErrors.deskripsi }"
+          ></textarea>
+          <div v-if="formErrors.deskripsi" class="error-text">{{ formErrors.deskripsi }}</div>
         </div>
         <div class="form-actions">
           <button class="btn-save" @click="savePL">
             {{ isEditing ? 'Update' : 'Simpan' }}
           </button>
-          <button v-if="isEditing" class="btn-cancel" @click="resetForm">Batal</button>
+          <!-- <button v-if="isEditing" class="btn-cancel" @click="resetForm">Batal</button> -->
         </div>
       </div>
 
       <!-- Loading indicator -->
       <div v-if="isLoading" class="loading">Loading...</div>
-      
+
       <!-- Error message -->
-      <div v-if="error" class="error-message">{{ error }}</div>
+      <div v-if="error" class="error-message">
+        {{ error }}
+        <button class="btn-close" @click="clearError">×</button>
+      </div>
 
       <!-- Profil Lulusan List -->
       <div v-else class="pl-content">
@@ -107,22 +167,30 @@ onMounted(() => {
           Profil lulusan untuk {{ kurikulumData.nama }} mencakup beberapa bidang keahlian yang
           diharapkan setelah menyelesaikan program studi.
         </p>
-        
+
         <div v-if="profilLulusan.length === 0" class="empty-state">
           Belum ada data profil lulusan.
         </div>
-        
-        <ul v-else class="pl-list">
-          <li v-for="profil in profilLulusan" :key="profil.id_pl" class="pl-item">
-            <div class="pl-content">
-              <strong>{{ profil.id_pl }}:</strong> {{ profil.deskripsi }}
-            </div>
-            <div class="pl-actions">
-              <button class="btn-edit" @click="editPL(profil)">Edit</button>
-              <button class="btn-delete" @click="removePL(profil.id_pl)">Hapus</button>
-            </div>
-          </li>
-        </ul>
+
+        <table v-else class="pl-table">
+          <thead>
+            <tr>
+              <th width="15%">ID PL</th>
+              <th width="65%">Deskripsi</th>
+              <th width="20%" class="aksi-title">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="profil in profilLulusan" :key="profil.id_pl" class="pl-item">
+              <td class="pl-id">{{ profil.id_pl }}</td>
+              <td class="desk-item">{{ profil.deskripsi }}</td>
+              <td class="action-button">
+                <button class="btn-edit" @click="editPL(profil)">Edit</button>
+                <button class="btn-delete" @click="removePL(profil.id_pl)">Hapus</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -158,30 +226,79 @@ onMounted(() => {
   margin-bottom: 15px;
 }
 
+/* Tidak digunakan - sebelumnya untuk tampilan list
 .pl-list {
   list-style-type: none;
   padding-left: 0;
   margin-bottom: 15px;
+} */
+
+.pl-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  border: 1px solid #ddd;
 }
 
-.pl-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.pl-table th {
   padding: 12px;
-  margin-bottom: 10px;
-  border: 1px solid #eee;
-  border-radius: 4px;
+  background-color: #f5f5f5;
+  font-weight: 600;
+  border: 1px solid #ddd;
+  text-align: center;
 }
 
-.pl-item:hover {
+.pl-table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  vertical-align: top;
+}
+
+.pl-table .pl-id {
+  text-align: left;
+  width: 100px; /* Lebar tetap untuk kolom ID */
+  white-space: nowrap;
+}
+
+.pl-table .desk-item {
+  text-align: left;
+  max-width: 60%; /* Membatasi lebar kolom deskripsi */
+}
+
+.pl-table .action-button {
+  text-align: center;
+  width: 150px; /* Lebar tetap untuk kolom aksi */
+  white-space: nowrap;
+}
+
+.pl-table tr:hover {
   background-color: #f9f9f9;
 }
 
-.pl-actions {
+.error-text {
+  color: var(--color-button);
+  font-size: 14px;
+  margin-top: 3px;
+}
+
+:placeholder-shown{
+  font-family: 'Inter', Arial, Helvetica, sans-serif;
+}
+
+textarea{
+  font-family: 'Inter', Arial, Helvetica, sans-serif;
+}
+
+/* Tidak digunakan - duplikat dengan tr:hover atau class lama untuk list
+.pl-item:hover {
+  background-color: #f9f9f9;
+} */
+
+/* Tidak digunakan - class diganti dengan action-button (singular)
+.action-buttons {
   display: flex;
   gap: 8px;
-}
+} */
 
 .form-container {
   background-color: #f9f9f9;
@@ -228,7 +345,7 @@ onMounted(() => {
 }
 
 .btn-save {
-  background-color: #4caf50;
+  background-color: var(--color-buttonter);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -236,27 +353,29 @@ onMounted(() => {
   cursor: pointer;
 }
 
+/* Tidak digunakan - tombol cancel dikomentari di template
 .btn-cancel {
-  background-color: #f44336;
+  background-color:var(--color-button);
   color: white;
   border: none;
   padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
-}
+} */
 
 .btn-edit {
-  background-color: #2196F3;
+  background-color: var(--color-buttonter);
   color: white;
   border: none;
   padding: 5px 10px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
+  margin-right: 5px;
 }
 
 .btn-delete {
-  background-color: #f44336;
+  background-color: var(--color-button);
   color: white;
   border: none;
   padding: 5px 10px;
@@ -272,7 +391,7 @@ onMounted(() => {
 }
 
 .error-message {
-  color: #f44336;
+  color: var(--color-button);
   padding: 10px;
   background-color: #ffebee;
   border-radius: 4px;

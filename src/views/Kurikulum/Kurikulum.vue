@@ -73,7 +73,6 @@ const handleDetail = () => {
 .dash-container {
   display: flex;
   flex-direction: column;
-  /* min-height: 100vh; */
 }
 
 .main-content {
@@ -170,7 +169,7 @@ const handleDetail = () => {
 
 .page-title p {
   color: var(--color-border);
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .page-title p a {

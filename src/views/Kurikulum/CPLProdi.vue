@@ -74,9 +74,7 @@ onMounted(() => {
 
 <template>
   <div class="dash-container">
-    <Sidebar />
     <div class="main-content">
-      <Header />
       <div class="dashboard">
         <div class="cpl-container">
           <div class="section-box">
@@ -147,7 +145,6 @@ onMounted(() => {
       </div>
     </div>
   </div>
-  <Footer />
 </template>
 
 <style scoped>
