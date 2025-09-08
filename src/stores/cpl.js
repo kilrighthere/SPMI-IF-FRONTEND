@@ -28,19 +28,29 @@ export const useCPLStore = defineStore('cpl', () => {
       // Fallback data sesuai format API
       cplList.value = [
         {
-          id: 'CPL001',
-          kode: 'CPL-01',
-          deskripsi: 'Mampu menerapkan ilmu pengetahuan dan teknologi di bidang informatika'
+          id_cpl: 'CPL001',
+          deskripsi: 'Mampu menguasai konsep dasar matematika dan algoritma.',
+          id_pl: 'PL001'
         },
         {
-          id: 'CPL002',
-          kode: 'CPL-02',
-          deskripsi: 'Mampu menganalisis masalah dan memberikan solusi di bidang informatika'
+          id_cpl: 'CPL002',
+          deskripsi: 'Mampu merancang solusi sistem informasi berbasis teknologi.',
+          id_pl: 'PL001'
         },
         {
-          id: 'CPL003',
-          kode: 'CPL-03',
-          deskripsi: 'Mampu beradaptasi dengan perkembangan teknologi informasi'
+          id_cpl: 'CPL003',
+          deskripsi: 'Mampu mengimplementasikan perangkat lunak sesuai spesifikasi.',
+          id_pl: 'PL001'
+        },
+        {
+          id_cpl: 'CPL004',
+          deskripsi: 'Mampu menganalisis dan menginterpretasi data kompleks.',
+          id_pl: 'PL001'
+        },
+        {
+          id_cpl: 'CPL005',
+          deskripsi: 'Mampu beradaptasi dengan teknologi baru dan belajar mandiri.',
+          id_pl: 'PL001'
         }
       ]
     } finally {
@@ -107,8 +117,8 @@ export const useCPLStore = defineStore('cpl', () => {
     
     try {
       await deleteCPL(id)
-      // Remove from local list - sesuaikan dengan id yang benar (kode/id)
-      cplList.value = cplList.value.filter(cpl => cpl.id !== id && cpl.kode !== id)
+      // Remove from local list - sesuaikan dengan id_cpl
+      cplList.value = cplList.value.filter(cpl => cpl.id_cpl !== id)
       return { success: true }
     } catch (err) {
       console.error(`Error deleting CPL with id ${id}:`, err)
