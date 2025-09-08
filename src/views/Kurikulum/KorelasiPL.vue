@@ -1,8 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import Footer from '@/components/Footer.vue'
-import Header from '@/components/Header.vue'
-import Sidebar from '@/components/Sidebar.vue'
+// Removed Header, Sidebar, Footer imports as they're already in the parent component
 import { usePLStore } from '@/stores/profilLulusan'
 import { useCPLStore } from '@/stores/cpl'
 import { useKorelasiCPLPLStore } from '@/stores/korelasiCPLPL'
@@ -28,14 +26,14 @@ const selectedCPLs = ref([])
 // CPL yang belum terhubung dengan PL manapun
 const unassignedCPLs = computed(() => {
   if (!cplList.value || !profilLulusanList.value) return []
-  return cplList.value.filter(cpl => !cpl.id_pl || cpl.id_pl === '' || cpl.id_pl === 'PL-REL')
+  return cplList.value.filter((cpl) => !cpl.id_pl || cpl.id_pl === '' || cpl.id_pl === 'PL-REL')
 })
 
 // CPL yang sudah terhubung dengan PL tertentu
 const getAssignedCPLs = (plId) => {
   if (!cplList.value) return []
   // Jangan tampilkan CPL dengan id_pl "PL-REL" karena itu adalah placeholder
-  return cplList.value.filter(cpl => cpl.id_pl === plId && cpl.id_pl !== "PL-REL")
+  return cplList.value.filter((cpl) => cpl.id_pl === plId && cpl.id_pl !== 'PL-REL')
 }
 
 // Fetch data
@@ -60,31 +58,31 @@ const selectPL = (pl) => {
 // Tambahkan CPL ke PL
 const addCPLToPL = async () => {
   if (!selectedPL.value || selectedCPLs.value.length === 0) return
-  
+
   try {
     // Update setiap CPL yang dipilih
     for (const cplId of selectedCPLs.value) {
-      const cpl = cplList.value.find(c => c.id_cpl === cplId)
+      const cpl = cplList.value.find((c) => c.id_cpl === cplId)
       if (cpl) {
         // Pastikan semua field yang dibutuhkan oleh API tetap ada
         await cplStore.editCPL(cpl.id_cpl, {
           id_cpl: cpl.id_cpl,
           deskripsi: cpl.deskripsi, // Tetap kirim field deskripsi
-          id_pl: selectedPL.value.id_pl
+          id_pl: selectedPL.value.id_pl,
         })
       }
     }
-    
+
     // Refresh data
     await fetchData()
-    
+
     // Tampilkan pesan sukses
     successMessage.value = 'Korelasi berhasil ditambahkan'
     showSuccess.value = true
     setTimeout(() => {
       showSuccess.value = false
     }, 3000)
-    
+
     // Reset selected CPLs
     selectedCPLs.value = []
   } catch (err) {
@@ -95,42 +93,42 @@ const addCPLToPL = async () => {
 // Hapus korelasi CPL dengan PL
 const removeCPLFromPL = async (cpl) => {
   if (!cpl) return
-  
+
   if (confirm('Apakah anda yakin ingin menghapus korelasi ini?')) {
     try {
-      console.log('Removing correlation for CPL:', cpl);
-      
-      // Dari data yang terlihat, "PL-REL" sepertinya digunakan sebagai nilai 
+      console.log('Removing correlation for CPL:', cpl)
+
+      // Dari data yang terlihat, "PL-REL" sepertinya digunakan sebagai nilai
       // default atau tempat penyimpanan sementara untuk CPL yang belum memiliki relasi tetap.
       const dataToSend = {
         deskripsi: cpl.deskripsi,
-        id_pl: "PL-REL" // Gunakan PL-REL sebagai placeholder untuk CPL tanpa korelasi
-      };
-      
-      console.log('Data yang dikirim ke API:', dataToSend);
-      await cplStore.editCPL(cpl.id_cpl, dataToSend);
-      
+        id_pl: 'PL-REL', // Gunakan PL-REL sebagai placeholder untuk CPL tanpa korelasi
+      }
+
+      console.log('Data yang dikirim ke API:', dataToSend)
+      await cplStore.editCPL(cpl.id_cpl, dataToSend)
+
       // Refresh data
-      await fetchData();
-      
+      await fetchData()
+
       // Tampilkan pesan sukses
-      successMessage.value = 'Korelasi berhasil dihapus';
-      showSuccess.value = true;
+      successMessage.value = 'Korelasi berhasil dihapus'
+      showSuccess.value = true
       setTimeout(() => {
-        showSuccess.value = false;
-      }, 3000);
+        showSuccess.value = false
+      }, 3000)
     } catch (err) {
-      console.error('Error removing CPL from PL:', err);
+      console.error('Error removing CPL from PL:', err)
       // Tampilkan pesan error dari API jika ada
       if (err.response && err.response.data) {
-        console.log('Error response:', err.response.data);
-        error.value = `Gagal menghapus korelasi: ${err.response.data.message || 'Error tidak diketahui'}`;
+        console.log('Error response:', err.response.data)
+        error.value = `Gagal menghapus korelasi: ${err.response.data.message || 'Error tidak diketahui'}`
       } else {
-        error.value = 'Gagal menghapus korelasi. Silakan coba lagi.';
+        error.value = 'Gagal menghapus korelasi. Silakan coba lagi.'
       }
-      
+
       // Tampilkan pesan error
-      showSuccess.value = false;
+      showSuccess.value = false
     }
   }
 }
@@ -152,156 +150,134 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="dash-container">
-    <Sidebar />
-    <div class="main-content">
-      <Header />
-      <div class="dashboard">
-        <div class="korelasi-container">
-          <div class="section-box">
-            <div class="section-header">
-              <h3>Korelasi Profil Lulusan dan CPL</h3>
+  <div class="korelasi-container">
+    <div class="section-box">
+      <div class="section-header">
+        <h3>Korelasi Profil Lulusan dan CPL</h3>
+      </div>
+
+      <!-- Loading indicator -->
+      <div v-if="isLoading" class="loading">Loading...</div>
+
+      <!-- Error message -->
+      <div v-if="error" class="error-message">{{ error }}</div>
+
+      <!-- Success message -->
+      <div v-if="showSuccess" class="success-message">{{ successMessage }}</div>
+
+      <!-- Content -->
+      <div v-if="!isLoading && !error" class="korelasi-content">
+        <p>
+          Halaman ini digunakan untuk mengelola korelasi antara Profil Lulusan (PL) dan Capaian
+          Pembelajaran Lulusan (CPL) pada {{ kurikulumData.nama }}.
+        </p>
+
+        <div class="korelasi-grid">
+          <!-- Daftar PL -->
+          <div class="pl-list-container">
+            <h4>Profil Lulusan</h4>
+            <div v-if="profilLulusanList.length === 0" class="empty-state">
+              Belum ada data Profil Lulusan.
             </div>
+            <ul v-else class="pl-list">
+              <li
+                v-for="pl in profilLulusanList"
+                :key="pl.id_pl"
+                :class="{ selected: selectedPL && pl.id_pl === selectedPL.id_pl }"
+                @click="selectPL(pl)"
+              >
+                <strong>{{ pl.id_pl }}</strong
+                >: {{ pl.deskripsi }}
+              </li>
+            </ul>
+          </div>
 
-            <!-- Loading indicator -->
-            <div v-if="isLoading" class="loading">Loading...</div>
-            
-            <!-- Error message -->
-            <div v-if="error" class="error-message">{{ error }}</div>
-            
-            <!-- Success message -->
-            <div v-if="showSuccess" class="success-message">{{ successMessage }}</div>
-
-            <!-- Content -->
-            <div v-if="!isLoading && !error" class="korelasi-content">
-              <p>
-                Halaman ini digunakan untuk mengelola korelasi antara Profil Lulusan (PL) dan 
-                Capaian Pembelajaran Lulusan (CPL) pada {{ kurikulumData.nama }}.
-              </p>
-              
-              <div class="korelasi-grid">
-                <!-- Daftar PL -->
-                <div class="pl-list-container">
-                  <h4>Profil Lulusan</h4>
-                  <div v-if="profilLulusanList.length === 0" class="empty-state">
-                    Belum ada data Profil Lulusan.
-                  </div>
-                  <ul v-else class="pl-list">
-                    <li 
-                      v-for="pl in profilLulusanList" 
-                      :key="pl.id_pl" 
-                      :class="{ 'selected': selectedPL && pl.id_pl === selectedPL.id_pl }"
-                      @click="selectPL(pl)"
-                    >
-                      <strong>{{ pl.id_pl }}</strong>: {{ pl.deskripsi }}
-                    </li>
-                  </ul>
+          <!-- Detail Korelasi -->
+          <div class="korelasi-detail">
+            <template v-if="selectedPL">
+              <h4>CPL yang terkait dengan {{ selectedPL.id_pl }}</h4>
+              <div class="assigned-cpl">
+                <div v-if="getAssignedCPLs(selectedPL.id_pl).length === 0" class="empty-state">
+                  Belum ada CPL yang terkait dengan Profil Lulusan ini.
                 </div>
-                
-                <!-- Detail Korelasi -->
-                <div class="korelasi-detail">
-                  <template v-if="selectedPL">
-                    <h4>CPL yang terkait dengan {{ selectedPL.id_pl }}</h4>
-                    <div class="assigned-cpl">
-                      <div v-if="getAssignedCPLs(selectedPL.id_pl).length === 0" class="empty-state">
-                        Belum ada CPL yang terkait dengan Profil Lulusan ini.
+                <table v-else class="cpl-table">
+                  <thead>
+                    <tr>
+                      <th>ID CPL</th>
+                      <th>Deskripsi</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="cpl in getAssignedCPLs(selectedPL.id_pl)" :key="cpl.id_cpl">
+                      <td>{{ cpl.id_cpl }}</td>
+                      <td>{{ cpl.deskripsi }}</td>
+                      <td>
+                        <button class="btn-delete" @click="removeCPLFromPL(cpl)">
+                          Hapus Korelasi
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Tambah CPL ke PL -->
+              <div class="add-cpl-section">
+                <h4>Tambahkan CPL ke {{ selectedPL.id_pl }}</h4>
+                <div v-if="unassignedCPLs.length === 0" class="empty-state">
+                  Tidak ada CPL yang tersedia untuk ditambahkan.
+                </div>
+                <div v-else>
+                  <div class="cpl-selection">
+                    <div
+                      v-for="cpl in unassignedCPLs"
+                      :key="cpl.id_cpl"
+                      class="cpl-selection-item"
+                      :class="{ selected: selectedCPLs.includes(cpl.id_cpl) }"
+                      @click="toggleCPLSelection(cpl.id_cpl)"
+                    >
+                      <div class="checkbox">
+                        <input
+                          type="checkbox"
+                          :id="`cpl-${cpl.id_cpl}`"
+                          :checked="selectedCPLs.includes(cpl.id_cpl)"
+                          @change="toggleCPLSelection(cpl.id_cpl)"
+                        />
                       </div>
-                      <table v-else class="cpl-table">
-                        <thead>
-                          <tr>
-                            <th>ID CPL</th>
-                            <th>Deskripsi</th>
-                            <th>Aksi</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr v-for="cpl in getAssignedCPLs(selectedPL.id_pl)" :key="cpl.id_cpl">
-                            <td>{{ cpl.id_cpl }}</td>
-                            <td>{{ cpl.deskripsi }}</td>
-                            <td>
-                              <button class="btn-delete" @click="removeCPLFromPL(cpl)">Hapus Korelasi</button>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                    
-                    <!-- Tambah CPL ke PL -->
-                    <div class="add-cpl-section">
-                      <h4>Tambahkan CPL ke {{ selectedPL.id_pl }}</h4>
-                      <div v-if="unassignedCPLs.length === 0" class="empty-state">
-                        Tidak ada CPL yang tersedia untuk ditambahkan.
-                      </div>
-                      <div v-else>
-                        <div class="cpl-selection">
-                          <div 
-                            v-for="cpl in unassignedCPLs" 
-                            :key="cpl.id_cpl" 
-                            class="cpl-selection-item"
-                            :class="{ 'selected': selectedCPLs.includes(cpl.id_cpl) }"
-                            @click="toggleCPLSelection(cpl.id_cpl)"
-                          >
-                            <div class="checkbox">
-                              <input 
-                                type="checkbox" 
-                                :id="`cpl-${cpl.id_cpl}`" 
-                                :checked="selectedCPLs.includes(cpl.id_cpl)"
-                                @change="toggleCPLSelection(cpl.id_cpl)"
-                              />
-                            </div>
-                            <div class="cpl-info">
-                              <strong>{{ cpl.id_cpl }}</strong>: {{ cpl.deskripsi }}
-                            </div>
-                          </div>
-                        </div>
-                        <div class="form-actions">
-                          <button 
-                            class="btn-save" 
-                            @click="addCPLToPL" 
-                            :disabled="selectedCPLs.length === 0"
-                          >
-                            Tambahkan CPL ke {{ selectedPL.id_pl }}
-                          </button>
-                        </div>
+                      <div class="cpl-info">
+                        <strong>{{ cpl.id_cpl }}</strong
+                        >: {{ cpl.deskripsi }}
                       </div>
                     </div>
-                  </template>
-                  
-                  <div v-else class="select-pl-prompt">
-                    Silakan pilih Profil Lulusan dari daftar di sebelah kiri untuk melihat atau mengelola korelasi.
+                  </div>
+                  <div class="form-actions">
+                    <button
+                      class="btn-save"
+                      @click="addCPLToPL"
+                      :disabled="selectedCPLs.length === 0"
+                    >
+                      Tambahkan CPL ke {{ selectedPL.id_pl }}
+                    </button>
                   </div>
                 </div>
               </div>
+            </template>
+
+            <div v-else class="select-pl-prompt">
+              Silakan pilih Profil Lulusan dari daftar di sebelah kiri untuk melihat atau mengelola
+              korelasi.
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <Footer />
 </template>
 
 <style scoped>
-.dash-container {
-  display: flex;
-  min-height: 100vh;
-}
-
-.main-content {
-  flex: 1;
-  margin-left: 256px; /* Same as sidebar width */
-  display: flex;
-  flex-direction: column;
-}
-
-.dashboard {
-  padding: 20px;
-  flex: 1;
-  padding-top: 90px; /* Adjusted for new header height */
-}
-
 .korelasi-container {
-  max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -310,7 +286,8 @@ onMounted(() => {
   border-radius: 8px;
   padding: 20px;
   background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
 }
 
 .section-header {
@@ -372,7 +349,7 @@ onMounted(() => {
 
 .pl-list li.selected {
   background-color: #e3f2fd;
-  border-color: #2196F3;
+  border-color: #2196f3;
 }
 
 .korelasi-detail {

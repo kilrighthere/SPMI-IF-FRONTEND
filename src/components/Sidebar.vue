@@ -69,7 +69,6 @@ const kurikulumId = computed(() => route.params.id)
 .sidebar {
   background-color: var(--color-sidebar);
   width: 230px;
-  box-shadow: 0px 0px 5px 1px rgb(154, 154, 154);
   z-index: 50; /* Lower than header (100) */
   position: fixed;
   left: 20px;
@@ -79,6 +78,8 @@ const kurikulumId = computed(() => route.params.id)
   border-radius: 20px;
   box-sizing: border-box;
   overflow: auto;
+  box-shadow: 0px 0px 15px 0px rgba(33, 33, 33, 0.269);
+
 }
 
 .submenu {

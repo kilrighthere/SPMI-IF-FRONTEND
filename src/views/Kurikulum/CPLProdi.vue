@@ -1,8 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import Footer from '@/components/Footer.vue'
-import Header from '@/components/Header.vue'
-import Sidebar from '@/components/Sidebar.vue'
+// Removed Header, Sidebar, Footer imports as they're already in the parent component
 
 // Import store CPL
 import { useCPLStore } from '@/stores/cpl'
@@ -20,7 +18,7 @@ const error = computed(() => cplStore.error)
 const form = ref({
   id_cpl: '',
   deskripsi: '',
-  id_pl: 'PL001' // Default ke PL001 karena di halaman ini tidak mengelola korelasi
+  id_pl: 'PL001', // Default ke PL001 karena di halaman ini tidak mengelola korelasi
 })
 
 const isEditing = ref(false)
@@ -73,101 +71,75 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="dash-container">
-    <div class="main-content">
-      <div class="dashboard">
-        <div class="cpl-container">
-          <div class="section-box">
-            <div class="section-header">
-              <h3>Capaian Pembelajaran Lulusan (CPL) Program Studi</h3>
-              <button class="btn-add" @click="showForm = !showForm">
-                {{ showForm ? 'Batal' : 'Tambah CPL' }}
-              </button>
-            </div>
-            
-            <!-- Form tambah/edit CPL -->
-            <div v-if="showForm" class="form-container">
-              <div class="form-group">
-                <label>ID CPL</label>
-                <input type="text" v-model="form.id_cpl" placeholder="ID CPL (contoh: CPL001)" />
-              </div>
-              <div class="form-group">
-                <label>Deskripsi</label>
-                <textarea v-model="form.deskripsi" placeholder="Deskripsi CPL"></textarea>
-              </div>
-              <div class="form-actions">
-                <button class="btn-save" @click="saveCPL">
-                  {{ isEditing ? 'Update' : 'Simpan' }}
-                </button>
-                <button v-if="isEditing" class="btn-cancel" @click="resetForm">Batal</button>
-              </div>
-            </div>
+  <div class="cpl-container">
+    <div class="section-box">
+      <div class="section-header">
+        <h3>Capaian Pembelajaran Lulusan (CPL) Program Studi</h3>
+        <button class="btn-add" @click="showForm = !showForm">
+          {{ showForm ? 'Batal' : 'Tambah CPL' }}
+        </button>
+      </div>
 
-            <!-- Loading indicator -->
-            <div v-if="isLoading" class="loading">Loading...</div>
-            
-            <!-- Error message -->
-            <div v-if="error" class="error-message">{{ error }}</div>
-
-            <!-- CPL Content -->
-            <div v-if="!isLoading && !error">
-              <p>
-                Capaian Pembelajaran Lulusan (CPL) untuk {{ kurikulumData.nama }} mencakup beberapa
-                kompetensi yang harus dikuasai oleh lulusan program studi.
-              </p>
-              
-              <div v-if="cplList.length === 0" class="empty-state">
-                Belum ada data CPL.
-              </div>
-              
-              <table v-else class="cpl-table">
-                <thead>
-                  <tr>
-                    <th>ID CPL</th>
-                    <th>Deskripsi</th>
-                    <th>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="cpl in cplList" :key="cpl.id_cpl">
-                    <td>{{ cpl.id_cpl }}</td>
-                    <td>{{ cpl.deskripsi }}</td>
-                    <td class="action-buttons">
-                      <button class="btn-edit" @click="editCPL(cpl)">Edit</button>
-                      <button class="btn-delete" @click="removeCPL(cpl.id_cpl)">Hapus</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+      <!-- Form tambah/edit CPL -->
+      <div v-if="showForm" class="form-container">
+        <div class="form-group">
+          <label>ID CPL</label>
+          <input type="text" v-model="form.id_cpl" placeholder="ID CPL (contoh: CPL001)" />
         </div>
+        <div class="form-group">
+          <label>Deskripsi</label>
+          <textarea v-model="form.deskripsi" placeholder="Deskripsi CPL"></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn-save" @click="saveCPL">
+            {{ isEditing ? 'Update' : 'Simpan' }}
+          </button>
+          <button v-if="isEditing" class="btn-cancel" @click="resetForm">Batal</button>
+        </div>
+      </div>
+
+      <!-- Loading indicator -->
+      <div v-if="isLoading" class="loading">Loading...</div>
+
+      <!-- Error message -->
+      <div v-if="error" class="error-message">{{ error }}</div>
+
+      <!-- CPL Content -->
+      <div v-if="!isLoading && !error">
+        <p>
+          Capaian Pembelajaran Lulusan (CPL) untuk {{ kurikulumData.nama }} mencakup beberapa
+          kompetensi yang harus dikuasai oleh lulusan program studi.
+        </p>
+
+        <div v-if="cplList.length === 0" class="empty-state">Belum ada data CPL.</div>
+
+        <table v-else class="cpl-table">
+          <thead>
+            <tr>
+              <th>ID CPL</th>
+              <th>Deskripsi</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="cpl in cplList" :key="cpl.id_cpl">
+              <td>{{ cpl.id_cpl }}</td>
+              <td>{{ cpl.deskripsi }}</td>
+              <td class="action-buttons">
+                <button class="btn-edit" @click="editCPL(cpl)">Edit</button>
+                <button class="btn-delete" @click="removeCPL(cpl.id_cpl)">Hapus</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.dash-container {
-  display: flex;
-  min-height: 100vh;
-}
-
-.main-content {
-  flex: 1;
-  margin-left: 256px; /* Same as sidebar width */
-  display: flex;
-  flex-direction: column;
-}
-
-.dashboard {
-  padding: 20px;
-  flex: 1;
-  padding-top: 90px; /* Adjusted for new header height */
-}
-
 .cpl-container {
-  max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -176,7 +148,8 @@ onMounted(() => {
   border-radius: 8px;
   padding: 20px;
   background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
 }
 
 .section-header {
@@ -283,7 +256,7 @@ onMounted(() => {
 }
 
 .btn-edit {
-  background-color: #2196F3;
+  background-color: #2196f3;
   color: white;
   border: none;
   padding: 5px 10px;

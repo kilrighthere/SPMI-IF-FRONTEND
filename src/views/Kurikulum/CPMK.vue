@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { kurikulumData } from '@/stores/kurikulum'
 
 // Import stores
 import { useCPMKStore } from '@/stores/cpmk'
@@ -13,13 +14,20 @@ const cplStore = useCPLStore()
 const cpmkList = computed(() => cpmkStore.cpmkList)
 const cplList = computed(() => cplStore.cplList)
 const isLoading = computed(() => cpmkStore.isLoading || cplStore.isLoading)
-const error = computed(() => cpmkStore.error || cplStore.error)
+const error = ref('') // Mengubah dari computed ke ref untuk kontrol lebih baik
 
 // Form untuk tambah/edit CPMK - sesuai format baru
 const form = ref({
   id_cpmk: '',
   deskripsi: '',
   id_cpl: '',
+})
+
+// Form validation state
+const formErrors = ref({
+  id_cpmk: '',
+  deskripsi: '',
+  id_cpl: ''
 })
 
 const isEditing = ref(false)
@@ -35,9 +43,40 @@ const fetchCPL = async () => {
   await cplStore.fetchAllCPL()
 }
 
+// Validasi form sebelum submit
+const validateForm = () => {
+  let isValid = true
+  formErrors.value = { id_cpmk: '', deskripsi: '', id_cpl: '' }
+  
+  if (!form.value.id_cpmk.trim()) {
+    formErrors.value.id_cpmk = 'ID CPMK tidak boleh kosong'
+    isValid = false
+  }
+  
+  if (!form.value.deskripsi.trim()) {
+    formErrors.value.deskripsi = 'Deskripsi tidak boleh kosong'
+    isValid = false
+  }
+  
+  if (!form.value.id_cpl) {
+    formErrors.value.id_cpl = 'CPL harus dipilih'
+    isValid = false
+  }
+  
+  return isValid
+}
+
 // Tambah CPMK baru menggunakan store
 const saveCPMK = async () => {
   try {
+    // Reset error message first
+    error.value = ''
+    
+    // Validate form before submission
+    if (!validateForm()) {
+      return // Stop if validation fails
+    }
+    
     if (isEditing.value) {
       await cpmkStore.editCPMK(form.value.id_cpmk, form.value)
     } else {
@@ -46,6 +85,7 @@ const saveCPMK = async () => {
     resetForm()
   } catch (err) {
     console.error('Error saving CPMK:', err)
+    error.value = isEditing.value ? 'Gagal mengupdate data' : 'Gagal menambah data'
   }
 }
 
@@ -54,6 +94,12 @@ const editCPMK = (cpmk) => {
   form.value = { ...cpmk }
   isEditing.value = true
   showForm.value = true
+  
+  // Scroll ke bagian atas halaman dimana form berada
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth',
+  })
 }
 
 // Hapus CPMK
@@ -63,11 +109,18 @@ const removeCPMK = async (id) => {
   }
 }
 
-// Reset form
+// Reset form dan pesan error
 const resetForm = () => {
   form.value = { id_cpmk: '', deskripsi: '', id_cpl: '' }
+  formErrors.value = { id_cpmk: '', deskripsi: '', id_cpl: '' }
+  error.value = ''
   isEditing.value = false
   showForm.value = false
+}
+
+// Hapus pesan error saja (tetap simpan data form)
+const clearError = () => {
+  error.value = ''
 }
 
 // Mendapatkan nama CPL berdasarkan ID

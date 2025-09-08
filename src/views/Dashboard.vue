@@ -35,6 +35,7 @@ import Sidebar from '@/components/Sidebar.vue';
     flex-direction: column;
     /* border: 3px solid brown; */
     padding: 0px 20px;
+    
 }
 
 .dash{
@@ -46,5 +47,6 @@ import Sidebar from '@/components/Sidebar.vue';
     padding-bottom: 50px; /* Add bottom padding for footer space */
     border-radius: 20px;
     border: 2px solid var(--color-border2);
+    box-shadow: 0px 0px 15px 0px rgba(33, 33, 33, 0.269);
 }
 </style>
