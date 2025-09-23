@@ -4,12 +4,16 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   // Timeout untuk request jika terlalu lama tidak ada respons
   timeout: 10000,
+  withCredentials: true,
   // Headers default untuk request
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  }
+    Accept: 'application/json',
+  },
 })
+
+// Export the axios instance so other modules can adjust defaults (e.g. set Authorization header)
+export { api as axiosInstance }
 
 // Menambahkan interceptor untuk menangani token dan error
 api.interceptors.request.use(
@@ -23,7 +27,7 @@ api.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error)
-  }
+  },
 )
 
 // Tambahkan interceptor untuk handling response
@@ -38,14 +42,59 @@ api.interceptors.response.use(
       console.warn('Network error detected. Using fallback data.')
       // Tidak perlu menampilkan alert, biarkan fallback data berjalan
     }
-    
+
+    // Jika server mengembalikan 401, biarkan interceptor refresh menangani
+    const originalRequest = error.config
+    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+      // Jika belum ada mekanisme refresh dipicu -> panggil /refresh
+      // Implementasi queue supaya hanya satu request refresh berjalan dan request lain menunggu
+      if (!api.isRefreshing) {
+        api.isRefreshing = true
+        api._refreshSubscribers = []
+        return api
+          .post('/refresh')
+          .then((res) => {
+            const newToken = res.data?.accessToken
+            // Simpan token ke localStorage agar interceptor request selanjutnya membawa header
+            if (newToken) localStorage.setItem('token', newToken)
+            // update Authorization header default
+            api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
+            // jalankan semua subscriber
+            api._refreshSubscribers.forEach((cb) => cb(newToken))
+            api._refreshSubscribers = []
+            api.isRefreshing = false
+            // retry original request
+            originalRequest.headers['Authorization'] = `Bearer ${newToken}`
+            return api(originalRequest)
+          })
+          .catch((refreshError) => {
+            api.isRefreshing = false
+            api._refreshSubscribers = []
+            // jika refresh gagal, forward error agar store/router bisa menangani logout
+            return Promise.reject(refreshError)
+          })
+      }
+
+      // Jika sedang melakukan refresh, queue request untuk dijalankan setelah selesai
+      return new Promise((resolve, reject) => {
+        api._refreshSubscribers.push((token) => {
+          originalRequest._retry = true
+          originalRequest.headers['Authorization'] = `Bearer ${token}`
+          resolve(api(originalRequest))
+        })
+      })
+    }
+
     // Log error untuk debugging
     console.error('API Error:', error)
-    
+
     // Kembalikan error untuk dihandle di store
     return Promise.reject(error)
-  }
+  },
 )
+
+// Export helper untuk manual refresh (jika diperlukan di auth store)
+export const refreshToken = () => api.post('/refresh')
 
 // Auth
 export const login = (data) => api.post('/login', data)
@@ -145,5 +194,5 @@ export default {
   getStrukturMKById,
   addStrukturMK,
   updateStrukturMK,
-  deleteStrukturMK
+  deleteStrukturMK,
 }
