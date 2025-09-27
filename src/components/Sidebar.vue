@@ -75,10 +75,11 @@ const kurikulumId = computed(() => route.params.id)
   top: 80px; /* Match header height */
   bottom: 70px;
   padding: 0 20px;
-  border-radius: 10px;
+  border-radius: 12px;
   box-sizing: border-box;
   overflow: auto;
   box-shadow: 0px 0px 15px 0px rgba(33, 33, 33, 0.269);
+
 }
 
 .submenu {
