@@ -10,13 +10,22 @@ import './assets/fonts.js'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { useAuthStore } from '@/stores/auth'
 
 import App from './App.vue'
 import router from './router'
 
+// Create app and single Pinia instance (avoid creating Pinia twice)
 const app = createApp(App)
-
-app.use(createPinia())
+const pinia = createPinia()
+app.use(pinia)
 app.use(router)
 
-app.mount('#app')
+// Initialize authentication state on startup. We attempt to refresh the access token
+// using a httpOnly refresh cookie if no token is present in localStorage. Do this
+// before mounting so route guards have the correct auth state.
+const auth = useAuthStore()
+auth.checkAuth().finally(() => {
+  // Mount the app regardless of auth outcome (router guards will redirect if needed)
+  app.mount('#app')
+})

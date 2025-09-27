@@ -3,47 +3,29 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Footer from '../components/Footer.vue'
 import Header from '@/components/Header.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const username = ref('')
 const password = ref('')
-const errorMsg = ref('')
 const router = useRouter()
+const auth = useAuthStore()
 
 async function loginHandler(e) {
   e.preventDefault()
-  errorMsg.value = ''
+  auth.error = null
 
-  /* DUMMY LOGIN */
-  if (username.value === 'admin' && password.value === '1234') {
-    router.push('/dashboard')
-  } else {
-    errorMsg.value = 'Username atau password salah'
+  if (!username.value || !password.value) {
+    auth.error = 'Username dan password wajib diisi'
+    return
   }
 
-  //   try {
-  //     const res = await fetch('#', {
-  //       method: 'POST',
-  //       headers: { 'Content-Type': 'application/json' },
-  //       body: JSON.stringify({
-  //         username: username.value,
-  //         password: password.value
-  //       })
-  //     })
-
-  //     const data = await res.json()
-
-  //     if (res.ok && data.success) {
-  //       // Simpan token (misalnya JWT)
-  //       localStorage.setItem('token', data.token)
-
-  //       // Redirect ke dashboard
-  //       router.push('/dashboard')
-  //     } else {
-  //       errorMsg.value = data.message || 'Login gagal'
-  //     }
-  //   } catch (err) {
-  //     errorMsg.value = 'Terjadi kesalahan jaringan'
-  //   }
+  const res = await auth.login({ nip: username.value, password: password.value })
+  if (res.success) {
+    router.push('/dashboard')
+  } else {
+    // auth.error already set inside store
+    // nothing else to do
+  }
 }
 </script>
 
@@ -53,7 +35,7 @@ async function loginHandler(e) {
     <div class="container-login">
       <div class="login-part">
         <div class="card-login">
-          <form @submit="loginHandler" class="form-login">
+          <form @submit="loginHandler" class="form-login" method="post">
             <div class="header-form">
               <h2>User Login</h2>
             </div>
@@ -82,10 +64,13 @@ async function loginHandler(e) {
                   />
                 </div>
               </div>
-              <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
+              <p v-if="auth.error" class="error">{{ auth.error }}</p>
             </div>
             <div class="submit">
-              <button type="submit" class="btn btn-primary">Sign In</button>
+              <button type="submit" class="btn btn-primary" :disabled="auth.isLoading">
+                <span v-if="auth.isLoading">Signing in...</span>
+                <span v-else>Sign In</span>
+              </button>
             </div>
           </form>
         </div>
@@ -99,8 +84,7 @@ async function loginHandler(e) {
 </template>
 
 <style>
-
-.all-contain{
+.all-contain {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -203,5 +187,4 @@ async function loginHandler(e) {
 .form-login button:hover {
   background-color: var(--color-button-hover);
 }
-
 </style>
