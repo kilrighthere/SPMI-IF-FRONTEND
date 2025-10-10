@@ -103,9 +103,10 @@ function togglePasswordVisibility() {
                     name="Password"
                     id="Password"
                     placeholder="Enter your password"
-                    class="form-input"
+                    class="form-input password-input"
                   />
                   <button
+                    v-if="password"
                     type="button"
                     @click="togglePasswordVisibility"
                     class="password-toggle"
@@ -145,10 +146,9 @@ function togglePasswordVisibility() {
                     </svg>
                   </button>
                 </div>
-              </div>
-
-              <div class="forgot-password-container">
-                <a href="#" class="forgot-password">Forgot password?</a>
+                <div class="forgot-password-container">
+                  <a href="#" class="forgot-password">Forgot password?</a>
+                </div>
               </div>
 
               <p v-if="auth.error" class="error-message">
@@ -221,7 +221,7 @@ function togglePasswordVisibility() {
   flex-direction: column;
   justify-content: space-between;
   min-height: 100vh;
-  background-color:var(--color-background);
+  background-color: var(--color-background);
 }
 
 .container-login {
@@ -334,7 +334,7 @@ function togglePasswordVisibility() {
 .main-form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .input-group {
@@ -354,6 +354,7 @@ function togglePasswordVisibility() {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
 .input-icon {
@@ -377,6 +378,10 @@ function togglePasswordVisibility() {
   box-sizing: border-box;
 }
 
+.password-input {
+  padding-right: 44px;
+}
+
 .form-input:focus {
   outline: none;
   border-color: var(--color-button);
@@ -390,27 +395,34 @@ function togglePasswordVisibility() {
 
 .password-toggle {
   position: absolute;
-  right: 14px;
+  right: 12px;
   background: none;
   border: none;
   color: #9ca3af;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: color 0.2s ease;
+  z-index: 2;
+  border-radius: 6px;
 }
 
 .password-toggle:hover {
   color: var(--color-text);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.password-toggle:active {
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 /* Form Options */
 .forgot-password-container {
   display: flex;
   justify-content: flex-end;
-  margin-top: -8px;
+  margin-top: 4px;
 }
 
 .forgot-password {
@@ -438,7 +450,7 @@ function togglePasswordVisibility() {
   padding: 12px 16px;
   border-radius: 10px;
   border-left: 3px solid var(--color-button);
-  margin-top: -8px;
+  line-height: 1.4;
 }
 
 /* Submit Section */
