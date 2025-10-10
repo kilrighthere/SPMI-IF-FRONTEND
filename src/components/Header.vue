@@ -65,72 +65,82 @@ onUnmounted(() => {
 
 <template>
   <header :class="['header', variantClass]">
-    <div class="header-content">
-      <div class="header-left">
-        <img src="../assets/Undip.png" alt="Logo Undip" class="header-logo" />
-        <h2 class="title">Outcome-Based Education Learning Integration and Knowledge System</h2>
-      </div>
-
-      <!-- User Navigation (only show if authenticated and not on login page) -->
-      <div v-if="auth.isAuthenticated && variant !== 'login'" class="header-right">
-        <div class="user-nav" ref="dropdownRef">
-          <button @click="toggleDropdown" class="user-button" :class="{ active: isDropdownOpen }">
-            <div class="user-avatar">
-              {{ userInitials }}
+    <div class="header-container">
+      <div class="header-content">
+        <div class="header-left">
+          <div class="logo-section">
+            <img src="../assets/Undip.png" alt="Logo Undip" class="header-logo" />
+            <div class="brand-info">
+              <h1 class="brand-title">OBELIKS</h1>
+              <p class="brand-subtitle">Departemen Informatika</p>
             </div>
-            <span class="user-name">{{ auth.user?.nama || 'User' }}</span>
-            <svg
-              class="chevron-icon"
-              :class="{ rotate: isDropdownOpen }"
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </button>
+          </div>
+        </div>
 
-          <!-- Dropdown Menu -->
-          <transition name="dropdown">
-            <div v-if="isDropdownOpen" class="dropdown-menu">
-              <div class="dropdown-header">
-                <div class="dropdown-avatar">
-                  {{ userInitials }}
-                </div>
-                <div class="dropdown-user-info">
-                  <p class="dropdown-name">{{ auth.user?.nama || 'User' }}</p>
-                  <p class="dropdown-nip">NIP: {{ auth.user?.nip || '-' }}</p>
-                </div>
+        <!-- User Navigation (only show if authenticated and not on login page) -->
+        <div v-if="auth.isAuthenticated && variant !== 'login'" class="header-right">
+          <div class="user-nav" ref="dropdownRef">
+            <button @click="toggleDropdown" class="user-button" :class="{ active: isDropdownOpen }">
+              <div class="user-avatar">
+                {{ userInitials }}
               </div>
+              <div class="user-info">
+                <span class="user-name">{{ auth.user?.nama || 'User' }}</span>
+                <span class="user-role">Dosen</span>
+              </div>
+              <svg
+                class="chevron-icon"
+                :class="{ rotate: isDropdownOpen }"
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
 
-              <div class="dropdown-divider"></div>
+            <!-- Dropdown Menu -->
+            <transition name="dropdown">
+              <div v-if="isDropdownOpen" class="dropdown-menu">
+                <div class="dropdown-header">
+                  <div class="dropdown-avatar">
+                    {{ userInitials }}
+                  </div>
+                  <div class="dropdown-user-info">
+                    <p class="dropdown-name">{{ auth.user?.nama || 'User' }}</p>
+                    <p class="dropdown-nip">NIP: {{ auth.user?.nip || '-' }}</p>
+                  </div>
+                </div>
 
-              <button @click="handleLogout" class="dropdown-item logout-item">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                  <polyline points="16 17 21 12 16 7"></polyline>
-                  <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-                <span>Logout</span>
-              </button>
-            </div>
-          </transition>
+                <div class="dropdown-divider"></div>
+
+                <button @click="handleLogout" class="dropdown-item logout-item">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                  </svg>
+                  <span>Logout</span>
+                </button>
+              </div>
+            </transition>
+          </div>
         </div>
       </div>
     </div>
@@ -138,70 +148,95 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.header-default {
-  height: 60px;
-  padding: 25px 20px;
-  background-color: var(--color-header);
+/* Header Base Styles */
+.header {
+  background-color: white;
   position: fixed;
   left: 0;
   right: 0;
   top: 0;
   z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.119);
+  border-bottom: 1px solid #e5e7eb;
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.95);
+  transition: all 0.3s ease;
 }
 
-.header-content {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  flex: 1;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
+.header-default {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .header-login {
-  height: 60px;
-  padding: 25px 20px;
-  background-color: var(--color-header);
   position: relative;
-  left: 0;
-  right: 0;
-  top: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.119);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.header-container {
+  width: 100%;
+  margin: 0;
+  padding: 0 20px;
   box-sizing: border-box;
 }
 
-.header-logo {
-  width: 45px;
-  height: auto;
-  margin-right: 15px;
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 72px;
+  gap: 24px;
 }
 
-.title {
+/* Left Section */
+.header-left {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-logo {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.brand-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.brand-title {
+  font-size: 22px;
+  font-weight: 700;
   color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
   margin: 0;
-  font-size: 16px;
-  letter-spacing: 0.2px;
+  letter-spacing: -0.6px;
+  line-height: 1.1;
+}
+
+.brand-subtitle {
+  font-size: 13.5px;
   font-weight: 500;
-  font-family: 'Montserrat';
+  color: #6b7280;
+  font-family: 'Montserrat', sans-serif;
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Right Section */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 /* User Navigation Styles */
@@ -213,73 +248,103 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 14px;
-  background-color: transparent;
+  padding: 7px 12px 7px 7px;
+  background-color: white;
   border: 1.5px solid #e5e7eb;
-  border-radius: 12px;
+  border-radius: 11px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   font-family: 'Montserrat', sans-serif;
   color: var(--color-text);
+  min-width: 0;
 }
 
 .user-button:hover {
   background-color: #f9fafb;
   border-color: #d1d5db;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .user-button.active {
-  background-color: #f9fafb;
+  background-color: white;
   border-color: var(--color-button);
-  box-shadow: 0 0 0 3px rgba(218, 42, 45, 0.1);
+  box-shadow: 0 0 0 3px rgba(218, 42, 45, 0.08);
 }
 
 .user-avatar {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--color-button) 0%, var(--color-button-hover) 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   font-family: 'Montserrat', sans-serif;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(218, 42, 45, 0.25);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: first baseline;
+  gap: 2px;
+  min-width: 0;
+  max-width: 160px;
 }
 
 .user-name {
   font-size: 14px;
-  font-weight: 500;
-  max-width: 150px;
+  font-weight: 600;
+  color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.user-role {
+  font-size: 12px;
+  font-weight: 400;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
 .chevron-icon {
-  color: #6b7280;
-  transition: transform 0.3s ease;
+  color: #9ca3af;
+  transition:
+    transform 0.3s ease,
+    color 0.2s ease;
   flex-shrink: 0;
+  margin-left: auto;
+}
+
+.user-button:hover .chevron-icon {
+  color: #6b7280;
 }
 
 .chevron-icon.rotate {
   transform: rotate(180deg);
+  color: var(--color-button);
 }
 
 /* Dropdown Menu */
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 10px);
   right: 0;
-  min-width: 280px;
+  min-width: 300px;
   background-color: white;
-  border-radius: 12px;
+  border-radius: 16px;
   box-shadow:
-    0 10px 40px rgba(0, 0, 0, 0.12),
-    0 2px 8px rgba(0, 0, 0, 0.08);
+    0 20px 60px rgba(0, 0, 0, 0.15),
+    0 0 1px rgba(0, 0, 0, 0.1);
   border: 1px solid #e5e7eb;
   overflow: hidden;
   z-index: 1000;
@@ -288,25 +353,26 @@ onUnmounted(() => {
 .dropdown-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
+  gap: 14px;
+  padding: 20px;
   background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+  border-bottom: 1px solid #fee2e2;
 }
 
 .dropdown-avatar {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--color-button) 0%, var(--color-button-hover) 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
   font-family: 'Montserrat', sans-serif;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(218, 42, 45, 0.3);
+  box-shadow: 0 4px 16px rgba(218, 42, 45, 0.3);
 }
 
 .dropdown-user-info {
@@ -315,14 +381,15 @@ onUnmounted(() => {
 }
 
 .dropdown-name {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   color: var(--color-text);
   font-family: 'Montserrat', sans-serif;
   margin: 0 0 4px 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
 .dropdown-nip {
@@ -330,11 +397,12 @@ onUnmounted(() => {
   color: #6b7280;
   font-family: 'Montserrat', sans-serif;
   margin: 0;
+  line-height: 1.3;
 }
 
 .dropdown-divider {
   height: 1px;
-  background-color: #e5e7eb;
+  background-color: #f3f4f6;
   margin: 0;
 }
 
@@ -342,15 +410,15 @@ onUnmounted(() => {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
+  gap: 12px;
+  padding: 14px 20px;
   background: none;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: 'Montserrat', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   text-align: left;
 }
 
@@ -368,7 +436,7 @@ onUnmounted(() => {
 
 /* Dropdown Animation */
 .dropdown-enter-active {
-  animation: dropdown-in 0.3s ease-out;
+  animation: dropdown-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .dropdown-leave-active {
@@ -378,7 +446,7 @@ onUnmounted(() => {
 @keyframes dropdown-in {
   0% {
     opacity: 0;
-    transform: translateY(-10px) scale(0.95);
+    transform: translateY(-12px) scale(0.96);
   }
   100% {
     opacity: 1;
@@ -393,42 +461,114 @@ onUnmounted(() => {
   }
   100% {
     opacity: 0;
-    transform: translateY(-10px) scale(0.95);
+    transform: translateY(-8px) scale(0.98);
   }
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
-  .title {
-    font-size: 14px;
+@media (max-width: 992px) {
+  .header-container {
+    padding: 0 20px;
   }
 
-  .user-name {
+  .header-content {
+    height: 66px;
+  }
+
+  .brand-title {
+    font-size: 20px;
+  }
+
+  .brand-subtitle {
+    font-size: 13px;
+  }
+
+  .user-info {
+    max-width: 140px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    padding: 0 16px;
+  }
+
+  .header-content {
+    height: 60px;
+  }
+
+  .header-logo {
+    width: 42px;
+    height: 42px;
+  }
+
+  .brand-title {
+    font-size: 18px;
+  }
+
+  .brand-subtitle {
+    font-size: 12px;
+  }
+
+  .user-info {
     display: none;
   }
 
   .user-button {
-    padding: 8px;
+    padding: 6px;
   }
 
   .dropdown-menu {
-    min-width: 260px;
+    min-width: 280px;
   }
 }
 
 @media (max-width: 480px) {
-  .title {
-    font-size: 12px;
+  .header-container {
+    padding: 0 12px;
+  }
+
+  .header-content {
+    height: 56px;
+    gap: 12px;
+  }
+
+  .logo-section {
+    gap: 10px;
   }
 
   .header-logo {
-    width: 35px;
-    margin-right: 10px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .brand-title {
+    font-size: 15px;
+  }
+
+  .brand-subtitle {
+    font-size: 10px;
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
   }
 
   .dropdown-menu {
-    right: -10px;
-    min-width: 240px;
+    right: -8px;
+    min-width: 260px;
+  }
+
+  .dropdown-header {
+    padding: 16px;
+  }
+
+  .dropdown-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
   }
 }
 </style>
