@@ -22,7 +22,7 @@
     <header  :class="['header', variantClass]">
         <div class="header-content">
             <img src="../assets/Undip.png" alt="Logo Undip" class="header-logo" />
-            <h2 class="title">Sistem Penjaminan Mutu Internal Departemen Informatika</h2>
+            <h2 class="title">Outcome-Based Education Learning Integration and Knowledge System</h2>
         </div>
     </header>
 </template>

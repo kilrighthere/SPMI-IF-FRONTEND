@@ -133,6 +133,7 @@ q:after {
 
 :root {
   --color-background: var(--spmi-c-white);
+  --color-background2: var(--spmi-c-dgray);
   --color-header: var(--spmi-c-white);
   --color-sidebar: var(--spmi-c-red3);
   --color-button: var(--spmi-c-red);

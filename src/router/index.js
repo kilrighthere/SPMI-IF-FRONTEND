@@ -14,17 +14,17 @@ import UkurCPL from '@/views/Kurikulum/UkurCPL.vue'
 
 const routes = [
   { path: '/', redirect: '/login' },
-  { path: '/login', component: Login, meta: { title: 'Login - Sistem Informasi' } },
+  { path: '/login', component: Login, meta: { title: 'Login' } },
   {
     path: '/dashboard',
     component: Dashboard,
-    meta: { title: 'Dashboard - Sistem Informasi', requiresAuth: true },
+    meta: { title: 'Dashboard', requiresAuth: true },
   },
-  { path: '/kurikulum', component: Kurikulum, meta: { title: 'Kurikulum - Sistem Informasi' } },
+  { path: '/kurikulum', component: Kurikulum, meta: { title: 'Kurikulum' } },
   {
     path: '/kurikulum/:id',
     component: DetailKur,
-    meta: { title: 'Detail Kurikulum - Sistem Informasi', requiresAuth: true },
+    meta: { title: 'Detail Kurikulum', requiresAuth: true },
     children: [
       { path: '', redirect: 'profil-lulusan' },
       {
@@ -74,7 +74,7 @@ const router = createRouter({
 
 // ganti title tab browser sesuai route dan proteksi route yang membutuhkan auth
 router.beforeEach(async (to, from, next) => {
-  document.title = to.meta.title ? `${to.meta.title} - Sistem Informasi` : 'Sistem Informasi'
+  document.title = to.meta.title ? `${to.meta.title} - OBELIKS` : 'OBELIKS'
 
   // Jika route membutuhkan autentikasi, cek auth store saat runtime
   if (to.meta.requiresAuth) {
