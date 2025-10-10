@@ -29,36 +29,88 @@ const handleDetail = () => {
     <Header />
     <div class="main-content" :class="{ 'minimized-sidebar': sidebarStore.isMinimized }">
       <div class="kur-content">
-        <div class="page-title">
-          <h2>Data Kurikulum Program Studi</h2>
-          <p><RouterLink to="/Dashboard">Dashboard</RouterLink> / Data Kurikulum Program Studi</p>
-        </div>
-        <div class="tabel">
-          <div class="header-tabel">
-            <div class="button">
-              <button id="excel" type="button" class="btn-secondary">Excel</button>
-              <button id="print" type="button" class="btn-secondary">Print</button>
-            </div>
+        <div class="page-header">
+          <div class="page-title">
+            <h2>Data Kurikulum Program Studi</h2>
+            <p class="breadcrumb">
+              <RouterLink to="/Dashboard">Dashboard</RouterLink>
+              <span class="separator">/</span>
+              <span class="current">Data Kurikulum Program Studi</span>
+            </p>
           </div>
-          <div class="data-tabel">
-            <table class="data-kurikulum">
+          <div class="page-actions">
+            <button type="button" class="btn-secondary">
+              <i class="ri-file-excel-2-line"></i>
+              <span>Export Excel</span>
+            </button>
+            <button type="button" class="btn-secondary">
+              <i class="ri-printer-line"></i>
+              <span>Print</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <div class="table-wrapper">
+            <table class="modern-table">
               <thead>
                 <tr>
-                  <th>No.</th>
-                  <th>Nama Kurikulum</th>
-                  <th>Tahun Mulai Berlaku</th>
-                  <th>Jumlah SKS Minimal</th>
-                  <th>Opsi</th>
+                  <th class="col-no">
+                    <div class="th-content">No.</div>
+                  </th>
+                  <th class="col-nama">
+                    <div class="th-content">Nama Kurikulum</div>
+                  </th>
+                  <th class="col-tahun">
+                    <div class="th-content">Tahun Berlaku</div>
+                  </th>
+                  <th class="col-sks">
+                    <div class="th-content">Jumlah SKS Minimal</div>
+                  </th>
+                  <th class="col-action">
+                    <div class="th-content">Action</div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(kurikulum, index) in kurikulumDataArray" :key="kurikulum.id">
-                  <td>{{ index + 1 }}</td>
-                  <td>{{ kurikulum.nama }}</td>
-                  <td>{{ kurikulum.tahun_berlaku }}</td>
-                  <td>{{ kurikulum.min_sks }}</td>
-                  <td>
-                    <button class="btn-info" @click="handleDetail()">Detail</button>
+                <tr
+                  v-for="(kurikulum, index) in kurikulumDataArray"
+                  :key="kurikulum.id"
+                  class="table-row"
+                >
+                  <td class="col-no">
+                    <div class="td-content">
+                      <span class="number-badge">{{ index + 1 }}</span>
+                    </div>
+                  </td>
+                  <td class="col-nama">
+                    <div class="td-content">
+                      <div class="nama-wrapper">
+                        <i class="ri-book-line nama-icon"></i>
+                        <span class="nama-text">{{ kurikulum.nama }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="col-tahun">
+                    <div class="td-content">
+                      <span class="year-badge">{{ kurikulum.tahun_berlaku }}</span>
+                    </div>
+                  </td>
+                  <td class="col-sks">
+                    <div class="td-content">
+                      <div class="sks-wrapper">
+                        <i class="ri-award-line sks-icon"></i>
+                        <span class="sks-text">{{ kurikulum.min_sks }} SKS</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="col-action">
+                    <div class="td-content">
+                      <button class="btn-detail" @click="handleDetail()">
+                        <i class="ri-eye-line"></i>
+                        <span>View Details</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -94,172 +146,343 @@ const handleDetail = () => {
 .kur-content {
   flex: 1;
   margin-top: 92px;
-  padding-top: 30px;
-  padding-left: 30px;
-  padding-right: 30px;
-  padding-bottom: 50px;
+  padding: 32px;
   border-radius: 20px;
-  border: 2px solid var(--color-border2);
-  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.08);
   background: white;
   transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.tabel {
-  border: 1px solid var(--color-border);
-  padding: 20px;
-  border-radius: 10px;
-  box-sizing: border-box;
-  justify-content: space-around;
-}
-
-.tabel-data {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.data-kurikulum {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-
-.data-kurikulum th,
-.data-kurikulum td {
-  border: 1px solid #ddd;
-  padding: 12px 15px;
-  text-align: center;
-  line-height: 1.5;
-}
-
-.opsi-cell {
-  margin-right: 5px;
-}
-
-.data-kurikulum thead {
-  background-color: #f4f4f4;
-  font-weight: bold;
-}
-
-.data-kurikulum tbody tr:nth-child(even) {
-  background-color: #fafafa;
-}
-
-.data-kurikulum tbody tr:hover {
-  background-color: #f1f1f1;
-}
-
-.title {
-  padding: 0;
+/* Page Header */
+.page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-}
-
-.title h2 {
-  font-weight: bold;
-  font-size: 25px;
+  align-items: flex-start;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .page-title {
-  margin-bottom: 24px;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
+  flex: 1;
 }
 
 .page-title h2 {
   font-weight: 700;
-  font-size: 26px;
-  margin-bottom: 5px;
+  font-size: 28px;
+  margin-bottom: 8px;
   color: var(--color-text);
   font-family: 'Montserrat', sans-serif;
+  letter-spacing: -0.5px;
 }
 
-.page-title p {
+.breadcrumb {
   color: #6b7280;
   font-size: 14px;
   font-weight: 500;
-}
-
-.page-title p a {
-  color: var(--color-button);
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.page-title p a:hover {
-  color: var(--color-button-hover);
-  text-decoration: underline;
-}
-
-.button {
-  display: flex;
-  gap: 5px;
-}
-
-.header-tabel {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.search {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 15px;
+  gap: 8px;
 }
 
-.footer-table {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 30px;
-}
-
-.btn-info {
-  background-color: var(--color-button);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
+.breadcrumb a {
+  color: var(--color-button);
+  text-decoration: none;
   transition: all 0.2s ease;
   font-weight: 600;
+}
+
+.breadcrumb a:hover {
+  color: var(--color-button-hover);
+}
+
+.breadcrumb .separator {
+  color: #d1d5db;
+  font-weight: 400;
+}
+
+.breadcrumb .current {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+/* Page Actions */
+.page-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Table Container */
+.table-container {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+/* Modern Table */
+.modern-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* Table Header */
+.modern-table thead {
+  background: linear-gradient(135deg, var(--color-button) 0%, var(--color-button-hover) 100%);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(218, 42, 45, 0.15);
+}
+
+.modern-table thead tr {
+  border-bottom: none;
+}
+
+.modern-table th {
+  padding: 0;
+  font-weight: 700;
+  font-size: 13px;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: none;
+}
+
+.th-content {
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Column Widths */
+.col-no {
+  width: 80px;
+}
+
+.col-nama {
+  width: auto;
+  min-width: 200px;
+}
+
+.col-tahun {
+  width: 200px;
+}
+
+.col-sks {
+  width: 220px;
+}
+
+.col-action {
+  width: 200px;
+}
+
+/* Table Body */
+.modern-table tbody tr {
+  border-bottom: 1px solid #f3f4f6;
+  transition: all 0.25s ease;
+  background: white;
+}
+
+.modern-table tbody tr:hover {
+  background: linear-gradient(135deg, #fef2f2 0%, #fff7ed 100%);
+  transform: scale(1.001);
+  box-shadow: 0 2px 8px rgba(218, 42, 45, 0.08);
+}
+
+.modern-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.modern-table td {
+  padding: 0;
+  color: #4b5563;
   font-size: 14px;
 }
 
-.btn-info:hover {
-  background-color: var(--color-button-hover);
-  transform: translateY(-1px);
+.td-content {
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Number Badge */
+.number-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  color: #6b7280;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.modern-table tbody tr:hover .number-badge {
+  background: linear-gradient(135deg, var(--color-button) 0%, var(--color-button-hover) 100%);
+  color: white;
+  transform: scale(1.1);
   box-shadow: 0 4px 8px rgba(218, 42, 45, 0.2);
 }
 
-.btn-info:active {
+/* Nama Wrapper */
+.nama-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  width: 100%;
+}
+
+.nama-icon {
+  font-size: 22px;
+  color: var(--color-button);
+  flex-shrink: 0;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+}
+
+.modern-table tbody tr:hover .nama-icon {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.nama-text {
+  font-weight: 600;
+  font-size: 15px;
+  color: #1f2937;
+  letter-spacing: -0.2px;
+}
+
+/* Year Badge */
+.year-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 16px;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 14px;
+  border: 1px solid #93c5fd;
+  transition: all 0.2s ease;
+}
+
+.modern-table tbody tr:hover .year-badge {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border-color: #2563eb;
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.2);
+}
+
+/* SKS Wrapper */
+.sks-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.sks-icon {
+  font-size: 20px;
+  color: #f59e0b;
+  transition: all 0.2s ease;
+}
+
+.modern-table tbody tr:hover .sks-icon {
+  transform: scale(1.15);
+  color: #d97706;
+}
+
+.sks-text {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1f2937;
+  transition: all 0.2s ease;
+}
+
+.modern-table tbody tr:hover .sks-text {
+  color: #f59e0b;
+}
+
+/* Action Button */
+.btn-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: white;
+  color: var(--color-button);
+  border: 1.5px solid var(--color-button);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.btn-detail:hover {
+  background: linear-gradient(135deg, var(--color-button) 0%, var(--color-button-hover) 100%);
+  color: white;
+  border-color: var(--color-button-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(218, 42, 45, 0.3);
+}
+
+.btn-detail:active {
   transform: translateY(0);
 }
 
+.btn-detail i {
+  font-size: 18px;
+}
+
+/* Secondary Buttons */
 .btn-secondary {
-  background-color: var(--color-buttonsec);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: white;
+  color: var(--color-text);
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
   font-weight: 600;
   font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .btn-secondary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background: var(--color-buttonsec);
+  color: white;
+  border-color: var(--color-buttonsec);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .btn-secondary:active {
   transform: translateY(0);
+}
+
+.btn-secondary i {
+  font-size: 18px;
 }
 
 /* Responsive */
@@ -270,6 +493,16 @@ const handleDetail = () => {
 
   .main-content.minimized-sidebar {
     margin-left: 114px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .page-actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 }
 
@@ -285,17 +518,33 @@ const handleDetail = () => {
 
   .kur-content {
     margin-top: 76px;
-    padding: 24px 20px 40px;
-  }
-
-  .page-title {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+    padding: 20px;
   }
 
   .page-title h2 {
     font-size: 22px;
+  }
+
+  .page-header {
+    margin-bottom: 20px;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+  }
+
+  .modern-table {
+    min-width: 700px;
+  }
+
+  .btn-detail span,
+  .btn-secondary span {
+    display: none;
+  }
+
+  .btn-detail,
+  .btn-secondary {
+    padding: 10px;
   }
 }
 </style>
