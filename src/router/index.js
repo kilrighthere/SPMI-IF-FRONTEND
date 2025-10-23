@@ -7,6 +7,7 @@ import ProfilLulusan from '@/views/Kurikulum/ProfilLulusan.vue'
 import CPLProdi from '@/views/Kurikulum/CPLProdi.vue'
 import CPMK from '@/views/Kurikulum/CPMK.vue'
 import NilMatkul from '@/views/Kurikulum/NilMatkul.vue'
+import DetailNilaiMatkul from '@/views/Kurikulum/DetailNilaiMatkul.vue'
 import RPS from '@/views/Kurikulum/RPS.vue'
 import StrukMatkul from '@/views/Kurikulum/StrukMatkul.vue'
 import UkurCPL from '@/views/Kurikulum/UkurCPL.vue'
@@ -47,6 +48,12 @@ const routes = [
         path: 'nilai-matkul',
         component: NilMatkul,
         meta: { title: 'Nilai Mata Kuliah', requiresAuth: true },
+      },
+      {
+        path: 'nilai-matkul/:kodeMk',
+        component: DetailNilaiMatkul,
+        name: 'DetailNilaiMatkul',
+        meta: { title: 'Detail Nilai Mata Kuliah', requiresAuth: true },
       },
       {
         path: 'ukur-cpl',
