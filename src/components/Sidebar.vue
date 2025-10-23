@@ -74,12 +74,12 @@ const kurikulumId = computed(() => route.params.id)
             <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPL Prodi</span>
           </RouterLink>
           <RouterLink
-            :to="`/kurikulum/${kurikulumId}/korelasi-pl`"
+            :to="`/kurikulum/${kurikulumId}/korelasi-cpl-pl`"
             class="menu-kurikulum"
-            :title="sidebarStore.isMinimized ? 'Korelasi PL-CPL' : ''"
+            :title="sidebarStore.isMinimized ? 'Korelasi CPL-PL' : ''"
           >
-            <i class="ri-node-tree"></i>
-            <span class="submenu-title" v-show="!sidebarStore.isMinimized">Korelasi PL-CPL</span>
+            <i class="ri-table-line"></i>
+            <span class="submenu-title" v-show="!sidebarStore.isMinimized">Korelasi CPL-PL</span>
           </RouterLink>
           <RouterLink
             :to="`/kurikulum/${kurikulumId}/cpmk`"
@@ -88,6 +88,14 @@ const kurikulumId = computed(() => route.params.id)
           >
             <i class="ri-file-text-line"></i>
             <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPMK</span>
+          </RouterLink>
+          <RouterLink
+            :to="`/kurikulum/${kurikulumId}/bahan-kajian`"
+            class="menu-kurikulum"
+            :title="sidebarStore.isMinimized ? 'Bahan Kajian' : ''"
+          >
+            <i class="ri-book-open-line"></i>
+            <span class="submenu-title" v-show="!sidebarStore.isMinimized">Bahan Kajian</span>
           </RouterLink>
           <RouterLink
             :to="`/kurikulum/${kurikulumId}/struktur-matkul`"

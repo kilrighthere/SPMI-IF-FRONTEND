@@ -6,11 +6,12 @@ import DetailKur from '@/views/Kurikulum/DetailKur.vue'
 import ProfilLulusan from '@/views/Kurikulum/ProfilLulusan.vue'
 import CPLProdi from '@/views/Kurikulum/CPLProdi.vue'
 import CPMK from '@/views/Kurikulum/CPMK.vue'
-import KorelasiPL from '@/views/Kurikulum/KorelasiPL.vue'
 import NilMatkul from '@/views/Kurikulum/NilMatkul.vue'
 import RPS from '@/views/Kurikulum/RPS.vue'
 import StrukMatkul from '@/views/Kurikulum/StrukMatkul.vue'
 import UkurCPL from '@/views/Kurikulum/UkurCPL.vue'
+import BahanKajian from '@/views/Kurikulum/BahanKajian.vue'
+import KorelasiCPLPL from '@/views/Kurikulum/KorelasiCPLPL.vue'
 
 const routes = [
   { path: '/', redirect: '/login' },
@@ -27,18 +28,15 @@ const routes = [
     meta: { title: 'Detail Kurikulum', requiresAuth: true },
     children: [
       { path: '', redirect: 'profil-lulusan' },
-      {
+      { 
         path: 'profil-lulusan',
         component: ProfilLulusan,
         meta: { title: 'Profil Lulusan', requiresAuth: true },
       },
       { path: 'cpl-prodi', component: CPLProdi, meta: { title: 'CPL Prodi', requiresAuth: true } },
+      { path: 'korelasi-cpl-pl', component: KorelasiCPLPL, meta: { title: 'Korelasi CPL-PL', requiresAuth: true } },
       { path: 'cpmk', component: CPMK, meta: { title: 'CPMK', requiresAuth: true } },
-      {
-        path: 'korelasi-pl',
-        component: KorelasiPL,
-        meta: { title: 'Korelasi PL-CPL', requiresAuth: true },
-      },
+      { path: 'bahan-kajian', component: BahanKajian, meta: { title: 'Bahan Kajian', requiresAuth: true } },
       {
         path: 'struktur-matkul',
         component: StrukMatkul,
