@@ -335,8 +335,8 @@ textarea{
 }
 
 .btn-add {
-  background-color: var(--color-button);
-  color: white;
+  background-color: var(--color-buttonsec);
+  color: var(--color-text);
   border: none;
   padding: 6px 12px;
   border-radius: 4px;
@@ -364,8 +364,8 @@ textarea{
 } */
 
 .btn-edit {
-  background-color: var(--color-buttonter);
-  color: white;
+  background-color: var(--color-buttonsec);
+  color: var(--color-text);
   border: none;
   padding: 5px 10px;
   border-radius: 4px;
