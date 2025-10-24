@@ -430,7 +430,7 @@ const kurikulumId = computed(() => route.params.id)
 }
 
 .menu-kurikulum.router-link-active {
-  background-color: var(--color-buttonsec);
+  background-color: var(--color-button);
   color: rgba(255, 255, 255, 0.95);
   font-weight: 600;
   border: 2px solid rgba(255, 255, 255, 0.15);
