@@ -119,7 +119,7 @@ q:after {
 }  */
 
 :root {
-  --spmi-c-dgray: #333333;
+  --spmi-c-dgray: #2e2d33;
   --spmi-c-blue: rgb(176, 225, 255);
   --spmi-c-white: #fbfbfb;
   --spmi-c-lgray: #f7f7f7;
@@ -129,18 +129,20 @@ q:after {
   --spmi-c-red2: #b92527;
   --spmi-c-red3: #d3191c;
   --spmi-c-blue: #3aa6ff;
+  --spmi-c-green:  #d5ff5f;
+
 }
 
 :root {
   --color-background: var(--spmi-c-white);
   --color-background2: var(--spmi-c-dgray);
   --color-header: var(--spmi-c-white);
-  --color-sidebar: var(--spmi-c-red3);
-  --color-button: var(--spmi-c-red);
+  --color-sidebar: var(--spmi-c-green);
+  --color-button: var(--spmi-c-dgray);
   --color-button-hover: var(--spmi-c-red2);
   --color-buttonsec: var(--spmi-c-dgray);
   --color-buttonter: var(--spmi-c-blue);
-  --color-footer: var(--spmi-c-red2);
+  --color-footer: var(--spmi-c-dgray);
   --color-border: var(--spmi-c-dustygray);
   --color-border2: var(--spmi-c-lgray);
   --color-text: var(--spmi-c-dgray);

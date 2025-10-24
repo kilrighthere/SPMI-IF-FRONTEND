@@ -192,7 +192,7 @@ const kurikulumId = computed(() => route.params.id)
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -210,7 +210,7 @@ const kurikulumId = computed(() => route.params.id)
 .sidebar-toggle:hover {
   background: rgba(255, 255, 255, 0.15);
   border-color: rgba(255, 255, 255, 0.25);
-  color: white;
+  color: var(--color-text);
   transform: scale(1.05);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
@@ -243,7 +243,7 @@ const kurikulumId = computed(() => route.params.id)
   align-items: center;
   justify-content: flex-start;
   gap: 14px;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--color-text);
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 12px;
   position: relative;
@@ -262,7 +262,7 @@ const kurikulumId = computed(() => route.params.id)
 
 .menu-sidebar:hover {
   background-color: rgba(255, 255, 255, 0.12);
-  color: white;
+  color: var(--color-text);
   border-color: rgba(255, 255, 255, 0.2);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
@@ -279,10 +279,10 @@ const kurikulumId = computed(() => route.params.id)
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.98) 100%);
   color: var(--color-button);
   font-weight: 700;
-  border-color: rgba(218, 42, 45, 0.3);
+  border-color: var(--color-button);
   box-shadow:
-    0 4px 16px rgba(218, 42, 45, 0.25),
-    0 0 0 1px rgba(218, 42, 45, 0.1);
+    0 4px 16px var(--color-button)
+    0 0 0 1px var(--color-buttonsec);
 }
 
 .menu-sidebar.router-link-active i {
@@ -291,8 +291,8 @@ const kurikulumId = computed(() => route.params.id)
 
 .menu-sidebar.router-link-active:hover {
   box-shadow:
-    0 6px 20px rgba(218, 42, 45, 0.35),
-    0 0 0 1px rgba(218, 42, 45, 0.15);
+    0 6px 20px var(--color-text) 0.5,
+    0 0 0 1px var(--color-buttonsec);
 }
 
 .sidebar:not(.minimized) .menu-sidebar.router-link-active:hover {
@@ -371,7 +371,7 @@ const kurikulumId = computed(() => route.params.id)
 
 .menu-kurikulum {
   text-decoration: none;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--color-text);
   font-size: 13.5px;
   padding: 10px 14px;
   box-sizing: border-box;
@@ -403,8 +403,10 @@ const kurikulumId = computed(() => route.params.id)
 }
 
 .menu-kurikulum:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+  background-color: rgba(255, 255, 255, 0.12);
+  color: var(--color-text);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .sidebar:not(.minimized) .menu-kurikulum:hover {
