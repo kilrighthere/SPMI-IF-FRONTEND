@@ -275,8 +275,8 @@ onUnmounted(() => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-button) 0%, var(--color-button-hover) 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -284,7 +284,7 @@ onUnmounted(() => {
   font-weight: 600;
   font-family: 'Montserrat', sans-serif;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(218, 42, 45, 0.25);
+  box-shadow: 0 2px 8px var(--color-text) 0.5;
 }
 
 .user-info {
@@ -355,7 +355,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 14px;
   padding: 20px;
-  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+  background: linear-gradient(135deg, #f2fef3 0%, #ffffff 100%);
   border-bottom: 1px solid #fee2e2;
 }
 
@@ -363,8 +363,8 @@ onUnmounted(() => {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-button) 0%, var(--color-button-hover) 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -372,7 +372,7 @@ onUnmounted(() => {
   font-weight: 700;
   font-family: 'Montserrat', sans-serif;
   flex-shrink: 0;
-  box-shadow: 0 4px 16px rgba(218, 42, 45, 0.3);
+  box-shadow: 0 4px 16px var(--color-buttonsec) 0.3;
 }
 
 .dropdown-user-info {

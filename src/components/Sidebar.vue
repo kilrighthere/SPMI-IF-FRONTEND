@@ -141,7 +141,7 @@ const kurikulumId = computed(() => route.params.id)
 
 <style scoped>
 .sidebar {
-  background-color: var(--color-sidebar);
+  background: linear-gradient(90deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
   width: 260px;
   z-index: 50;
   position: fixed;

@@ -130,6 +130,7 @@ q:after {
   --spmi-c-red3: #d3191c;
   --spmi-c-blue: #3aa6ff;
   --spmi-c-green:  #d5ff5f;
+  --spmi-c-green2: #a6d600
 
 }
 
@@ -140,7 +141,7 @@ q:after {
   --color-sidebar: var(--spmi-c-green);
   --color-button: var(--spmi-c-dgray);
   --color-button-hover: var(--spmi-c-red2);
-  --color-buttonsec: var(--spmi-c-dgray);
+  --color-buttonsec: var(--spmi-c-green);
   --color-buttonter: var(--spmi-c-blue);
   --color-footer: var(--spmi-c-dgray);
   --color-border: var(--spmi-c-dustygray);

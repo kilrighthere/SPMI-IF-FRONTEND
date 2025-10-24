@@ -235,7 +235,7 @@ const handleDetail = () => {
 
 /* Table Header */
 .modern-table thead {
-  background: linear-gradient(135deg, var(--color-button) 0%, var(--color-button-hover) 100%);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -250,7 +250,7 @@ const handleDetail = () => {
   padding: 0;
   font-weight: 700;
   font-size: 13px;
-  color: white;
+  color: var(--color-text);
   text-transform: uppercase;
   letter-spacing: 0.8px;
   border-bottom: none;
@@ -293,7 +293,7 @@ const handleDetail = () => {
 }
 
 .modern-table tbody tr:hover {
-  background: linear-gradient(135deg, #fef2f2 0%, #fff7ed 100%);
+  background: #faffec;
   transform: scale(1.001);
   box-shadow: 0 2px 8px rgba(218, 42, 45, 0.08);
 }
@@ -323,19 +323,13 @@ const handleDetail = () => {
   width: 32px;
   height: 32px;
   background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-  color: #6b7280;
+  color: var(--color-text);
   border-radius: 8px;
   font-weight: 700;
   font-size: 14px;
   transition: all 0.2s ease;
 }
 
-.modern-table tbody tr:hover .number-badge {
-  background: linear-gradient(135deg, var(--color-button) 0%, var(--color-button-hover) 100%);
-  color: white;
-  transform: scale(1.1);
-  box-shadow: 0 4px 8px rgba(218, 42, 45, 0.2);
-}
 
 /* Nama Wrapper */
 .nama-wrapper {
@@ -351,13 +345,13 @@ const handleDetail = () => {
   color: var(--color-button);
   flex-shrink: 0;
   opacity: 0.8;
-  transition: all 0.2s ease;
+  /* transition: all 0.2s ease; */
 }
 
-.modern-table tbody tr:hover .nama-icon {
+/* .modern-table tbody tr:hover .nama-icon {
   opacity: 1;
   transform: scale(1.1);
-}
+} */
 
 .nama-text {
   font-weight: 600;
@@ -372,22 +366,22 @@ const handleDetail = () => {
   align-items: center;
   justify-content: center;
   padding: 6px 16px;
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #1e40af;
+  /* background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); */
+  color: var(--color-text);
   border-radius: 20px;
   font-weight: 700;
   font-size: 14px;
-  border: 1px solid #93c5fd;
-  transition: all 0.2s ease;
+  /* border: 1px solid #93c5fd; */
+  /* transition: all 0.2s ease; */
 }
 
-.modern-table tbody tr:hover .year-badge {
+/* .modern-table tbody tr:hover .year-badge {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   border-color: #2563eb;
   transform: scale(1.05);
   box-shadow: 0 4px 8px rgba(37, 99, 235, 0.2);
-}
+} */
 
 /* SKS Wrapper */
 .sks-wrapper {
@@ -400,24 +394,24 @@ const handleDetail = () => {
 .sks-icon {
   font-size: 20px;
   color: #f59e0b;
-  transition: all 0.2s ease;
+  /* transition: all 0.2s ease; */
 }
 
-.modern-table tbody tr:hover .sks-icon {
+/* .modern-table tbody tr:hover .sks-icon {
   transform: scale(1.15);
   color: #d97706;
-}
+} */
 
 .sks-text {
   font-weight: 700;
   font-size: 15px;
-  color: #1f2937;
-  transition: all 0.2s ease;
+  color: var(--color-text);
+  /* transition: all 0.2s ease; */
 }
 
-.modern-table tbody tr:hover .sks-text {
+/* .modern-table tbody tr:hover .sks-text {
   color: #f59e0b;
-}
+} */
 
 /* Action Button */
 .btn-detail {
@@ -437,11 +431,11 @@ const handleDetail = () => {
 }
 
 .btn-detail:hover {
-  background: linear-gradient(135deg, var(--color-button) 0%, var(--color-button-hover) 100%);
-  color: white;
-  border-color: var(--color-button-hover);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--color-button);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(218, 42, 45, 0.3);
+  box-shadow: 0 6px 16px var(--color-button) 0.35;
 }
 
 .btn-detail:active {
@@ -470,7 +464,7 @@ const handleDetail = () => {
 }
 
 .btn-secondary:hover {
-  background: var(--color-buttonsec);
+  background: var(--color-button);
   color: white;
   border-color: var(--color-buttonsec);
   transform: translateY(-2px);
