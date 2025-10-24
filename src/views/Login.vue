@@ -386,7 +386,7 @@ function togglePasswordVisibility() {
   outline: none;
   border-color: var(--color-button);
   background-color: white;
-  box-shadow: 0 0 0 4px rgba(218, 42, 45, 0.1);
+  box-shadow: 0 0 0 4px var(--spmi-color-green2);
 }
 
 .form-input::placeholder {
@@ -463,8 +463,8 @@ function togglePasswordVisibility() {
 .btn-login {
   width: 100%;
   padding: 14px 24px;
-  background: linear-gradient(135deg, var(--color-button) 0%, var(--color-button-hover) 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
   border: none;
   border-radius: 12px;
   font-size: 16px;
@@ -472,12 +472,12 @@ function togglePasswordVisibility() {
   font-family: 'Montserrat', sans-serif;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(218, 42, 45, 0.3);
+  box-shadow: 0 4px 12px var(--color-text) 0.35;
 }
 
 .btn-login:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(218, 42, 45, 0.4);
+  box-shadow: 0 6px 20px rgba(76, 76, 76, 0.4);
 }
 
 .btn-login:active:not(:disabled) {
