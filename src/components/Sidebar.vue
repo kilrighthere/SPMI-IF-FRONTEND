@@ -133,6 +133,14 @@ const kurikulumId = computed(() => route.params.id)
               >Pengukuran CPL Mahasiswa</span
             >
           </RouterLink>
+          <RouterLink
+            :to="`/kurikulum/${kurikulumId}/mahasiswa`"
+            class="menu-kurikulum"
+            :title="sidebarStore.isMinimized ? 'Mahasiswa' : ''"
+          >
+            <i class="ri-group-line"></i>
+            <span class="submenu-title" v-show="!sidebarStore.isMinimized">Mahasiswa</span>
+          </RouterLink>
         </div>
       </template>
     </div>

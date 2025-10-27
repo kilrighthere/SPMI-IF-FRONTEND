@@ -13,6 +13,7 @@ import StrukMatkul from '@/views/Kurikulum/StrukMatkul.vue'
 import UkurCPL from '@/views/Kurikulum/UkurCPL.vue'
 import BahanKajian from '@/views/Kurikulum/BahanKajian.vue'
 import KorelasiCPLPL from '@/views/Kurikulum/KorelasiCPLPL.vue'
+import Mahasiswa from '@/views/Mahasiswa.vue'
 
 const routes = [
   { path: '/', redirect: '/login' },
@@ -22,6 +23,7 @@ const routes = [
     component: Dashboard,
     meta: { title: 'Dashboard', requiresAuth: true },
   },
+
   { path: '/kurikulum', component: Kurikulum, meta: { title: 'Kurikulum' } },
   {
     path: '/kurikulum/:id',
@@ -59,6 +61,11 @@ const routes = [
         path: 'ukur-cpl',
         component: UkurCPL,
         meta: { title: 'Pengukuran CPL Mahasiswa', requiresAuth: true },
+      },
+      {
+        path: 'mahasiswa',
+        component: Mahasiswa,
+        meta: { title: 'Mahasiswa', requiresAuth: true },
       },
     ],
   },
