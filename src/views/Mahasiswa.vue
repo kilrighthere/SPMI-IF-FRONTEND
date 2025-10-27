@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useMahasiswaStore } from '@/stores/mahasiswa'
 import { useSidebarStore } from '@/stores/sidebar'
 import Footer from '@/components/Footer.vue'
@@ -9,8 +9,55 @@ import Sidebar from '@/components/Sidebar.vue'
 const mahasiswaStore = useMahasiswaStore()
 const sidebarStore = useSidebarStore()
 
+const mahasiswaList = computed(() => mahasiswaStore.mahasiswaList)
+const isLoading = computed(() => mahasiswaStore.isLoading)
+const error = computed(() => mahasiswaStore.error)
+
+const form = ref({
+  nim: '',
+  nama: ''
+})
+
+const isEditing = ref(false)
+const showForm = ref(false)
+
+const fetchMahasiswa = async () => {
+  await mahasiswaStore.fetchMahasiswa()
+}
+
+const saveMahasiswa = async () => {
+  try {
+    if (isEditing.value) {
+      await mahasiswaStore.editMahasiswa(form.value.nim, form.value)
+    } else {
+      await mahasiswaStore.createMahasiswa(form.value)
+    }
+    resetForm()
+  } catch (err) {
+    console.error('Error saving mahasiswa:', err)
+  }
+}
+
+const editMahasiswa = (mahasiswa) => {
+  form.value = { ...mahasiswa }
+  isEditing.value = true
+  showForm.value = true
+}
+
+const removeMahasiswa = async (nim) => {
+  if (confirm('Apakah anda yakin ingin menghapus mahasiswa ini?')) {
+    await mahasiswaStore.removeMahasiswa(nim)
+  }
+}
+
+const resetForm = () => {
+  form.value = { nim: '', nama: '' }
+  isEditing.value = false
+  showForm.value = false
+}
+
 onMounted(() => {
-  mahasiswaStore.fetchMahasiswa()
+  fetchMahasiswa()
 })
 </script>
 
@@ -31,6 +78,26 @@ onMounted(() => {
               <span class="current">Data Mahasiswa</span>
             </p>
           </div>
+          <button class="btn-add" @click="showForm = !showForm">
+            {{ showForm ? 'Batal' : 'Tambah Mahasiswa' }}
+          </button>
+        </div>
+
+        <div v-if="showForm" class="form-container">
+          <div class="form-group">
+            <label>NIM</label>
+            <input type="text" v-model="form.nim" placeholder="NIM Mahasiswa" :disabled="isEditing" />
+          </div>
+          <div class="form-group">
+            <label>Nama Mahasiswa</label>
+            <input type="text" v-model="form.nama" placeholder="Nama Mahasiswa" />
+          </div>
+          <div class="form-actions">
+            <button class="btn-save" @click="saveMahasiswa">
+              {{ isEditing ? 'Update' : 'Simpan' }}
+            </button>
+            <button v-if="isEditing" class="btn-cancel" @click="resetForm">Batal</button>
+          </div>
         </div>
 
         <div class="table-container">
@@ -41,19 +108,24 @@ onMounted(() => {
                   <th class="col-no">No.</th>
                   <th class="col-nim">NIM</th>
                   <th class="col-nama">Nama Mahasiswa</th>
+                  <th class="col-aksi">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="mahasiswaStore.isLoading">
-                  <td colspan="3" class="text-center">Loading...</td>
+                <tr v-if="isLoading">
+                  <td colspan="4" class="text-center">Loading...</td>
                 </tr>
-                <tr v-else-if="mahasiswaStore.error">
-                  <td colspan="3" class="text-center error">{{ mahasiswaStore.error }}</td>
+                <tr v-else-if="error">
+                  <td colspan="4" class="text-center error">{{ error }}</td>
                 </tr>
-                <tr v-for="(mahasiswa, index) in mahasiswaStore.mahasiswaList" :key="mahasiswa.nim">
+                <tr v-for="(mahasiswa, index) in mahasiswaList" :key="mahasiswa.nim">
                   <td class="col-no">{{ index + 1 }}</td>
                   <td class="col-nim">{{ mahasiswa.nim }}</td>
                   <td class="col-nama">{{ mahasiswa.nama }}</td>
+                  <td class="col-aksi action-buttons">
+                    <button class="btn-edit" @click="editMahasiswa(mahasiswa)">Edit</button>
+                    <button class="btn-delete" @click="removeMahasiswa(mahasiswa.nim)">Hapus</button>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -73,7 +145,8 @@ onMounted(() => {
 
 .main-content {
   flex: 1;
-  margin-left: 306px;
+  /* Sidebar is positioned at left:20px with width:260px -> content offset = 20 + 260 = 280px */
+  margin-left: 280px;
   margin-top: 0;
   display: flex;
   flex-direction: column;
@@ -82,7 +155,8 @@ onMounted(() => {
 }
 
 .main-content.minimized-sidebar {
-  margin-left: 126px;
+  /* Minimized sidebar width is 80px and left offset 20px => 100px */
+  margin-left: 100px;
 }
 
 .mahasiswa-content {
@@ -99,7 +173,7 @@ onMounted(() => {
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 28px;
   padding-bottom: 20px;
   border-bottom: 1px solid #f0f0f0;
@@ -144,6 +218,64 @@ onMounted(() => {
   font-weight: 500;
 }
 
+.btn-add {
+  background-color: var(--color-button);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-container {
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-save {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
 /* Table Container */
 .table-container {
   background: white;
@@ -183,7 +315,33 @@ onMounted(() => {
 
 .col-no { width: 80px; text-align: center; }
 .col-nim { width: 200px; }
-.col-nama { }
+.col-aksi { width: 150px; text-align: center; }
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.btn-edit {
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.btn-delete {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
 
 .text-center {
     text-align: center;
