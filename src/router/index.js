@@ -13,7 +13,7 @@ import StrukMatkul from '@/views/Kurikulum/StrukMatkul.vue'
 import UkurCPL from '@/views/Kurikulum/UkurCPL.vue'
 import BahanKajian from '@/views/Kurikulum/BahanKajian.vue'
 import KorelasiCPLPL from '@/views/Kurikulum/KorelasiCPLPL.vue'
-import Mahasiswa from '@/views/Mahasiswa.vue'
+import Mahasiswa from '@/views/Kurikulum/Mahasiswa.vue'
 
 const routes = [
   { path: '/', redirect: '/login' },

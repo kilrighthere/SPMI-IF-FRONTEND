@@ -435,7 +435,7 @@ function togglePasswordVisibility() {
 }
 
 .forgot-password:hover {
-  color: var(--color-button-hover);
+  color: var(--color-buttonsec);
   text-decoration: underline;
 }
 
@@ -582,7 +582,7 @@ function togglePasswordVisibility() {
 }
 
 .signup-link:hover {
-  color: var(--color-button-hover);
+  color: var(--color-buttonsec);
   text-decoration: underline;
 }
 

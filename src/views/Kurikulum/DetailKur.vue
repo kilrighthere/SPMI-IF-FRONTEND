@@ -74,19 +74,17 @@ const submenuTitles = {
 .kur-content {
   flex: 1;
   margin-top: 92px;
-  padding-top: 30px;
-  padding-left: 30px;
-  padding-right: 30px;
-  padding-bottom: 50px;
+  padding: 32px;
   border-radius: 20px;
-  border: 2px solid var(--color-border2);
-  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.08);
   background: white;
   transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .page-title {
   margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -95,10 +93,11 @@ const submenuTitles = {
 
 .page-title h2 {
   font-weight: 700;
-  font-size: 26px;
-  margin-bottom: 5px;
+  font-size: 28px;
+  margin-bottom: 8px;
   color: var(--color-text);
   font-family: 'Montserrat', sans-serif;
+  letter-spacing: -0.5px;
 }
 
 .page-title p {
@@ -110,12 +109,12 @@ const submenuTitles = {
 .page-title p a {
   color: var(--color-button);
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
+  font-weight: 600;
 }
 
 .page-title p a:hover {
   color: var(--color-button-hover);
-  text-decoration: underline;
 }
 
 .submenu-container {
@@ -145,7 +144,7 @@ const submenuTitles = {
 
   .kur-content {
     margin-top: 76px;
-    padding: 24px 20px 40px;
+    padding: 20px;
   }
 
   .page-title {
