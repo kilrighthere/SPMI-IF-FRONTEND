@@ -64,9 +64,9 @@ export const useKurikulumStore = defineStore('kurikulum', () => {
       // Fallback data
       currentKurikulum.value = {
         id_kurikulum: id,
-        nama: 'Kurikulum 2020',
-        tahun_berlaku: '2020',
-        min_sks: 144,
+        nama_kurikulum: 'Kurikulum 2020',
+        tahun_mulai: '2020',
+        jumlah_sks_minimal: 144,
       }
       return currentKurikulum.value
     } finally {
