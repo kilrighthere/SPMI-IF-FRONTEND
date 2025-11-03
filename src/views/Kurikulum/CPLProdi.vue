@@ -119,8 +119,8 @@ onMounted(async () => {
       <div v-if="!isLoading && !error">
         <p>
           Capaian Pembelajaran Lulusan (CPL) untuk
-          {{ currentKurikulum?.nama || 'Kurikulum' }} mencakup beberapa kompetensi yang harus
-          dikuasai oleh lulusan program studi.
+          {{ currentKurikulum?.nama_kurikulum || 'Kurikulum' }} mencakup beberapa kompetensi yang
+          harus dikuasai oleh lulusan program studi.
         </p>
 
         <div v-if="cplList.length === 0" class="empty-state">Belum ada data CPL.</div>

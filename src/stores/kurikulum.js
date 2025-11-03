@@ -31,13 +31,13 @@ export const useKurikulumStore = defineStore('kurikulum', () => {
       console.error('Error fetching kurikulum:', err)
       error.value = 'Gagal memuat data kurikulum'
 
-      // Fallback data sesuai format API
+      // Fallback data sesuai format API yang benar
       kurikulumList.value = [
         {
           id_kurikulum: '2020',
-          nama: 'Kurikulum 2020',
-          tahun_berlaku: '2020',
-          min_sks: 144,
+          nama_kurikulum: 'Kurikulum 2020',
+          tahun_mulai: 2020,
+          jumlah_sks_minimal: 144,
         },
       ]
     } finally {
@@ -61,11 +61,11 @@ export const useKurikulumStore = defineStore('kurikulum', () => {
       console.error(`Error fetching kurikulum with id ${id}:`, err)
       error.value = 'Gagal memuat detail kurikulum'
 
-      // Fallback data
+      // Fallback data sesuai format API yang benar
       currentKurikulum.value = {
         id_kurikulum: id,
         nama_kurikulum: 'Kurikulum 2020',
-        tahun_mulai: '2020',
+        tahun_mulai: 2020,
         jumlah_sks_minimal: 144,
       }
       return currentKurikulum.value

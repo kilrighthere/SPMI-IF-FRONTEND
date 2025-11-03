@@ -173,8 +173,8 @@ onMounted(async () => {
       <!-- Profil Lulusan List -->
       <div v-else class="pl-content">
         <p>
-          Profil lulusan untuk {{ currentKurikulum?.nama || 'Kurikulum' }} mencakup beberapa bidang
-          keahlian yang diharapkan setelah menyelesaikan program studi.
+          Profil lulusan untuk {{ currentKurikulum?.nama_kurikulum || 'Kurikulum' }} mencakup
+          beberapa bidang keahlian yang diharapkan setelah menyelesaikan program studi.
         </p>
 
         <div v-if="profilLulusan.length === 0" class="empty-state">

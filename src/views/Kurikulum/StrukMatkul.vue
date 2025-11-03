@@ -169,7 +169,7 @@ onMounted(async () => {
       <div v-if="!isLoading && !error" class="struktur-content">
         <p>
           Halaman ini digunakan untuk mengelola struktur mata kuliah pada
-          {{ currentKurikulum?.nama || 'Kurikulum' }}.
+          {{ currentKurikulum?.nama_kurikulum || 'Kurikulum' }}.
         </p>
 
         <div class="action-bar">

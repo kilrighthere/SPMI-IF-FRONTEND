@@ -107,20 +107,20 @@ onMounted(() => {
                     <div class="td-content">
                       <div class="nama-wrapper">
                         <i class="ri-book-line nama-icon"></i>
-                        <span class="nama-text">{{ kurikulum.nama }}</span>
+                        <span class="nama-text">{{ kurikulum.nama_kurikulum }}</span>
                       </div>
                     </div>
                   </td>
                   <td class="col-tahun">
                     <div class="td-content">
-                      <span class="year-badge">{{ kurikulum.tahun_berlaku }}</span>
+                      <span class="year-badge">{{ kurikulum.tahun_mulai }}</span>
                     </div>
                   </td>
                   <td class="col-sks">
                     <div class="td-content">
                       <div class="sks-wrapper">
                         <i class="ri-award-line sks-icon"></i>
-                        <span class="sks-text">{{ kurikulum.min_sks }} SKS</span>
+                        <span class="sks-text">{{ kurikulum.jumlah_sks_minimal }} SKS</span>
                       </div>
                     </div>
                   </td>
