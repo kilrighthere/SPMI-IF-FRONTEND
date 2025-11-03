@@ -48,6 +48,53 @@ export const useAuthStore = defineStore('auth', () => {
     isLoading.value = true
     error.value = null
 
+    // ========================================
+    // DUMMY AUTH - Static Login (Server Down)
+    // ========================================
+    // Gunakan NIP dan Password: 111111111111111111
+    try {
+      const dummyNip = '111111111111111111'
+      const dummyPassword = '111111111111111111'
+
+      if (credentials.nip === dummyNip && credentials.password === dummyPassword) {
+        // Generate dummy token (fake JWT format)
+        const dummyToken =
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuaXAiOiIxMTExMTExMTExMTExMTExMTEiLCJuYW1lIjoiRHVtbXkgVXNlciIsInJvbGUiOiJkb3NlbiIsImV4cCI6OTk5OTk5OTk5OX0.dummysignature'
+        const dummyUser = {
+          nip: dummyNip,
+          name: 'Dummy User',
+          role: 'dosen',
+          email: 'dummy@example.com',
+        }
+
+        token.value = dummyToken
+        user.value = dummyUser
+
+        // Persist token/user
+        localStorage.setItem('token', token.value)
+        localStorage.setItem('user', JSON.stringify(user.value))
+
+        // set axios default header
+        setAuthHeader(token.value)
+
+        isLoading.value = false
+        return { success: true }
+      } else {
+        error.value = 'NIP atau password salah. Gunakan: 111111111111111111'
+        isLoading.value = false
+        return { success: false, error: error.value }
+      }
+    } catch (err) {
+      console.error('Dummy login failed:', err)
+      error.value = 'Terjadi kesalahan saat login'
+      isLoading.value = false
+      return { success: false, error: error.value }
+    }
+
+    // ========================================
+    // DATABASE AUTH - Uncomment when server is back online
+    // ========================================
+    /*
     try {
       const response = await apiLogin(credentials)
       // Backend should return { accessToken, user }
@@ -78,10 +125,22 @@ export const useAuthStore = defineStore('auth', () => {
     } finally {
       isLoading.value = false
     }
+    */
   }
 
   // Call refresh endpoint to obtain a new access token using httpOnly refresh cookie
   async function refresh() {
+    // ========================================
+    // DUMMY AUTH - Refresh disabled (Server Down)
+    // ========================================
+    // Return true if token exists (dummy mode doesn't expire)
+    if (token.value) return true
+    return false
+
+    // ========================================
+    // DATABASE AUTH - Uncomment when server is back online
+    // ========================================
+    /*
     try {
       const res = await refreshToken()
       const newToken = res.data?.accessToken
@@ -99,11 +158,27 @@ export const useAuthStore = defineStore('auth', () => {
       console.error('Refresh failed:', err)
       return false
     }
+    */
   }
 
   async function logout() {
     isLoading.value = true
 
+    // ========================================
+    // DUMMY AUTH - Simple logout (Server Down)
+    // ========================================
+    // Just clear local storage, no API call
+    token.value = null
+    user.value = null
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setAuthHeader(null)
+    isLoading.value = false
+
+    // ========================================
+    // DATABASE AUTH - Uncomment when server is back online
+    // ========================================
+    /*
     try {
       // Attempt to notify server to revoke refresh token & clear cookie
       await apiLogout()
@@ -119,11 +194,23 @@ export const useAuthStore = defineStore('auth', () => {
       setAuthHeader(null)
       isLoading.value = false
     }
+    */
   }
 
   // Check authentication on app startup.
   // If we have a token, we trust it for now; otherwise try to refresh via cookie.
   async function checkAuth() {
+    // ========================================
+    // DUMMY AUTH - Always valid if token exists (Server Down)
+    // ========================================
+    // In dummy mode, just check if token exists in storage
+    if (token.value) return true
+    return false
+
+    // ========================================
+    // DATABASE AUTH - Uncomment when server is back online
+    // ========================================
+    /*
     // If we have a token and it's valid, we're authenticated
     if (isTokenValid(token.value)) return true
 
@@ -139,6 +226,7 @@ export const useAuthStore = defineStore('auth', () => {
     // Try silent refresh using httpOnly cookie
     const ok = await refresh()
     return ok
+    */
   }
 
   return {
