@@ -5,6 +5,7 @@ import Kurikulum from '@/views/Kurikulum/Kurikulum.vue'
 import DetailKur from '@/views/Kurikulum/DetailKur.vue'
 import ProfilLulusan from '@/views/Kurikulum/ProfilLulusan.vue'
 import CPLProdi from '@/views/Kurikulum/CPLProdi.vue'
+import CPLSndikti from '@/views/Kurikulum/CPLSndikti.vue'
 import CPMK from '@/views/Kurikulum/CPMK.vue'
 import NilMatkul from '@/views/Kurikulum/NilMatkul.vue'
 import DetailNilaiMatkul from '@/views/Kurikulum/DetailNilaiMatkul.vue'
@@ -31,15 +32,28 @@ const routes = [
     meta: { title: 'Detail Kurikulum', requiresAuth: true },
     children: [
       { path: '', redirect: 'profil-lulusan' },
-      { 
+      {
         path: 'profil-lulusan',
         component: ProfilLulusan,
         meta: { title: 'Profil Lulusan', requiresAuth: true },
       },
       { path: 'cpl-prodi', component: CPLProdi, meta: { title: 'CPL Prodi', requiresAuth: true } },
-      { path: 'korelasi-cpl-pl', component: KorelasiCPLPL, meta: { title: 'Korelasi CPL-PL', requiresAuth: true } },
+      {
+        path: 'cpl-sndikti',
+        component: CPLSndikti,
+        meta: { title: 'CPL SNDIKTI', requiresAuth: true },
+      },
+      {
+        path: 'korelasi-cpl-pl',
+        component: KorelasiCPLPL,
+        meta: { title: 'Korelasi CPL-PL', requiresAuth: true },
+      },
       { path: 'cpmk', component: CPMK, meta: { title: 'CPMK', requiresAuth: true } },
-      { path: 'bahan-kajian', component: BahanKajian, meta: { title: 'Bahan Kajian', requiresAuth: true } },
+      {
+        path: 'bahan-kajian',
+        component: BahanKajian,
+        meta: { title: 'Bahan Kajian', requiresAuth: true },
+      },
       {
         path: 'struktur-matkul',
         component: StrukMatkul,

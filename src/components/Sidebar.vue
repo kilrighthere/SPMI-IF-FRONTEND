@@ -74,6 +74,14 @@ const kurikulumId = computed(() => route.params.id)
             <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPL Prodi</span>
           </RouterLink>
           <RouterLink
+            :to="`/kurikulum/${kurikulumId}/cpl-sndikti`"
+            class="menu-kurikulum"
+            :title="sidebarStore.isMinimized ? 'CPL SNDIKTI' : ''"
+          >
+            <i class="ri-government-line"></i>
+            <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPL SNDIKTI</span>
+          </RouterLink>
+          <RouterLink
             :to="`/kurikulum/${kurikulumId}/korelasi-cpl-pl`"
             class="menu-kurikulum"
             :title="sidebarStore.isMinimized ? 'Korelasi CPL-PL' : ''"
@@ -288,9 +296,7 @@ const kurikulumId = computed(() => route.params.id)
   color: var(--color-button);
   font-weight: 700;
   border-color: var(--color-button);
-  box-shadow:
-    0 4px 16px var(--color-button)
-    0 0 0 1px var(--color-buttonsec);
+  box-shadow: 0 4px 16px var(--color-button) 0 0 0 1px var(--color-buttonsec);
 }
 
 .menu-sidebar.router-link-active i {

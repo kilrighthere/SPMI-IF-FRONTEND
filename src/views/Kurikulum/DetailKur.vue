@@ -31,12 +31,15 @@ const activeSubmenu = computed(() => {
 const submenuTitles = {
   'profil-lulusan': 'Profil Lulusan',
   'cpl-prodi': 'CPL Prodi',
-  'korelasi-pl': 'Korelasi PL-CPL',
+  'cpl-sndikti': 'CPL SNDIKTI',
+  'korelasi-cpl-pl': 'Korelasi CPL-PL',
   cpmk: 'CPMK',
+  'bahan-kajian': 'Bahan Kajian',
   'struktur-matkul': 'Struktur Mata Kuliah',
   rps: 'RPS Mata Kuliah',
   'nilai-matkul': 'Nilai Mata Kuliah',
   'ukur-cpl': 'Pengukuran CPL Mahasiswa',
+  mahasiswa: 'Mahasiswa',
 }
 </script>
 
