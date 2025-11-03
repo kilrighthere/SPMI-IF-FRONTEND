@@ -1,14 +1,20 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { kurikulumData } from '@/stores/kurikulum'
+import { useRoute } from 'vue-router'
 
 // Import stores
 import { useCPMKStore } from '@/stores/cpmk'
 import { useCPLStore } from '@/stores/cpl'
+import { useKurikulumStore } from '@/stores/kurikulum'
 
 // Initialize stores
 const cpmkStore = useCPMKStore()
 const cplStore = useCPLStore()
+const kurikulumStore = useKurikulumStore()
+const route = useRoute()
+
+// Get kurikulum data
+const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
 
 // Data untuk CPMK
 const cpmkList = computed(() => cpmkStore.cpmkList)
@@ -27,7 +33,7 @@ const form = ref({
 const formErrors = ref({
   id_cpmk: '',
   deskripsi: '',
-  id_cpl: ''
+  id_cpl: '',
 })
 
 const isEditing = ref(false)
@@ -47,22 +53,22 @@ const fetchCPL = async () => {
 const validateForm = () => {
   let isValid = true
   formErrors.value = { id_cpmk: '', deskripsi: '', id_cpl: '' }
-  
+
   if (!form.value.id_cpmk.trim()) {
     formErrors.value.id_cpmk = 'ID CPMK tidak boleh kosong'
     isValid = false
   }
-  
+
   if (!form.value.deskripsi.trim()) {
     formErrors.value.deskripsi = 'Deskripsi tidak boleh kosong'
     isValid = false
   }
-  
+
   if (!form.value.id_cpl) {
     formErrors.value.id_cpl = 'CPL harus dipilih'
     isValid = false
   }
-  
+
   return isValid
 }
 
@@ -71,12 +77,12 @@ const saveCPMK = async () => {
   try {
     // Reset error message first
     error.value = ''
-    
+
     // Validate form before submission
     if (!validateForm()) {
       return // Stop if validation fails
     }
-    
+
     if (isEditing.value) {
       await cpmkStore.editCPMK(form.value.id_cpmk, form.value)
     } else {
@@ -94,7 +100,7 @@ const editCPMK = (cpmk) => {
   form.value = { ...cpmk }
   isEditing.value = true
   showForm.value = true
-  
+
   // Scroll ke bagian atas halaman dimana form berada
   window.scrollTo({
     top: 0,
@@ -130,7 +136,12 @@ const getCPLName = (cplId) => {
 }
 
 // Load data saat komponen dimuat
-onMounted(() => {
+onMounted(async () => {
+  // Fetch kurikulum data by ID from route params
+  const kurikulumId = route.params.id
+  if (kurikulumId) {
+    await kurikulumStore.fetchKurikulumById(kurikulumId)
+  }
   fetchCPMK()
   fetchCPL()
 })

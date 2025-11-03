@@ -1,26 +1,35 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Footer from '@/components/Footer.vue'
 import Header from '@/components/Header.vue'
 import Sidebar from '@/components/Sidebar.vue'
-import { computed } from 'vue'
-import { kurikulumId, kurikulumData } from '@/stores/kurikulum'
+import { useKurikulumStore } from '@/stores/kurikulum'
 import { useSidebarStore } from '@/stores/sidebar'
 
 const router = useRouter()
 const sidebarStore = useSidebarStore()
+const kurikulumStore = useKurikulumStore()
 
-// No loading needed for static data
-const isLoading = ref(false)
+// Get data from store
+const kurikulumList = computed(() => kurikulumStore.kurikulumList)
+const isLoading = computed(() => kurikulumStore.isLoading)
+const error = computed(() => kurikulumStore.error)
 
-// Use the static data as an array for v-for rendering
-const kurikulumDataArray = ref([kurikulumData])
+// Fetch data kurikulum dari store
+const fetchKurikulum = async () => {
+  await kurikulumStore.fetchAllKurikulum()
+}
 
 // Handler tombol
-const handleDetail = () => {
-  router.push(`/kurikulum/${kurikulumId}/profil-lulusan`)
+const handleDetail = (id) => {
+  router.push(`/kurikulum/${id}/profil-lulusan`)
 }
+
+// Load data saat komponen dimuat
+onMounted(() => {
+  fetchKurikulum()
+})
 </script>
 
 <template>
@@ -50,8 +59,19 @@ const handleDetail = () => {
           </div>
         </div>
 
-        <div class="table-container">
-          <div class="table-wrapper">
+        <!-- Loading indicator -->
+        <div v-if="isLoading" class="loading">Loading...</div>
+
+        <!-- Error message -->
+        <div v-else-if="error" class="error-message">
+          {{ error }}
+        </div>
+
+        <!-- Table Container -->
+        <div v-else class="table-container">
+          <div v-if="kurikulumList.length === 0" class="empty-state">Belum ada data kurikulum.</div>
+
+          <div v-else class="table-wrapper">
             <table class="modern-table">
               <thead>
                 <tr>
@@ -74,8 +94,8 @@ const handleDetail = () => {
               </thead>
               <tbody>
                 <tr
-                  v-for="(kurikulum, index) in kurikulumDataArray"
-                  :key="kurikulum.id"
+                  v-for="(kurikulum, index) in kurikulumList"
+                  :key="kurikulum.id_kurikulum"
                   class="table-row"
                 >
                   <td class="col-no">
@@ -106,7 +126,7 @@ const handleDetail = () => {
                   </td>
                   <td class="col-action">
                     <div class="td-content">
-                      <button class="btn-detail" @click="handleDetail()">
+                      <button class="btn-detail" @click="handleDetail(kurikulum.id_kurikulum)">
                         <i class="ri-eye-line"></i>
                         <span>View Details</span>
                       </button>
@@ -330,7 +350,6 @@ const handleDetail = () => {
   transition: all 0.2s ease;
 }
 
-
 /* Nama Wrapper */
 .nama-wrapper {
   display: flex;
@@ -477,6 +496,34 @@ const handleDetail = () => {
 
 .btn-secondary i {
   font-size: 18px;
+}
+
+/* Loading & Error States */
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 16px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.error-message {
+  color: var(--color-button);
+  padding: 16px;
+  background-color: #ffebee;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+  font-style: italic;
+  font-size: 16px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 /* Responsive */

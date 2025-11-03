@@ -1,11 +1,17 @@
 <script setup>
 // Import stores
-import { kurikulumData } from '@/stores/kurikulum'
+import { useKurikulumStore } from '@/stores/kurikulum'
 import { usePLStore } from '@/stores/profilLulusan'
 import { ref, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
 
-// Initialize store
+// Initialize stores
 const plStore = usePLStore()
+const kurikulumStore = useKurikulumStore()
+const route = useRoute()
+
+// Get kurikulum data
+const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
 
 // Get data from store
 const profilLulusan = computed(() => plStore.profilLulusanList)
@@ -23,9 +29,8 @@ const showForm = ref(false)
 // Form validation state
 const formErrors = ref({
   id_pl: '',
-  deskripsi: ''
+  deskripsi: '',
 })
-
 
 // Fetch data profil lulusan dari store
 const fetchProfilLulusan = async () => {
@@ -35,32 +40,31 @@ const fetchProfilLulusan = async () => {
 const validateForm = () => {
   let isValid = true
   formErrors.value = { id_pl: '', deskripsi: '' }
-  
+
   if (!form.value.id_pl.trim()) {
     formErrors.value.id_pl = 'ID Profil Lulusan tidak boleh kosong'
     isValid = false
   }
-  
+
   if (!form.value.deskripsi.trim()) {
     formErrors.value.deskripsi = 'Deskripsi tidak boleh kosong'
     isValid = false
   }
-  
+
   return isValid
 }
-
 
 // Tambah profil lulusan baru
 const savePL = async () => {
   try {
     // Reset error message first
     error.value = ''
-    
+
     // Validate form before submission
     if (!validateForm()) {
       return // Stop if validation fails
     }
-    
+
     if (isEditing.value) {
       await plStore.editPL(form.value.id_pl, form.value)
     } else {
@@ -107,9 +111,13 @@ const clearError = () => {
   error.value = ''
 }
 
-
 // Load data saat komponen dimuat
-onMounted(() => {
+onMounted(async () => {
+  // Fetch kurikulum data by ID from route params
+  const kurikulumId = route.params.id
+  if (kurikulumId) {
+    await kurikulumStore.fetchKurikulumById(kurikulumId)
+  }
   fetchProfilLulusan()
 })
 </script>
@@ -138,9 +146,10 @@ onMounted(() => {
         </div>
         <div class="form-group">
           <label>Deskripsi</label>
-          <textarea v-model="form.deskripsi" 
-          placeholder="Deskripsi profil lulusan"
-          :class="{ 'input-error': formErrors.deskripsi }"
+          <textarea
+            v-model="form.deskripsi"
+            placeholder="Deskripsi profil lulusan"
+            :class="{ 'input-error': formErrors.deskripsi }"
           ></textarea>
           <div v-if="formErrors.deskripsi" class="error-text">{{ formErrors.deskripsi }}</div>
         </div>
@@ -164,8 +173,8 @@ onMounted(() => {
       <!-- Profil Lulusan List -->
       <div v-else class="pl-content">
         <p>
-          Profil lulusan untuk {{ kurikulumData.nama }} mencakup beberapa bidang keahlian yang
-          diharapkan setelah menyelesaikan program studi.
+          Profil lulusan untuk {{ currentKurikulum?.nama || 'Kurikulum' }} mencakup beberapa bidang
+          keahlian yang diharapkan setelah menyelesaikan program studi.
         </p>
 
         <div v-if="profilLulusan.length === 0" class="empty-state">
@@ -281,11 +290,11 @@ onMounted(() => {
   margin-top: 3px;
 }
 
-:placeholder-shown{
+:placeholder-shown {
   font-family: 'Inter', Arial, Helvetica, sans-serif;
 }
 
-textarea{
+textarea {
   font-family: 'Inter', Arial, Helvetica, sans-serif;
 }
 

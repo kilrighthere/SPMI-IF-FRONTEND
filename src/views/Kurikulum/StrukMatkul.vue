@@ -1,10 +1,16 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useMKStore } from '@/stores/mataKuliah'
-import { kurikulumData } from '@/stores/kurikulum'
+import { useKurikulumStore } from '@/stores/kurikulum'
 
-// Initialize store
+// Initialize stores
 const mkStore = useMKStore()
+const kurikulumStore = useKurikulumStore()
+const route = useRoute()
+
+// Get kurikulum data
+const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
 
 // Data
 const mataKuliahList = computed(() => mkStore.mataKuliahList)
@@ -19,7 +25,7 @@ const formMode = ref('add') // 'add' or 'edit'
 const newMK = ref({
   kode: '',
   nama: '',
-  sks: 0
+  sks: 0,
 })
 
 // For filtering
@@ -33,8 +39,7 @@ const filteredMataKuliah = computed(() => {
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     filtered = filtered.filter(
-      mk => mk.kode.toLowerCase().includes(query) || 
-            mk.nama.toLowerCase().includes(query)
+      (mk) => mk.kode.toLowerCase().includes(query) || mk.nama.toLowerCase().includes(query),
     )
   }
 
@@ -52,7 +57,7 @@ const openAddModal = () => {
   newMK.value = {
     kode: '',
     nama: '',
-    sks: 2
+    sks: 2,
   }
   showModal.value = true
 }
@@ -71,8 +76,8 @@ const saveMK = async () => {
       error.value = 'Mohon lengkapi semua data yang diperlukan'
       return
     }
-    
-    let result;
+
+    let result
     if (formMode.value === 'add') {
       result = await mkStore.createMK(newMK.value)
       if (result) {
@@ -84,7 +89,7 @@ const saveMK = async () => {
         successMessage.value = 'Mata kuliah berhasil diperbarui'
       }
     }
-    
+
     if (result) {
       showModal.value = false
       showSuccess.value = true
@@ -103,7 +108,7 @@ const deleteMK = async (mk) => {
   if (confirm(`Apakah anda yakin ingin menghapus mata kuliah ${mk.kode} - ${mk.nama}?`)) {
     try {
       const result = await mkStore.removeMK(mk.id)
-      
+
       if (result.success) {
         successMessage.value = 'Mata kuliah berhasil dihapus'
         showSuccess.value = true
@@ -130,6 +135,11 @@ const deleteMK = async (mk) => {
 onMounted(async () => {
   console.log('StrukMatkul component mounted, fetching data...')
   try {
+    // Fetch kurikulum data by ID from route params
+    const kurikulumId = route.params.id
+    if (kurikulumId) {
+      await kurikulumStore.fetchKurikulumById(kurikulumId)
+    }
     await fetchData()
     console.log('Data fetched successfully, found', mataKuliahList.value.length, 'mata kuliah')
   } catch (err) {
@@ -145,43 +155,40 @@ onMounted(async () => {
       <div class="section-header">
         <h3>Struktur Mata Kuliah</h3>
       </div>
-      
+
       <!-- Loading indicator -->
       <div v-if="isLoading" class="loading">Loading...</div>
-      
+
       <!-- Error message -->
       <div v-if="error" class="error-message">{{ error }}</div>
-      
+
       <!-- Success message -->
       <div v-if="showSuccess" class="success-message">{{ successMessage }}</div>
-      
+
       <!-- Content -->
       <div v-if="!isLoading && !error" class="struktur-content">
         <p>
-          Halaman ini digunakan untuk mengelola struktur mata kuliah pada {{ kurikulumData.nama }}.
+          Halaman ini digunakan untuk mengelola struktur mata kuliah pada
+          {{ currentKurikulum?.nama || 'Kurikulum' }}.
         </p>
-        
+
         <div class="action-bar">
           <div class="filters">
             <div class="search-container">
-              <input 
-                type="text" 
-                v-model="searchQuery" 
-                placeholder="Cari mata kuliah..." 
+              <input
+                type="text"
+                v-model="searchQuery"
+                placeholder="Cari mata kuliah..."
                 class="search-input"
               />
             </div>
-            
-
           </div>
-          
+
           <button class="btn-add" @click="openAddModal">
             <i class="ri-add-line"></i> Tambah Mata Kuliah
           </button>
         </div>
-        
 
-        
         <!-- Mata Kuliah Table -->
         <div>
           <table v-if="filteredMataKuliah.length > 0" class="mk-table">
@@ -209,13 +216,11 @@ onMounted(async () => {
               </tr>
             </tbody>
           </table>
-          <div v-else class="empty-state">
-            Tidak ada mata kuliah yang sesuai dengan filter.
-          </div>
+          <div v-else class="empty-state">Tidak ada mata kuliah yang sesuai dengan filter.</div>
         </div>
       </div>
     </div>
-    
+
     <!-- Modal for Adding/Editing Mata Kuliah -->
     <div v-if="showModal" class="modal-overlay">
       <div class="modal-content">
@@ -226,17 +231,38 @@ onMounted(async () => {
         <div class="modal-body">
           <div class="form-group">
             <label for="kode">Kode Mata Kuliah:</label>
-            <input type="text" id="kode" v-model="newMK.kode" class="form-input" placeholder="Contoh: IF2110" required />
+            <input
+              type="text"
+              id="kode"
+              v-model="newMK.kode"
+              class="form-input"
+              placeholder="Contoh: IF2110"
+              required
+            />
           </div>
           <div class="form-group">
             <label for="nama">Nama Mata Kuliah:</label>
-            <input type="text" id="nama" v-model="newMK.nama" class="form-input" placeholder="Nama mata kuliah" required />
+            <input
+              type="text"
+              id="nama"
+              v-model="newMK.nama"
+              class="form-input"
+              placeholder="Nama mata kuliah"
+              required
+            />
           </div>
           <div class="form-group">
             <label for="sks">SKS:</label>
-            <input type="number" id="sks" v-model="newMK.sks" class="form-input" min="1" max="6" required />
+            <input
+              type="number"
+              id="sks"
+              v-model="newMK.sks"
+              class="form-input"
+              min="1"
+              max="6"
+              required
+            />
           </div>
-
         </div>
         <div class="modal-footer">
           <button class="btn-cancel" @click="showModal = false">Batal</button>
@@ -319,8 +345,6 @@ onMounted(async () => {
   font-size: 14px;
 }
 
-
-
 .btn-add {
   background-color: #4caf50;
   color: white;
@@ -336,10 +360,6 @@ onMounted(async () => {
 .btn-add i {
   font-size: 16px;
 }
-
-
-
-
 
 .mk-table {
   width: 100%;

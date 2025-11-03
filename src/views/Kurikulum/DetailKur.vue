@@ -1,14 +1,26 @@
 <script setup>
 import { useRoute } from 'vue-router'
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import Footer from '@/components/Footer.vue'
 import Header from '@/components/Header.vue'
 import Sidebar from '@/components/Sidebar.vue'
-import { kurikulumId, kurikulumData } from '@/stores/kurikulum'
+import { useKurikulumStore } from '@/stores/kurikulum'
 import { useSidebarStore } from '@/stores/sidebar'
 
 const route = useRoute()
 const sidebarStore = useSidebarStore()
+const kurikulumStore = useKurikulumStore()
+
+// Get kurikulum data from store
+const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
+
+// Load kurikulum data when component is mounted
+onMounted(async () => {
+  const kurikulumId = route.params.id
+  if (kurikulumId) {
+    await kurikulumStore.fetchKurikulumById(kurikulumId)
+  }
+})
 
 // sub menu aktif
 const activeSubmenu = computed(() => {

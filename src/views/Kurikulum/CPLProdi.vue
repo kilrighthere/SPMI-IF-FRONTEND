@@ -1,13 +1,19 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
 // Removed Header, Sidebar, Footer imports as they're already in the parent component
 
-// Import store CPL
+// Import stores
 import { useCPLStore } from '@/stores/cpl'
-import { kurikulumData } from '@/stores/kurikulum'
+import { useKurikulumStore } from '@/stores/kurikulum'
 
-// Initialize store
+// Initialize stores
 const cplStore = useCPLStore()
+const kurikulumStore = useKurikulumStore()
+const route = useRoute()
+
+// Get kurikulum data
+const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
 
 // Data untuk CPL
 const cplList = computed(() => cplStore.cplList)
@@ -65,7 +71,12 @@ const resetForm = () => {
 }
 
 // Load data saat komponen dimuat
-onMounted(() => {
+onMounted(async () => {
+  // Fetch kurikulum data by ID from route params
+  const kurikulumId = route.params.id
+  if (kurikulumId) {
+    await kurikulumStore.fetchKurikulumById(kurikulumId)
+  }
   fetchCPL()
 })
 </script>
@@ -107,8 +118,9 @@ onMounted(() => {
       <!-- CPL Content -->
       <div v-if="!isLoading && !error">
         <p>
-          Capaian Pembelajaran Lulusan (CPL) untuk {{ kurikulumData.nama }} mencakup beberapa
-          kompetensi yang harus dikuasai oleh lulusan program studi.
+          Capaian Pembelajaran Lulusan (CPL) untuk
+          {{ currentKurikulum?.nama || 'Kurikulum' }} mencakup beberapa kompetensi yang harus
+          dikuasai oleh lulusan program studi.
         </p>
 
         <div v-if="cplList.length === 0" class="empty-state">Belum ada data CPL.</div>
