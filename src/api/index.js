@@ -209,6 +209,8 @@ export const deleteStrukturMK = (id) => api.delete(`/delete/struktur-mk/${id}`)
 // Mahasiswa
 export const getMahasiswaList = () => api.get('/list/mahasiswa');
 export const getMahasiswaByNim = (nim) => api.get(`/view/mahasiswa/${nim}`);
+export const getMahasiswaPetaNilai = (nim) => api.get(`/view/mahasiswa/peta-nilai/${nim}`);
+export const getMahasiswaCplPerGrades = (nim) => api.get(`/view/mahasiswa/cpl-per-grades/${nim}`);
 export const addMahasiswa = (data) => api.post('/add/mahasiswa', data);
 export const updateMahasiswa = (nim, data) => api.put(`/update/mahasiswa/${nim}`, data);
 export const deleteMahasiswa = (nim) => api.delete(`/delete/mahasiswa/${nim}`);
@@ -308,6 +310,8 @@ export default {
   // Mahasiswa
   getMahasiswaList,
   getMahasiswaByNim,
+  getMahasiswaPetaNilai,
+  getMahasiswaCplPerGrades,
   addMahasiswa,
   updateMahasiswa,
   deleteMahasiswa,
