@@ -172,14 +172,23 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
       console.log('Creating nilai with data:', apiData)
       const response = await addNilaiMk(apiData)
       console.log('API response:', response)
+      console.log('API response.data:', response.data)
+      console.log('API response.data.success:', response.data?.success)
       
-      // Refresh data after adding
-      await fetchAllData()
-      
-      if (response.data && response.data.success) {
-        return { success: true, data: response.data.data }
+      // Refresh data after adding - hanya refresh nilai untuk periode yang dipilih
+      if (selectedPeriode.value) {
+        await fetchNilaiByFilter({ id_periode: selectedPeriode.value })
       }
-      return response.data
+      
+      // Handle berbagai format response dari API
+      if (response.data && response.data.success) {
+        return { success: true, data: response.data.data, message: response.data.message }
+      } else if (response.data) {
+        // Fallback untuk format response yang berbeda
+        return { success: true, data: response.data }
+      }
+      
+      return { success: false, message: 'Unexpected response format' }
     } catch (err) {
       console.error('Error creating nilai:', err)
       console.error('Error details:', err.response?.data || err.message)
@@ -254,6 +263,7 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
     isLoading,
     error,
     fetchInitialData,
+    fetchAllData: fetchInitialData, // Backward compatibility alias
     fetchNilaiByFilter,
     fetchWithFilters,
     fetchPeriodeList,

@@ -37,6 +37,18 @@ const formData = ref({
   nilai_akhir: ''
 })
 
+// Info mahasiswa untuk validasi NIM
+const mahasiswaInfo = ref({
+  nim: '',
+  nama: ''
+})
+
+// Combobox mata kuliah
+const mkSearchQuery = ref('')
+const showMkDropdown = ref(false)
+const selectedMK = ref(null)
+const filteredMK = ref([])
+
 // Filter dan pencarian
 const searchQuery = ref('')
 const selectedMataKuliah = ref('')
@@ -116,13 +128,31 @@ function getCurrentKurikulumName() {
 }
 
 // Modal functions
-function openAddModal() {
+async function openAddModal() {
+  // Pastikan data mahasiswa sudah tersedia
+  if (Object.keys(nilaiMkStore.mahasiswaMap).length === 0) {
+    await nilaiMkStore.fetchMahasiswaData()
+  }
+  
   formData.value = {
     id_periode: selectedPeriode.value,
     kode_mk: '',
     nim: '',
     nilai_akhir: ''
   }
+  
+  // Reset mahasiswa info
+  mahasiswaInfo.value = {
+    nim: '',
+    nama: ''
+  }
+  
+  // Reset combobox mata kuliah
+  selectedMK.value = null
+  mkSearchQuery.value = ''
+  showMkDropdown.value = false
+  filteredMK.value = availableMataKuliah.value
+  
   showModal.value = true
 }
 
@@ -134,6 +164,69 @@ function closeModal() {
     nim: '',
     nilai_akhir: ''
   }
+  // Reset mahasiswa info
+  mahasiswaInfo.value = {
+    nim: '',
+    nama: ''
+  }
+  // Reset combobox mata kuliah
+  selectedMK.value = null
+  mkSearchQuery.value = ''
+  showMkDropdown.value = false
+  filteredMK.value = []
+}
+
+// Check nama mahasiswa berdasarkan NIM
+function checkMahasiswaNama() {
+  const nim = formData.value.nim.trim()
+  
+  if (nim.length >= 10) { // Minimal 10 karakter untuk mulai check
+    const nama = nilaiMkStore.getMahasiswaNama(nim)
+    mahasiswaInfo.value = {
+      nim: nim,
+      nama: nama !== nim ? nama : '' // Jika sama dengan NIM, berarti tidak ditemukan
+    }
+  } else {
+    mahasiswaInfo.value = {
+      nim: '',
+      nama: ''
+    }
+  }
+}
+
+// Mata kuliah combobox functions
+function filterMataKuliah() {
+  const query = mkSearchQuery.value.toLowerCase().trim()
+  
+  if (query === '') {
+    filteredMK.value = availableMataKuliah.value
+  } else {
+    filteredMK.value = availableMataKuliah.value.filter(mk => 
+      mk.kode_mk.toLowerCase().includes(query) ||
+      mk.nama_mk.toLowerCase().includes(query)
+    )
+  }
+}
+
+function selectMataKuliah(mk) {
+  selectedMK.value = mk
+  formData.value.kode_mk = mk.kode_mk
+  mkSearchQuery.value = `${mk.kode_mk} - ${mk.nama_mk}`
+  showMkDropdown.value = false
+}
+
+function clearMataKuliah() {
+  selectedMK.value = null
+  formData.value.kode_mk = ''
+  mkSearchQuery.value = ''
+  filteredMK.value = availableMataKuliah.value
+}
+
+function hideMkDropdown() {
+  // Delay untuk memungkinkan click pada option
+  setTimeout(() => {
+    showMkDropdown.value = false
+  }, 150)
 }
 
 // Submit form
@@ -151,6 +244,13 @@ async function submitForm() {
       return
     }
 
+    // Validasi mahasiswa ditemukan
+    const namaMahasiswa = nilaiMkStore.getMahasiswaNama(formData.value.nim)
+    if (namaMahasiswa === formData.value.nim) {
+      alert('Mahasiswa dengan NIM tersebut tidak ditemukan. Pastikan NIM sudah benar.')
+      return
+    }
+
     // Format nilai dengan 2 desimal
     formData.value.nilai_akhir = nilai.toFixed(2)
 
@@ -158,11 +258,13 @@ async function submitForm() {
     
     const result = await nilaiMkStore.createNilai(formData.value)
     
-    if (result && result.success) {
+    console.log('Create nilai result:', result)
+    
+    if (result && (result.success === true || result.success === undefined)) {
       alert(`Nilai berhasil ditambahkan!\nNilai: ${formData.value.nilai_akhir}\nHuruf Mutu: ${nilaiMkStore.getHurufMutu(formData.value.nilai_akhir)}`)
       closeModal()
     } else {
-      alert('Gagal menambahkan nilai')
+      alert('Gagal menambahkan nilai: ' + (result?.message || 'Unknown error'))
     }
   } catch (err) {
     console.error('Error submitting nilai:', err)
@@ -395,21 +497,44 @@ onMounted(() => {
 
           <div class="form-group">
             <label for="mata-kuliah" class="form-label">Mata Kuliah *</label>
-            <select 
-              id="mata-kuliah" 
-              v-model="formData.kode_mk" 
-              class="form-select"
-              required
-            >
-              <option value="">Pilih Mata Kuliah</option>
-              <option 
-                v-for="mk in availableMataKuliah" 
-                :key="mk.kode_mk" 
-                :value="mk.kode_mk"
-              >
-                {{ mk.kode_mk }} - {{ mk.nama_mk }}
-              </option>
-            </select>
+            <div class="combobox-container">
+              <input 
+                type="text" 
+                id="mata-kuliah" 
+                v-model="mkSearchQuery"
+                class="form-input combobox-input"
+                placeholder="Ketik kode atau nama mata kuliah..."
+                required
+                @input="filterMataKuliah"
+                @focus="showMkDropdown = true"
+                @blur="hideMkDropdown"
+                autocomplete="off"
+              />
+              <div v-if="showMkDropdown && filteredMK.length > 0" class="combobox-dropdown">
+                <div v-if="mkSearchQuery" class="combobox-header">
+                  {{ filteredMK.length }} mata kuliah ditemukan
+                </div>
+                <div 
+                  v-for="mk in filteredMK" 
+                  :key="mk.kode_mk"
+                  class="combobox-option"
+                  @mousedown="selectMataKuliah(mk)"
+                >
+                  <span class="mk-kode">{{ mk.kode_mk }}</span>
+                  <span class="mk-nama">{{ mk.nama_mk }}</span>
+                </div>
+              </div>
+              <div v-if="showMkDropdown && filteredMK.length === 0 && mkSearchQuery" class="combobox-empty">
+                Mata kuliah tidak ditemukan
+              </div>
+            </div>
+            <div v-if="selectedMK" class="selected-mk-info">
+              <i class="ri-book-line"></i>
+              <span class="selected-mk-text">{{ selectedMK.kode_mk }} - {{ selectedMK.nama_mk }}</span>
+              <button type="button" class="clear-mk-btn" @click="clearMataKuliah">
+                <i class="ri-close-line"></i>
+              </button>
+            </div>
           </div>
 
           <div class="form-group">
@@ -421,7 +546,19 @@ onMounted(() => {
               class="form-input"
               placeholder="Masukkan NIM mahasiswa"
               required
+              @input="checkMahasiswaNama"
             />
+            <div v-if="mahasiswaInfo.nim && mahasiswaInfo.nim === formData.nim" class="nim-info">
+              <div v-if="mahasiswaInfo.nama" class="nim-found">
+                <i class="ri-user-line"></i>
+                <span class="nama-mahasiswa">{{ mahasiswaInfo.nama }}</span>
+                <i class="ri-check-line check-icon"></i>
+              </div>
+              <div v-else class="nim-not-found">
+                <i class="ri-error-warning-line"></i>
+                <span class="error-text">Mahasiswa tidak ditemukan</span>
+              </div>
+            </div>
           </div>
 
           <div class="form-group">
@@ -851,6 +988,195 @@ onMounted(() => {
   margin-top: 6px;
   font-size: 12px;
   color: #6b7280;
+}
+
+/* NIM Info Styles */
+.nim-info {
+  margin-top: 8px;
+}
+
+.nim-found {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.nim-found i.ri-user-line {
+  color: #0284c7;
+}
+
+.nama-mahasiswa {
+  color: #0c4a6e;
+  font-weight: 500;
+  flex-grow: 1;
+}
+
+.check-icon {
+  color: #16a34a;
+  font-size: 16px;
+}
+
+.nim-not-found {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.nim-not-found i.ri-error-warning-line {
+  color: #dc2626;
+}
+
+.error-text {
+  color: #991b1b;
+  font-weight: 500;
+}
+
+/* Combobox Styles */
+.combobox-container {
+  position: relative;
+}
+
+.combobox-input {
+  width: 100%;
+  padding-right: 32px;
+}
+
+.combobox-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+/* Custom scrollbar untuk dropdown */
+.combobox-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.combobox-dropdown::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.combobox-dropdown::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.combobox-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.combobox-header {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #6b7280;
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 500;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.combobox-option {
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.combobox-option:hover {
+  background-color: #f8fafc;
+}
+
+.combobox-option:last-child {
+  border-bottom: none;
+}
+
+.mk-kode {
+  font-weight: 600;
+  color: #374151;
+  min-width: 80px;
+}
+
+.mk-nama {
+  color: #6b7280;
+  flex-grow: 1;
+}
+
+.combobox-empty {
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #9ca3af;
+  text-align: center;
+  font-style: italic;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+}
+
+.selected-mk-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.selected-mk-info i.ri-book-line {
+  color: #0284c7;
+}
+
+.selected-mk-text {
+  color: #0c4a6e;
+  font-weight: 500;
+  flex-grow: 1;
+}
+
+.clear-mk-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clear-mk-btn:hover {
+  background-color: rgba(75, 85, 99, 0.1);
+  color: #374151;
 }
 
 .modal-footer {
