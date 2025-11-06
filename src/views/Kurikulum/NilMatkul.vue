@@ -5,6 +5,10 @@ import { useNilaiMkStore } from '@/stores/nilaiMk'
 import { useKurikulumStore } from '@/stores/kurikulum'
 import { useMKStore } from '@/stores/mataKuliah'
 import { usePermissions } from '@/composables/usePermissions'
+import ExcelJS from 'exceljs'
+
+// Ref untuk file input
+const excelUpload = ref(null)
 
 const router = useRouter()
 const route = useRoute()
@@ -304,6 +308,266 @@ async function loadNilaiData() {
   ])
 }
 
+// Fungsi untuk memproses file Excel
+async function processExcelFile(file) {
+  try {
+    const workbook = new ExcelJS.Workbook()
+    await workbook.xlsx.load(await file.arrayBuffer())
+    
+    const worksheet = workbook.worksheets[0]
+    if (!worksheet) {
+      throw new Error('Worksheet not found')
+    }
+    
+    // Get header info (first 6 rows)
+    const mataKuliahRow = worksheet.getRow(1).values
+    const tahunAjaranRow = worksheet.getRow(2).values
+    const semesterRow = worksheet.getRow(3).values
+    
+    if (!mataKuliahRow || !tahunAjaranRow || !semesterRow) {
+      throw new Error('Format Excel tidak sesuai dengan template SIAP')
+    }
+    
+    console.log('Debug - Mata Kuliah Row:', mataKuliahRow)
+    console.log('Debug - Tahun Ajaran Row:', tahunAjaranRow)
+    console.log('Debug - Semester Row:', semesterRow)
+    
+    // Extract kode_mk from ": MKK231 - Kompilator"
+    let kodeMK = ''
+    if (mataKuliahRow[2] && typeof mataKuliahRow[2] === 'string') {
+      const parts = mataKuliahRow[2].split('-')
+      if (parts[0]) {
+        kodeMK = parts[0].replace(':', '').trim()
+      }
+    }
+    
+    // Extract tahun from ": 2020"
+    let tahun = ''
+    if (tahunAjaranRow[2] && typeof tahunAjaranRow[2] === 'string') {
+      const match = tahunAjaranRow[2].match(/\d{4}/)
+      if (match) {
+        tahun = match[0]
+      }
+    }
+    
+    // Extract semester from ": Gasal"
+    let semester = ''
+    if (semesterRow[2] && typeof semesterRow[2] === 'string') {
+      const semesterText = semesterRow[2].toLowerCase()
+      if (semesterText.includes('gasal')) {
+        semester = 'gasal'
+      } else if (semesterText.includes('genap')) {
+        semester = 'genap'
+      }
+    }
+    
+    console.log('Debug - Extracted values:', { kodeMK, tahun, semester })
+    
+    if (!kodeMK || !tahun || !semester) {
+      throw new Error('Tidak dapat membaca informasi Mata Kuliah, Tahun Ajaran, atau Semester')
+    }
+    
+    // Convert to id_periode format (YYYYS where S is 1 for Gasal, 2 for Genap)
+    const idPeriode = tahun + (semester.toLowerCase() === 'gasal' ? '1' : '2')
+    
+    // Get data rows (start from row 8)
+    const nilaiData = []
+    
+    // Find header row (containing "NIM" and "Nilai Akhir Angka")
+    let headerRow = null
+    let nimIndex = 1
+    let nilaiAkhirIndex = 0
+    
+    // Debug: Print all rows for inspection
+    console.log('Debug - All Rows:')
+    worksheet.eachRow((row, rowNumber) => {
+      console.log(`Row ${rowNumber}:`, row.values)
+    })
+    
+    // Find the header row first
+    worksheet.eachRow((row, rowNumber) => {
+      const values = row.values
+      if (!headerRow && values) {
+        // Debug: Print each row being checked for headers
+        console.log(`Checking row ${rowNumber} for headers:`, values)
+        
+        for (let i = 1; i < values.length; i++) {
+          const cellValue = values[i]?.toString().toLowerCase() || ''
+          if (cellValue.includes('nim')) {
+            nimIndex = i
+            console.log('Found NIM column at index:', i)
+          }
+          if (cellValue.includes('nilai akhir angka')) {
+            nilaiAkhirIndex = i
+            headerRow = rowNumber
+            console.log('Found Nilai Akhir Angka column at index:', i)
+          }
+        }
+      }
+    })
+    
+    if (!headerRow || !nilaiAkhirIndex) {
+      throw new Error('Format Excel tidak sesuai: tidak dapat menemukan kolom NIM dan Nilai Akhir Angka')
+    }
+    
+    console.log('Debug - Header found:', { headerRow, nimIndex, nilaiAkhirIndex })
+    
+    // Read data rows
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber <= headerRow) return
+      
+      const values = row.values
+      console.log(`Processing row ${rowNumber}:`, values)
+      
+      if (!values || values.length <= Math.max(nimIndex, nilaiAkhirIndex)) {
+        console.log(`Skipping row ${rowNumber} - insufficient columns`)
+        return
+      }
+      
+      const nim = values[nimIndex]
+      const nilaiAkhirCell = values[nilaiAkhirIndex]
+      
+      console.log(`Row ${rowNumber} values:`, { nim, nilaiAkhirCell })
+      
+      if (nim) {
+        // Debug nilai akhir cell details
+        console.log(`Row ${rowNumber} nilaiAkhirCell detail:`, {
+          value: nilaiAkhirCell,
+          type: typeof nilaiAkhirCell,
+          keys: nilaiAkhirCell ? Object.keys(nilaiAkhirCell) : [],
+          text: nilaiAkhirCell?.text,
+          result: nilaiAkhirCell?.result
+        })
+
+        // Convert nilai to number and handle any formatting
+        let nilaiAkhir = 0
+        
+        if (typeof nilaiAkhirCell === 'number') {
+          nilaiAkhir = nilaiAkhirCell
+        } else if (nilaiAkhirCell && typeof nilaiAkhirCell === 'object') {
+          // Try to get value from cell object
+          if (nilaiAkhirCell.result) {
+            nilaiAkhir = nilaiAkhirCell.result
+          } else if (nilaiAkhirCell.text) {
+            nilaiAkhir = parseFloat(nilaiAkhirCell.text.replace(',', '.'))
+          } else {
+            // Calculate nilai akhir based on column weights
+            const weights = {
+              5: 0.10,  // Nilai Aktivitas Partisipatif (10%)
+              6: 0.40,  // Nilai Hasil Proyek (40%)
+              7: 0.10,  // Nilai Tugas (10%)
+              8: 0.10,  // Nilai Quiz (10%)
+              9: 0.15,  // Nilai UTS (15%)
+              10: 0.15  // Nilai UAS (15%)
+            }
+            
+            let total = 0
+            for (const [colIndex, weight] of Object.entries(weights)) {
+              const nilai = parseFloat(values[colIndex] || 0)
+              if (!isNaN(nilai)) {
+                total += nilai * weight
+              }
+            }
+            nilaiAkhir = total
+          }
+        } else if (nilaiAkhirCell) {
+          const nilaiStr = nilaiAkhirCell.toString().replace(',', '.').trim()
+          nilaiAkhir = parseFloat(nilaiStr)
+        }
+        
+        console.log(`Row ${rowNumber} parsed nilai:`, { nilaiAkhir })
+        
+        if (!isNaN(nilaiAkhir) && nilaiAkhir >= 0) {
+          const dataItem = {
+            id_periode: idPeriode,
+            kode_mk: kodeMK,
+            nim: nim.toString(),
+            nilai_akhir: Number(nilaiAkhir.toFixed(2))
+          }
+          console.log(`Adding data item:`, dataItem)
+          nilaiData.push(dataItem)
+        }
+      }
+    })
+    
+    console.log('Debug - Nilai Data:', nilaiData)
+    
+    // Filter out rows with invalid NIM
+    const validData = nilaiData.filter(item => item.nim && item.nim.length >= 10)
+    
+    if (validData.length === 0) {
+      alert('Tidak ada data nilai yang valid ditemukan di file Excel')
+      return
+    }
+
+    // Check if selected period matches
+    if (selectedPeriode.value && selectedPeriode.value !== idPeriode) {
+      alert('Periode di file Excel tidak sesuai dengan periode yang dipilih')
+      return
+    }
+    
+    // Set periode if not already selected
+    if (!selectedPeriode.value) {
+      selectedPeriode.value = idPeriode
+    }
+    
+    // Submit nilai satu per satu
+    let successCount = 0
+    let failedCount = 0
+    
+    for (const nilai of validData) {
+      try {
+        // Format nilai to 2 decimal places
+        nilai.nilai_akhir = parseFloat(nilai.nilai_akhir.toFixed(2))
+        
+        const result = await nilaiMkStore.createNilai(nilai)
+        if (result && (result.success === true || result.success === undefined)) {
+          successCount++
+        } else {
+          failedCount++
+        }
+      } catch (err) {
+        console.error('Error submitting nilai:', err)
+        failedCount++
+      }
+    }
+    
+    // Show summary
+    alert(`Upload selesai!\nBerhasil: ${successCount} nilai\nGagal: ${failedCount} nilai`)
+    
+    // Reload data
+    await loadNilaiData()
+    
+  } catch (err) {
+    console.error('Error processing Excel file:', err)
+    alert('Terjadi kesalahan saat memproses file Excel: ' + err.message)
+  }
+}
+
+// Fungsi untuk trigger input file
+function triggerFileInput() {
+  const fileInput = document.getElementById('excelUpload')
+  if (fileInput) {
+    fileInput.click()
+  }
+}
+
+// Fungsi untuk handle file upload
+function handleFileUpload(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  // Validate file type
+  if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+    alert('File harus berformat Excel (.xlsx atau .xls)')
+    event.target.value = '' // Clear input
+    return
+  }
+  
+  processExcelFile(file)
+  event.target.value = '' // Clear input after processing
+}
+
 // Watch untuk perubahan filter mata kuliah
 watch(selectedMataKuliah, async (newValue, oldValue) => {
   if (selectedPeriode.value && newValue !== oldValue) {
@@ -311,9 +575,12 @@ watch(selectedMataKuliah, async (newValue, oldValue) => {
   }
 })
 
-// Load hanya periode saat komponen dimuat
-onMounted(() => {
-  loadPeriodeOnly()
+// Load data saat komponen dimuat
+onMounted(async () => {
+  await Promise.all([
+    loadPeriodeOnly(),
+    mkStore.fetchAllMK() // Load data mata kuliah
+  ])
 })
 </script>
 
@@ -362,9 +629,32 @@ onMounted(() => {
       </div>
 
       <!-- Action Button -->
+<<<<<<< Updated upstream
       <div class="action-section" v-if="isAdmin || isDosen">
         <button
           @click="openAddModal"
+=======
+      <div class="action-section" v-if="canManageKurikulumMk">
+        <input
+          type="file"
+          id="excelUpload"
+          ref="excelUpload"
+          accept=".xlsx,.xls"
+          class="hidden-input"
+          @change="handleFileUpload"
+        />
+        <button 
+          @click="triggerFileInput"
+          class="btn-upload"
+          :disabled="isLoading"
+          :title="isLoading ? 'Sedang memproses...' : 'Upload nilai dari Excel SIAP'"
+        >
+          <i class="ri-file-excel-2-line"></i>
+          Upload Excel
+        </button>
+        <button 
+          @click="openAddModal" 
+>>>>>>> Stashed changes
           class="btn-primary"
           :disabled="!selectedPeriode"
           :title="!selectedPeriode ? 'Pilih periode terlebih dahulu' : 'Tambah nilai baru'"
@@ -441,7 +731,7 @@ onMounted(() => {
                   <span class="kode-mk">{{ nilai.kode_mk }}</span>
                 </td>
                 <td>
-                  <span class="nama-mk">{{ nilaiMkStore.getMataKuliahNama(nilai.kode_mk) }}</span>
+                  <span class="nama-mk">{{ mkStore.getMataKuliahNama(nilai.kode_mk) }}</span>
                 </td>
                 <td>
                   <span class="nim">{{ nilai.nim }}</span>
@@ -672,6 +962,34 @@ onMounted(() => {
 .action-section {
   display: flex;
   gap: 12px;
+}
+
+.hidden-input {
+  display: none;
+}
+
+.btn-upload {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: #15803d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-upload:hover:not(:disabled) {
+  background-color: #166534;
+}
+
+.btn-upload:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .btn-primary {

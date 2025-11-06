@@ -211,6 +211,24 @@ export const useMKStore = defineStore('mataKuliah', () => {
     }
   }
 
+  // Helper untuk mendapatkan mata kuliah berdasarkan kode
+  function getMKByKode(kodeMK) {
+    if (!kodeMK) return null
+    return mataKuliahList.value.find(mk => 
+      // Handle different API response formats
+      (mk.kode_mk && mk.kode_mk === kodeMK) || // New format
+      (mk.kode && mk.kode === kodeMK) || // Old format
+      (mk.id && mk.id === kodeMK) // Fallback to id
+    )
+  }
+
+  // Helper untuk mendapatkan nama mata kuliah
+  function getMataKuliahNama(kodeMK) {
+    const mk = getMKByKode(kodeMK)
+    if (!mk) return kodeMK // Return kode if not found
+    return mk.nama_mk || mk.nama || `${kodeMK}` // Handle different formats
+  }
+
   return {
     mataKuliahList,
     currentMK,
@@ -220,6 +238,8 @@ export const useMKStore = defineStore('mataKuliah', () => {
     fetchMKById,
     createMK,
     editMK,
-    removeMK
+    removeMK,
+    getMKByKode,
+    getMataKuliahNama
   }
 })
