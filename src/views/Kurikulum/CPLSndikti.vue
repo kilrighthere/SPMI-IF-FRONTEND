@@ -5,12 +5,16 @@ import { useCplSndiktiStore } from '@/stores/cplSndikti'
 import { useCPLStore } from '@/stores/cpl'
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
 
 // Initialize stores
 const cplSndiktiStore = useCplSndiktiStore()
 const kurikulumStore = useKurikulumStore()
 const cplStore = useCPLStore()
 const route = useRoute()
+const authStore = useAuthStore()
+
 
 // Get kurikulum data
 const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
@@ -20,6 +24,13 @@ const cplSndiktiList = computed(() => cplSndiktiStore.cplSndiktiList)
 const cplList = computed(() => cplStore.cplList)
 const isLoading = computed(() => cplSndiktiStore.isLoading || cplStore.isLoading)
 const error = ref('')
+
+// cek role user
+const userRole = computed(() => authStore.user?.role?.toLowerCase())
+const isAdmin = computed(() => userRole.value === 'admin')
+const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
+const isDosen = computed(() => userRole.value === 'dosen')
+
 
 // Form untuk tambah/edit CPL SNDIKTI
 const form = ref({
@@ -153,7 +164,7 @@ onMounted(async () => {
     <div id="form-section" class="section-box">
       <div class="section-header">
         <h3>CPL SNDIKTI (Standar Nasional Pendidikan Tinggi)</h3>
-        <button class="btn-add" @click="showForm ? resetForm() : (showForm = true)">
+        <button class="btn-add" @click="showForm ? resetForm() : (showForm = true)" v-if="isAdmin">
           {{ showForm ? 'Batal' : 'Tambah CPL SNDIKTI' }}
         </button>
       </div>
@@ -236,7 +247,7 @@ onMounted(async () => {
               <th width="15%">Aspek</th>
               <th width="45%">Deskripsi</th>
               <th width="10%">CPL Terkait</th>
-              <th width="20%" class="aksi-title">Aksi</th>
+              <th width="20%" class="aksi-title" v-if="isAdmin">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -252,7 +263,7 @@ onMounted(async () => {
               </td>
               <td class="desk-item">{{ item.deskripsi }}</td>
               <td class="cpl-id">{{ item.id_cpl }}</td>
-              <td class="action-buttons">
+              <td class="action-buttons" v-if="isAdmin">
                 <button class="action-button btn-edit" @click="editCplSndikti(item)">
                   <i class="ri-edit-line"></i>
                   Edit

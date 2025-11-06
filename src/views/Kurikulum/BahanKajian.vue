@@ -3,7 +3,7 @@
     <div class="section-box">
       <div class="section-header">
         <h3>Bahan Kajian (BK)</h3>
-        <button class="btn-add" @click="showForm = !showForm">
+        <button class="btn-add" @click="showForm = !showForm" v-if="isAdmin">
           {{ showForm ? 'Batal' : 'Tambah BK' }}
         </button>
       </div>
@@ -51,14 +51,14 @@
             <tr>
               <th>Kode BK</th>
               <th>Deskripsi</th>
-              <th>Aksi</th>
+              <th v-if="isAdmin">Aksi</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="bk in bkList" :key="bk.id_bk">
               <td>{{ bk.id_bk }}</td>
               <td>{{ bk.deskripsi }}</td>
-              <td class="action-buttons">
+              <td class="action-buttons" v-if="isAdmin">
                 <button class="btn-edit" @click="editBK(bk)">Edit</button>
                 <button class="btn-delete" @click="removeBK(bk.id_bk)">Hapus</button>
               </td>
@@ -73,6 +73,17 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useBKStore } from '@/stores/bk'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+
+
+// cek role user
+const userRole = computed(() => authStore.user?.role?.toLowerCase())
+const isAdmin = computed(() => userRole.value === 'admin')
+const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
+const isDosen = computed(() => userRole.value === 'dosen')
+
 
 // Initialize store
 const bkStore = useBKStore()
