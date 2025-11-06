@@ -216,15 +216,13 @@ onMounted(async () => {
               <tr>
                 <th>Kode</th>
                 <th>Nama Mata Kuliah</th>
-                <th>SKS</th>
                 <th v-if="isAdmin">Aksi</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="mk in filteredMataKuliah" :key="mk.id">
-                <td>{{ mk.kode }}</td>
-                <td>{{ mk.nama }}</td>
-                <td>{{ mk.sks }}</td>
+                <td>{{ mk.kode_mk }}</td>
+                <td>{{ mk.nama_mk }}</td>
                 <td>
                   <button class="btn-edit" @click="openEditModal(mk)">
                     <i class="ri-edit-line"></i>
