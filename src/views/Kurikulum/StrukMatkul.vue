@@ -3,11 +3,21 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMKStore } from '@/stores/mataKuliah'
 import { useKurikulumStore } from '@/stores/kurikulum'
+import { useAuthStore } from '@/stores/auth'
+
 
 // Initialize stores
 const mkStore = useMKStore()
 const kurikulumStore = useKurikulumStore()
 const route = useRoute()
+const authStore = useAuthStore()
+
+// cek role user
+const userRole = computed(() => authStore.user?.role?.toLowerCase())
+const isAdmin = computed(() => userRole.value === 'admin')
+const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
+const isDosen = computed(() => userRole.value === 'dosen')
+
 
 // Get kurikulum data
 const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
@@ -194,7 +204,7 @@ onMounted(async () => {
             </div>
           </div>
 
-          <button class="btn-add" @click="openAddModal">
+          <button class="btn-add" @click="openAddModal" v-if="isAdmin">
             <i class="ri-add-line"></i> Tambah Mata Kuliah
           </button>
         </div>
@@ -206,15 +216,15 @@ onMounted(async () => {
               <tr>
                 <th>Kode</th>
                 <th>Nama Mata Kuliah</th>
-                <th>Deskripsi</th>
-                <th>Aksi</th>
+                <th>SKS</th>
+                <th v-if="isAdmin">Aksi</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="mk in filteredMataKuliah" :key="mk.kode_mk">
-                <td>{{ mk.kode_mk }}</td>
-                <td>{{ mk.nama_mk }}</td>
-                <td>{{ mk.deskripsi || '-' }}</td>
+              <tr v-for="mk in filteredMataKuliah" :key="mk.id">
+                <td>{{ mk.kode }}</td>
+                <td>{{ mk.nama }}</td>
+                <td>{{ mk.sks }}</td>
                 <td>
                   <button class="btn-edit" @click="openEditModal(mk)">
                     <i class="ri-edit-line"></i>

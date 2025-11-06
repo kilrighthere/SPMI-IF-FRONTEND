@@ -57,13 +57,14 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
           class="menu-sidebar"
           :class="{ 'router-link-active': isKurikulumActive }"
           :title="sidebarStore.isMinimized ? 'Kurikulum' : ''"
+          v-if="!isMahasiswa"
         >
           <i class="ri-folder-2-fill"></i>
           <span class="menu-title" v-show="!sidebarStore.isMinimized">Kurikulum</span>
         </RouterLink>
 
         <!-- Submenu - Show when kurikulumId exists -->
-        <div class="submenu" v-if="kurikulumId">
+        <div class="submenu" v-if="kurikulumId | isMahasiswa" >
           <RouterLink
             :to="`/kurikulum/${kurikulumId}/profil-lulusan`"
             class="menu-kurikulum"
@@ -509,6 +510,7 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
   line-height: 1.4;
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 0;
+  text-wrap:initial;
 }
 
 .sidebar.minimized .submenu-title {

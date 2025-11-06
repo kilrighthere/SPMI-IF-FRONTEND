@@ -6,12 +6,23 @@ import { useRoute } from 'vue-router'
 import { useCPMKStore } from '@/stores/cpmk'
 import { useCPLStore } from '@/stores/cpl'
 import { useKurikulumStore } from '@/stores/kurikulum'
+import { useAuthStore } from '@/stores/auth'
+
 
 // Initialize stores
 const cpmkStore = useCPMKStore()
 const cplStore = useCPLStore()
 const kurikulumStore = useKurikulumStore()
 const route = useRoute()
+const authStore = useAuthStore()
+
+
+// cek role user
+const userRole = computed(() => authStore.user?.role?.toLowerCase())
+const isAdmin = computed(() => userRole.value === 'admin')
+const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
+const isDosen = computed(() => userRole.value === 'dosen')
+
 
 // Get kurikulum data
 const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
@@ -152,7 +163,7 @@ onMounted(async () => {
     <div class="section-box">
       <div class="section-header">
         <h3>Capaian Pembelajaran Mata Kuliah (CPMK)</h3>
-        <button class="btn-add" @click="showForm = !showForm">
+        <button class="btn-add" @click="showForm = !showForm" v-if="isAdmin">
           {{ showForm ? 'Batal' : 'Tambah CPMK' }}
         </button>
       </div>
@@ -207,7 +218,7 @@ onMounted(async () => {
                 <span class="cpl-tag">CPL: {{ getCPLName(cpmk.id_cpl) }}</span>
               </div>
             </div>
-            <div class="cpmk-actions">
+            <div class="cpmk-actions" v-if="isAdmin">
               <button class="btn-edit" @click="editCPMK(cpmk)">Edit</button>
               <button class="btn-delete" @click="removeCPMK(cpmk.id_cpmk)">Hapus</button>
             </div>

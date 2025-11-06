@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 // Removed Header, Sidebar, Footer imports as they're already in the parent component
+import { useAuthStore } from '@/stores/auth'
 
 // Import stores
 import { useCPLStore } from '@/stores/cpl'
@@ -11,6 +12,15 @@ import { useKurikulumStore } from '@/stores/kurikulum'
 const cplStore = useCPLStore()
 const kurikulumStore = useKurikulumStore()
 const route = useRoute()
+const authStore = useAuthStore()
+
+
+// cek role user
+const userRole = computed(() => authStore.user?.role?.toLowerCase())
+const isAdmin = computed(() => userRole.value === 'admin')
+const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
+const isDosen = computed(() => userRole.value === 'dosen')
+
 
 // Get kurikulum data
 const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
@@ -86,7 +96,7 @@ onMounted(async () => {
     <div class="section-box">
       <div class="section-header">
         <h3>Capaian Pembelajaran Lulusan (CPL) Program Studi</h3>
-        <button class="btn-add" @click="showForm = !showForm">
+        <button v-if="isAdmin" class="btn-add" @click="showForm = !showForm">
           {{ showForm ? 'Batal' : 'Tambah CPL' }}
         </button>
       </div>
@@ -130,14 +140,14 @@ onMounted(async () => {
             <tr>
               <th>ID CPL</th>
               <th>Deskripsi</th>
-              <th>Aksi</th>
+              <th v-if="isAdmin">Aksi</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="cpl in cplList" :key="cpl.id_cpl">
               <td>{{ cpl.id_cpl }}</td>
               <td>{{ cpl.deskripsi }}</td>
-              <td class="action-buttons">
+              <td class="action-buttons" v-if="isAdmin">
                 <button class="btn-edit" @click="editCPL(cpl)">Edit</button>
                 <button class="btn-delete" @click="removeCPL(cpl.id_cpl)">Hapus</button>
               </td>
