@@ -14,8 +14,11 @@
       <!-- CPL-PL Content -->
       <div v-if="!isLoading && !error">
         <p class="description">
-          Matriks berikut menunjukkan korelasi antara Capaian Pembelajaran Lulusan (CPL) dengan 
-          Profil Lulusan (PL). Centang kotak untuk mengalokasikan CPL ke Profil Lulusan tertentu.
+          Matriks berikut menunjukkan korelasi antara Capaian Pembelajaran Lulusan (CPL) dengan
+          Profil Lulusan (PL). Pilih satu Profil Lulusan untuk setiap CPL.
+          <span v-if="isDosen && !isAdmin" class="readonly-notice">
+            (Mode Tampilan - Hanya Admin yang dapat mengubah)
+          </span>
         </p>
 
         <div v-if="cplList.length === 0 || plList.length === 0" class="empty-state">
@@ -32,6 +35,9 @@
                   <div class="pl-code">{{ pl.kode_pl }}</div>
                   <!--<div class="pl-desc">{{ pl.deskripsi }}</div>-->
                 </th>
+                <th class="pl-header none-header">
+                  <div class="pl-code">Tidak Ada</div>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -41,11 +47,21 @@
                   <!--<div class="cpl-desc">{{ cpl.deskripsi }}</div>-->
                 </td>
                 <td v-for="pl in plList" :key="`${cpl.id_cpl}-${pl.kode_pl}`" class="matrix-cell">
-                  <input 
-                    type="checkbox" 
-                    :checked="isRelated(cpl.id_cpl, pl.kode_pl)" 
-                    @change="toggleRelation(cpl.id_cpl, pl.kode_pl, $event.target.checked)"
-                    :disabled="isLoading"
+                  <input
+                    type="radio"
+                    :name="`cpl-${cpl.id_cpl}`"
+                    :checked="isRelated(cpl.id_cpl, pl.kode_pl)"
+                    @change="selectRelation(cpl.id_cpl, pl.kode_pl)"
+                    :disabled="isLoading || (isDosen && !isAdmin)"
+                  />
+                </td>
+                <td class="matrix-cell none-cell">
+                  <input
+                    type="radio"
+                    :name="`cpl-${cpl.id_cpl}`"
+                    :checked="!hasAnyRelation(cpl.id_cpl)"
+                    @change="clearRelation(cpl.id_cpl)"
+                    :disabled="isLoading || (isDosen && !isAdmin)"
                   />
                 </td>
               </tr>
@@ -60,9 +76,13 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useKorelasiCPLPLStore } from '@/stores/korelasiCPLPL'
+import { usePermissions } from '@/composables/usePermissions'
 
 // Initialize store
 const cplPlStore = useKorelasiCPLPLStore()
+
+// Use centralized permissions
+const { isAdmin, isDosen, isMahasiswa } = usePermissions()
 
 // Data untuk CPL-PL
 const cplList = computed(() => cplPlStore.cplList)
@@ -77,18 +97,66 @@ const isRelated = (cplId, plId) => {
   return matrixData.value[cplId] && matrixData.value[cplId][plId] === true
 }
 
-// Toggle relation between CPL and PL
-const toggleRelation = async (cplId, plId, isChecked) => {
+// Check if CPL has any relation to any PL
+const hasAnyRelation = (cplId) => {
+  if (!matrixData.value[cplId]) return false
+
+  return Object.values(matrixData.value[cplId]).some((value) => value === true)
+}
+
+// Clear all relations for a CPL
+const clearRelation = async (cplId) => {
+  // Only admin can change the relation
+  if (isDosen.value && !isAdmin.value) {
+    return
+  }
+
   try {
-    await cplPlStore.toggleRelation(cplId, plId, isChecked)
+    // Uncheck all PL for this CPL
+    if (matrixData.value[cplId]) {
+      for (const plId in matrixData.value[cplId]) {
+        if (matrixData.value[cplId][plId] === true) {
+          await cplPlStore.toggleRelation(cplId, plId, false)
+        }
+      }
+    }
   } catch (err) {
-    console.error('Error toggling relation:', err)
+    console.error('Error clearing relation:', err)
+  }
+}
+
+// Select relation between CPL and PL (radio button - only one PL per CPL)
+const selectRelation = async (cplId, plId) => {
+  // Only admin can change the relation
+  if (isDosen.value && !isAdmin.value) {
+    return
+  }
+
+  try {
+    // First, uncheck all PL for this CPL
+    if (matrixData.value[cplId]) {
+      for (const existingPlId in matrixData.value[cplId]) {
+        if (matrixData.value[cplId][existingPlId] === true && existingPlId !== plId) {
+          await cplPlStore.toggleRelation(cplId, existingPlId, false)
+        }
+      }
+    }
+
+    // Then, check the selected PL
+    await cplPlStore.toggleRelation(cplId, plId, true)
+  } catch (err) {
+    console.error('Error selecting relation:', err)
   }
 }
 
 // Load data saat komponen dimuat
-onMounted(() => {
-  cplPlStore.fetchAllData()
+onMounted(async () => {
+  await cplPlStore.fetchAllData()
+  console.log('CPL List:', cplList.value)
+  console.log('PL List:', plList.value)
+  console.log('Matrix Data:', matrixData.value)
+  console.log('isAdmin:', isAdmin.value)
+  console.log('isDosen:', isDosen.value)
 })
 </script>
 
@@ -126,6 +194,17 @@ onMounted(() => {
   color: #555;
 }
 
+.readonly-notice {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 4px 8px;
+  background-color: #fff3cd;
+  color: #856404;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
 .table-responsive {
   overflow-x: auto;
   margin-bottom: 20px;
@@ -157,6 +236,16 @@ onMounted(() => {
   vertical-align: top;
 }
 
+.none-header {
+  background-color: #fff3cd;
+  border-left: 2px solid #ffc107;
+}
+
+.none-cell {
+  background-color: #fffbf0;
+  border-left: 2px solid #ffc107;
+}
+
 .pl-code {
   font-weight: bold;
   margin-bottom: 5px;
@@ -186,11 +275,66 @@ onMounted(() => {
 .matrix-cell {
   text-align: center;
   background-color: #ffffff;
+  vertical-align: middle;
+  transition: background-color 0.2s ease;
 }
 
-input[type="checkbox"] {
-  transform: scale(1.3);
+/* .matrix-cell:has(input[type='radio']:checked) {
+  background-color: #e8f5e9;
+}
+
+.none-cell:has(input[type='radio']:checked) {
+  background-color: #fff9e6;
+} */
+
+/* Custom Radio Button Styling */
+input[type='radio'] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+  outline: none;
   cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+  background-color: white;
+}
+
+input[type='radio']:hover:not(:disabled) {
+  border-color: #2196f3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+}
+
+input[type='radio']:checked {
+  border-color: var(--color-buttonsec);
+  background-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+}
+
+input[type='radio']:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: white;
+}
+
+input[type='radio']:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  background-color: #f5f5f5;
+}
+
+input[type='radio']:disabled:checked {
+  border-color: #81c784;
+  background-color: #81c784;
 }
 
 .loading {
