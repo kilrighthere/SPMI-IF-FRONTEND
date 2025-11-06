@@ -8,22 +8,17 @@ import {
   LineElement,
   Filler,
   Tooltip,
-  Legend
+  Legend,
 } from 'chart.js'
 import { getMahasiswaList, getMahasiswaPetaNilai, getMahasiswaCplPerGrades } from '@/api'
-import { useAuthStore } from '@/stores/auth'
+import { usePermissions } from '@/composables/usePermissions'
 
 // Register Chart.js components
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
 
-// Auth store
-const auth = useAuthStore()
-
-// Role-based logic
-const userRole = computed(() => auth.user?.role?.toLowerCase())
-const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
-const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 'admin')
-const currentUserNim = computed(() => auth.user?.nim)
+// Use centralized permissions
+const { isAdmin, isDosen, isMahasiswa, userId } = usePermissions()
+const currentUserNim = userId
 
 // State
 const mahasiswaList = ref([])
@@ -45,10 +40,10 @@ const chartData = computed(() => {
 
   // Buat array untuk 12 CPL (CPL-01 sampai CPL-12)
   const allCPL = Array.from({ length: 12 }, (_, i) => `CPL-${String(i + 1).padStart(2, '0')}`)
-  
+
   // Map nilai dari API ke array 12 CPL
-  const nilaiArray = allCPL.map(cplCode => {
-    const found = petaNilaiData.value.find(item => item.id_cpl === cplCode)
+  const nilaiArray = allCPL.map((cplCode) => {
+    const found = petaNilaiData.value.find((item) => item.id_cpl === cplCode)
     return found ? parseFloat(found.nilai_akhir_cpl) : 0
   })
 
@@ -64,9 +59,9 @@ const chartData = computed(() => {
         pointBackgroundColor: 'rgba(255, 99, 132, 1)',
         pointBorderColor: '#fff',
         pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: 'rgba(255, 99, 132, 1)'
-      }
-    ]
+        pointHoverBorderColor: 'rgba(255, 99, 132, 1)',
+      },
+    ],
   }
 })
 
@@ -77,36 +72,36 @@ const chartOptions = {
     r: {
       angleLines: {
         display: true,
-        color: 'rgba(0, 0, 0, 0.1)'
+        color: 'rgba(0, 0, 0, 0.1)',
       },
       suggestedMin: 0,
       suggestedMax: 100,
       ticks: {
         stepSize: 20,
-        callback: function(value) {
+        callback: function (value) {
           return value
-        }
+        },
       },
       pointLabels: {
         font: {
-          size: 12
-        }
-      }
-    }
+          size: 12,
+        },
+      },
+    },
   },
   plugins: {
     legend: {
       display: true,
-      position: 'bottom'
+      position: 'bottom',
     },
     tooltip: {
       callbacks: {
-        label: function(context) {
+        label: function (context) {
           return context.dataset.label + ': ' + context.parsed.r.toFixed(2)
-        }
-      }
-    }
-  }
+        },
+      },
+    },
+  },
 }
 
 // Methods
@@ -115,7 +110,7 @@ async function fetchMahasiswaList() {
   try {
     const response = await getMahasiswaList()
     let allMahasiswa = []
-    
+
     if (response.data && response.data.success) {
       allMahasiswa = response.data.data
     } else {
@@ -125,10 +120,10 @@ async function fetchMahasiswaList() {
     // Filter berdasarkan role
     if (isMahasiswa.value && currentUserNim.value) {
       // Untuk mahasiswa, hanya tampilkan data mereka sendiri
-      const currentUserData = allMahasiswa.find(mhs => mhs.nim === currentUserNim.value)
+      const currentUserData = allMahasiswa.find((mhs) => mhs.nim === currentUserNim.value)
       mahasiswaList.value = currentUserData ? [currentUserData] : []
       filteredMahasiswaList.value = mahasiswaList.value
-      
+
       // Auto-select mahasiswa jika mereka login
       if (currentUserData) {
         selectedMahasiswa.value = currentUserData
@@ -153,10 +148,10 @@ async function fetchPetaNilai(nim) {
 
   isLoadingChart.value = true
   error.value = null
-  
+
   try {
     const response = await getMahasiswaPetaNilai(nim)
-    
+
     if (response.data && response.data.success) {
       petaNilaiData.value = response.data.data
     } else if (response.data && Array.isArray(response.data.data)) {
@@ -179,10 +174,10 @@ async function fetchCplPerGrades(nim) {
   if (!nim) return
 
   isLoadingTable.value = true
-  
+
   try {
     const response = await getMahasiswaCplPerGrades(nim)
-    
+
     if (response.data && response.data.success) {
       cplPerGradesData.value = response.data.data
     } else if (response.data && Array.isArray(response.data.data)) {
@@ -221,8 +216,8 @@ function clearSelection() {
 // Get nilai CPL from petaNilaiData
 function getNilaiCPL(idCpl) {
   if (!petaNilaiData.value) return '0.00'
-  
-  const found = petaNilaiData.value.find(item => item.id_cpl === idCpl)
+
+  const found = petaNilaiData.value.find((item) => item.id_cpl === idCpl)
   return found ? parseFloat(found.nilai_akhir_cpl).toFixed(2) : '0.00'
 }
 
@@ -234,12 +229,12 @@ const groupedByCPL = computed(() => {
 
   // Group by id_cpl
   const grouped = {}
-  cplPerGradesData.value.forEach(item => {
+  cplPerGradesData.value.forEach((item) => {
     if (!grouped[item.id_cpl]) {
       grouped[item.id_cpl] = {
         id_cpl: item.id_cpl,
         nilai_cpl: getNilaiCPL(item.id_cpl),
-        courses: []
+        courses: [],
       }
     }
     grouped[item.id_cpl].courses.push(item)
@@ -255,9 +250,8 @@ watch(searchQuery, (newQuery) => {
     filteredMahasiswaList.value = mahasiswaList.value
   } else {
     const query = newQuery.toLowerCase()
-    filteredMahasiswaList.value = mahasiswaList.value.filter(mhs => 
-      mhs.nim.toLowerCase().includes(query) || 
-      mhs.nama.toLowerCase().includes(query)
+    filteredMahasiswaList.value = mahasiswaList.value.filter(
+      (mhs) => mhs.nim.toLowerCase().includes(query) || mhs.nama.toLowerCase().includes(query),
     )
   }
 })
@@ -269,202 +263,196 @@ onMounted(() => {
 
 <template>
   <div class="ukur-cpl-container">
-    <h1 class="page-title">{{ isMahasiswa ? 'Pengukuran CPL Saya' : 'Pengukuran CPL Mahasiswa' }}</h1>
-          
-        <!-- Search Bar - Hanya untuk Dosen/Admin -->
-        <div v-if="isDosen" class="search-section">
-          <div class="search-box">
-            <i class="ri-search-line search-icon"></i>
-            <input 
-              type="text" 
-              v-model="searchQuery" 
-              placeholder="Cari mahasiswa berdasarkan NIM atau nama..." 
-              class="search-input"
-            />
+    <h1 class="page-title">
+      {{ isMahasiswa ? 'Pengukuran CPL Saya' : 'Pengukuran CPL Mahasiswa' }}
+    </h1>
+
+    <!-- Search Bar - Hanya untuk Dosen/Admin -->
+    <div v-if="isDosen" class="search-section">
+      <div class="search-box">
+        <i class="ri-search-line search-icon"></i>
+        <input
+          type="text"
+          v-model="searchQuery"
+          placeholder="Cari mahasiswa berdasarkan NIM atau nama..."
+          class="search-input"
+        />
+      </div>
+    </div>
+    <!-- Loading State -->
+    <div v-if="isLoading" class="text-center my-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-2">Memuat daftar mahasiswa...</p>
+    </div>
+
+    <!-- Mahasiswa Catalog - Table (Hanya untuk Dosen/Admin) -->
+    <div v-else-if="isDosen && !selectedMahasiswa" class="table-container">
+      <div class="table-header">
+        <h5 class="table-title">
+          <i class="ri-user-line"></i>
+          Daftar Mahasiswa
+        </h5>
+      </div>
+      <div class="table-responsive">
+        <table class="table mahasiswa-table">
+          <thead>
+            <tr>
+              <th width="80">NO</th>
+              <th>NIM</th>
+              <th>NAMA MAHASISWA</th>
+              <th width="180" class="text-center">AKSI</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(mhs, index) in filteredMahasiswaList" :key="mhs.nim" class="mahasiswa-row">
+              <td class="text-center">{{ index + 1 }}</td>
+              <td>
+                <span class="nim-text">{{ mhs.nim }}</span>
+              </td>
+              <td>
+                <span class="mahasiswa-name">{{ mhs.nama }}</span>
+              </td>
+              <td class="text-center">
+                <button class="btn btn-view" @click="selectMahasiswa(mhs)">
+                  <i class="ri-eye-line"></i> Lihat Peta CPL
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- No Results -->
+        <div v-if="filteredMahasiswaList.length === 0" class="no-results">
+          <i class="ri-search-line"></i>
+          <p>Tidak ada mahasiswa yang ditemukan dengan kata kunci "{{ searchQuery }}"</p>
+          <button class="btn btn-outline-primary btn-sm" @click="searchQuery = ''">
+            Reset Pencarian
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div v-else-if="selectedMahasiswa || isMahasiswa" id="chart-section">
+      <!-- Selected Mahasiswa Info (Hanya untuk Dosen/Admin) -->
+      <div v-if="isDosen" class="selected-mahasiswa-banner">
+        <div class="selected-info-content">
+          <div class="selected-details">
+            <h4>{{ selectedMahasiswa.nama }}</h4>
+            <p class="nim-display">NIM: {{ selectedMahasiswa.nim }}</p>
           </div>
-        </div>        <!-- Loading State -->
-        <div v-if="isLoading" class="text-center my-5">
-          <div class="spinner-border text-primary" role="status">
+        </div>
+        <button class="btn btn-back" @click="clearSelection">
+          <i class="ri-arrow-left-line"></i> Kembali ke Daftar
+        </button>
+      </div>
+
+      <!-- Mahasiswa Profile (Untuk Mahasiswa) -->
+      <div v-else-if="isMahasiswa && selectedMahasiswa" class="mahasiswa-profile-banner">
+        <div class="profile-content">
+          <div class="profile-details">
+            <h4>{{ selectedMahasiswa.nama }}</h4>
+            <p class="nim-display">NIM: {{ selectedMahasiswa.nim }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div v-if="error" class="alert alert-warning" role="alert">
+        <i class="ri-alert-line"></i> {{ error }}
+      </div>
+
+      <!-- Loading Chart -->
+      <div v-if="isLoadingChart" class="text-center my-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Memuat peta nilai CPL...</p>
+      </div>
+
+      <!-- Chart -->
+      <div v-else-if="chartData" class="chart-card">
+        <div class="chart-header">
+          <h5 class="chart-title">
+            <i class="ri-radar-line"></i>
+            Capaian Pembelajaran Lulusan Program Studi
+          </h5>
+        </div>
+        <div class="chart-body">
+          <div class="chart-container">
+            <Radar :data="chartData" :options="chartOptions" />
+          </div>
+        </div>
+      </div>
+
+      <!-- No Chart Data -->
+      <div v-else class="alert alert-info">
+        <i class="ri-information-line"></i> Data grafik tidak tersedia
+      </div>
+
+      <!-- Detail Table Section -->
+      <div v-if="!isLoadingChart && !isLoadingTable" class="detail-section">
+        <h5 class="section-title">
+          <i class="ri-table-line"></i>
+          Detail Nilai CPL Per Mata Kuliah
+        </h5>
+
+        <!-- Loading Table -->
+        <div v-if="isLoadingTable" class="text-center my-4">
+          <div class="spinner-border" role="status">
             <span class="visually-hidden">Loading...</span>
           </div>
-          <p class="mt-2">Memuat daftar mahasiswa...</p>
+          <p class="mt-2">Memuat detail nilai...</p>
         </div>
 
-        <!-- Mahasiswa Catalog - Table (Hanya untuk Dosen/Admin) -->
-        <div v-else-if="isDosen && !selectedMahasiswa" class="table-container">
-          <div class="table-header">
-            <h5 class="table-title">
-              <i class="ri-user-line"></i>
-              Daftar Mahasiswa
-            </h5>
-          </div>
-          <div class="table-responsive">
-            <table class="table mahasiswa-table">
-              <thead>
-                <tr>
-                  <th width="80">NO</th>
-                  <th>NIM</th>
-                  <th>NAMA MAHASISWA</th>
-                  <th width="180" class="text-center">AKSI</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr 
-                  v-for="(mhs, index) in filteredMahasiswaList" 
-                  :key="mhs.nim"
-                  class="mahasiswa-row"
-                >
-                  <td class="text-center">{{ index + 1 }}</td>
-                  <td>
-                    <span class="nim-text">{{ mhs.nim }}</span>
-                  </td>
-                  <td>
-                    <span class="mahasiswa-name">{{ mhs.nama }}</span>
-                  </td>
-                  <td class="text-center">
-                    <button 
-                      class="btn btn-view"
-                      @click="selectMahasiswa(mhs)"
-                    >
-                      <i class="ri-eye-line"></i> Lihat Peta CPL
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <!-- No Results -->
-            <div v-if="filteredMahasiswaList.length === 0" class="no-results">
-              <i class="ri-search-line"></i>
-              <p>Tidak ada mahasiswa yang ditemukan dengan kata kunci "{{ searchQuery }}"</p>
-              <button class="btn btn-outline-primary btn-sm" @click="searchQuery = ''">
-                Reset Pencarian
-              </button>
+        <!-- CPL Cards -->
+        <div v-else-if="groupedByCPL && groupedByCPL.length > 0" class="cpl-cards-container">
+          <div v-for="cplGroup in groupedByCPL" :key="cplGroup.id_cpl" class="cpl-card">
+            <div class="cpl-card-header">
+              <div class="cpl-info">
+                <span class="cpl-code-badge">{{ cplGroup.id_cpl }}</span>
+                <span class="cpl-nilai-badge">Nilai CPL: {{ cplGroup.nilai_cpl }}</span>
+              </div>
+            </div>
+            <div class="cpl-card-body">
+              <table class="table cpl-table">
+                <thead>
+                  <tr>
+                    <th width="60">NO</th>
+                    <th>NAMA MATA KULIAH</th>
+                    <th width="150">NILAI AKHIR MK</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="(course, index) in cplGroup.courses"
+                    :key="`${cplGroup.id_cpl}-${course.nama_mk}-${index}`"
+                  >
+                    <td class="text-center">{{ index + 1 }}</td>
+                    <td>
+                      <span class="mk-name">{{ course.nama_mk }}</span>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge-nilai">{{
+                        parseFloat(course.nilai_akhir).toFixed(2)
+                      }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
 
-        <!-- Chart Section -->
-        <div v-else-if="selectedMahasiswa || isMahasiswa" id="chart-section">
-          <!-- Selected Mahasiswa Info (Hanya untuk Dosen/Admin) -->
-          <div v-if="isDosen" class="selected-mahasiswa-banner">
-            <div class="selected-info-content">
-              <div class="selected-details">
-                <h4>{{ selectedMahasiswa.nama }}</h4>
-                <p class="nim-display">NIM: {{ selectedMahasiswa.nim }}</p>
-              </div>
-            </div>
-            <button class="btn btn-back" @click="clearSelection">
-              <i class="ri-arrow-left-line"></i> Kembali ke Daftar
-            </button>
-          </div>
-          
-          <!-- Mahasiswa Profile (Untuk Mahasiswa) -->
-          <div v-else-if="isMahasiswa && selectedMahasiswa" class="mahasiswa-profile-banner">
-            <div class="profile-content">
-              <div class="profile-details">
-                <h4>{{ selectedMahasiswa.nama }}</h4>
-                <p class="nim-display">NIM: {{ selectedMahasiswa.nim }}</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Error Message -->
-          <div v-if="error" class="alert alert-warning" role="alert">
-            <i class="ri-alert-line"></i> {{ error }}
-          </div>
-
-          <!-- Loading Chart -->
-          <div v-if="isLoadingChart" class="text-center my-5">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="mt-2">Memuat peta nilai CPL...</p>
-          </div>
-
-          <!-- Chart -->
-          <div v-else-if="chartData" class="chart-card">
-            <div class="chart-header">
-              <h5 class="chart-title">
-                <i class="ri-radar-line"></i>
-                Capaian Pembelajaran Lulusan Program Studi
-              </h5>
-            </div>
-            <div class="chart-body">
-              <div class="chart-container">
-                <Radar :data="chartData" :options="chartOptions" />
-              </div>
-            </div>
-          </div>
-
-          <!-- No Chart Data -->
-          <div v-else class="alert alert-info">
-            <i class="ri-information-line"></i> Data grafik tidak tersedia
-          </div>
-
-          <!-- Detail Table Section -->
-          <div v-if="!isLoadingChart && !isLoadingTable" class="detail-section">
-            <h5 class="section-title">
-              <i class="ri-table-line"></i>
-              Detail Nilai CPL Per Mata Kuliah
-            </h5>
-
-            <!-- Loading Table -->
-            <div v-if="isLoadingTable" class="text-center my-4">
-              <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
-              <p class="mt-2">Memuat detail nilai...</p>
-            </div>
-
-            <!-- CPL Cards -->
-            <div v-else-if="groupedByCPL && groupedByCPL.length > 0" class="cpl-cards-container">
-              <div 
-                v-for="cplGroup in groupedByCPL" 
-                :key="cplGroup.id_cpl"
-                class="cpl-card"
-              >
-                <div class="cpl-card-header">
-                  <div class="cpl-info">
-                    <span class="cpl-code-badge">{{ cplGroup.id_cpl }}</span>
-                    <span class="cpl-nilai-badge">Nilai CPL: {{ cplGroup.nilai_cpl }}</span>
-                  </div>
-                </div>
-                <div class="cpl-card-body">
-                  <table class="table cpl-table">
-                    <thead>
-                      <tr>
-                        <th width="60">NO</th>
-                        <th>NAMA MATA KULIAH</th>
-                        <th width="150">NILAI AKHIR MK</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr 
-                        v-for="(course, index) in cplGroup.courses" 
-                        :key="`${cplGroup.id_cpl}-${course.nama_mk}-${index}`"
-                      >
-                        <td class="text-center">{{ index + 1 }}</td>
-                        <td>
-                          <span class="mk-name">{{ course.nama_mk }}</span>
-                        </td>
-                        <td class="text-center">
-                          <span class="badge-nilai">{{ parseFloat(course.nilai_akhir).toFixed(2) }}</span>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            <!-- No Data -->
-            <div v-else class="no-data-message">
-              <i class="ri-file-list-3-line"></i>
-              <p>Tidak ada data nilai mata kuliah yang tersedia</p>
-            </div>
-          </div>
+        <!-- No Data -->
+        <div v-else class="no-data-message">
+          <i class="ri-file-list-3-line"></i>
+          <p>Tidak ada data nilai mata kuliah yang tersedia</p>
         </div>
+      </div>
+    </div>
   </div>
 </template>
 

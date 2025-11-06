@@ -3,18 +3,18 @@
 import { useKurikulumStore } from '@/stores/kurikulum'
 import { useCplSndiktiStore } from '@/stores/cplSndikti'
 import { useCPLStore } from '@/stores/cpl'
+import { usePermissions } from '@/composables/usePermissions'
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-
 
 // Initialize stores
 const cplSndiktiStore = useCplSndiktiStore()
 const kurikulumStore = useKurikulumStore()
 const cplStore = useCPLStore()
 const route = useRoute()
-const authStore = useAuthStore()
 
+// Use centralized permissions
+const { isAdmin, isDosen, isMahasiswa, can } = usePermissions()
 
 // Get kurikulum data
 const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
@@ -24,13 +24,6 @@ const cplSndiktiList = computed(() => cplSndiktiStore.cplSndiktiList)
 const cplList = computed(() => cplStore.cplList)
 const isLoading = computed(() => cplSndiktiStore.isLoading || cplStore.isLoading)
 const error = ref('')
-
-// cek role user
-const userRole = computed(() => authStore.user?.role?.toLowerCase())
-const isAdmin = computed(() => userRole.value === 'admin')
-const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
-const isDosen = computed(() => userRole.value === 'dosen')
-
 
 // Form untuk tambah/edit CPL SNDIKTI
 const form = ref({

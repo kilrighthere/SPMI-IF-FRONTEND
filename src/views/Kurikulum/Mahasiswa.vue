@@ -1,24 +1,21 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useMahasiswaStore } from '@/stores/mahasiswa'
-import { useAuthStore } from '@/stores/auth'
+import { usePermissions } from '@/composables/usePermissions'
 
 const mahasiswaStore = useMahasiswaStore()
-const auth = useAuthStore()
+
+// Use centralized permissions
+const { isAdmin, isDosen, isMahasiswa, userId } = usePermissions()
 
 const mahasiswaList = computed(() => mahasiswaStore.mahasiswaList)
 const isLoading = computed(() => mahasiswaStore.isLoading)
 const error = computed(() => mahasiswaStore.error)
 
-// Role-based logic
-const userRole = computed(() => auth.user?.role?.toLowerCase())
-const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
-const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 'admin')
-
 // For mahasiswa, show only their own data
 const currentUserData = computed(() => {
   if (isMahasiswa.value) {
-    return mahasiswaList.value.find(mhs => mhs.nim === auth.user?.nim) || null
+    return mahasiswaList.value.find((mhs) => mhs.nim === userId.value) || null
   }
   return null
 })
@@ -112,13 +109,13 @@ onMounted(() => {
       <div class="section-header">
         <h3>Profil Saya</h3>
       </div>
-      
+
       <!-- Loading indicator -->
       <div v-if="isLoading" class="loading">Loading...</div>
-      
+
       <!-- Error message -->
       <div v-else-if="error" class="error-message">{{ error }}</div>
-      
+
       <!-- Profile data -->
       <div v-else-if="currentUserData" class="profile-container">
         <div class="profile-card">
@@ -133,11 +130,9 @@ onMounted(() => {
           </div>
         </div>
       </div>
-      
+
       <!-- No data found -->
-      <div v-else class="no-data">
-        Data profil tidak ditemukan
-      </div>
+      <div v-else class="no-data">Data profil tidak ditemukan</div>
     </div>
 
     <!-- View untuk Dosen/Admin - manajemen semua mahasiswa -->

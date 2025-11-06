@@ -3,7 +3,10 @@
     <div class="section-box">
       <div class="section-header">
         <div>
-          <h3>{{ isMahasiswa ? 'Nilai Saya:' : 'Nilai Mata Kuliah:' }} {{ mataKuliah ? mataKuliah.nama : kodeMk }}</h3>
+          <h3>
+            {{ isMahasiswa ? 'Nilai Saya:' : 'Nilai Mata Kuliah:' }}
+            {{ mataKuliah ? mataKuliah.nama : kodeMk }}
+          </h3>
           <p class="mk-info" v-if="mataKuliah">
             {{ mataKuliah.kode_mk }}
           </p>
@@ -26,10 +29,10 @@
         <div class="search-filter">
           <div class="search-box">
             <i class="ri-search-line"></i>
-            <input 
-              v-model="searchQuery" 
-              type="text" 
-              :placeholder="isMahasiswa ? 'Cari periode...' : 'Cari mahasiswa...'" 
+            <input
+              v-model="searchQuery"
+              type="text"
+              :placeholder="isMahasiswa ? 'Cari periode...' : 'Cari mahasiswa...'"
               class="search-input"
             />
           </div>
@@ -62,7 +65,7 @@
             </tbody>
           </table>
         </div>
-        
+
         <!-- Info table results -->
         <div v-if="filteredNilai.length > 0" class="table-info">
           Menampilkan {{ filteredNilai.length }} dari {{ nilaiMahasiswa.length }} data nilai
@@ -76,7 +79,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNilaiMkStore } from '@/stores/nilaiMk'
-import { useAuthStore } from '@/stores/auth'
+import { usePermissions } from '@/composables/usePermissions'
 
 const route = useRoute()
 const router = useRouter()
@@ -84,35 +87,34 @@ const kodeMk = route.params.kodeMk
 
 // Initialize stores
 const nilaiMkStore = useNilaiMkStore()
-const auth = useAuthStore()
 
-// Role-based logic
-const userRole = computed(() => auth.user?.role?.toLowerCase())
-const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
-const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 'admin')
-const currentUserNim = computed(() => auth.user?.nim)
+// Use centralized permissions
+const { isAdmin, isDosen, isMahasiswa, userId } = usePermissions()
+const currentUserNim = userId
 
 // Data untuk nilai mata kuliah
 const isLoading = computed(() => nilaiMkStore.isLoading)
 const error = computed(() => nilaiMkStore.error)
 const nilaiMahasiswa = ref([])
 const mataKuliah = computed(() => {
-  return nilaiMkStore.mataKuliahList.find(mk => mk.kode_mk === kodeMk)
+  return nilaiMkStore.mataKuliahList.find((mk) => mk.kode_mk === kodeMk)
 })
 
 // Filter
 const searchQuery = ref('')
 const filteredNilai = computed(() => {
   if (!searchQuery.value) return nilaiMahasiswa.value
-  
+
   const query = searchQuery.value.toLowerCase()
-  return nilaiMahasiswa.value.filter(nilai => {
+  return nilaiMahasiswa.value.filter((nilai) => {
     // Get mahasiswa name for search
     const mahasiswaNama = nilaiMkStore.getMahasiswaNama(nilai.nim).toLowerCase()
-    
-    return mahasiswaNama.includes(query) || 
-           nilai.nim.toLowerCase().includes(query) ||
-           nilai.id_periode.toLowerCase().includes(query)
+
+    return (
+      mahasiswaNama.includes(query) ||
+      nilai.nim.toLowerCase().includes(query) ||
+      nilai.id_periode.toLowerCase().includes(query)
+    )
   })
 })
 
@@ -122,10 +124,10 @@ const loadNilaiData = () => {
     // Jika belum ada data, fetch semua data terlebih dahulu
     nilaiMkStore.fetchAllData().then(() => {
       const allNilai = nilaiMkStore.getNilaiByMataKuliah(kodeMk)
-      
+
       if (isMahasiswa.value && currentUserNim.value) {
         // Untuk mahasiswa, hanya tampilkan nilai mereka sendiri
-        nilaiMahasiswa.value = allNilai.filter(nilai => nilai.nim === currentUserNim.value)
+        nilaiMahasiswa.value = allNilai.filter((nilai) => nilai.nim === currentUserNim.value)
       } else {
         // Untuk dosen/admin, tampilkan semua nilai
         nilaiMahasiswa.value = allNilai
@@ -134,10 +136,10 @@ const loadNilaiData = () => {
   } else {
     // Jika sudah ada data, langsung filter untuk mata kuliah ini
     const allNilai = nilaiMkStore.getNilaiByMataKuliah(kodeMk)
-    
+
     if (isMahasiswa.value && currentUserNim.value) {
       // Untuk mahasiswa, hanya tampilkan nilai mereka sendiri
-      nilaiMahasiswa.value = allNilai.filter(nilai => nilai.nim === currentUserNim.value)
+      nilaiMahasiswa.value = allNilai.filter((nilai) => nilai.nim === currentUserNim.value)
     } else {
       // Untuk dosen/admin, tampilkan semua nilai
       nilaiMahasiswa.value = allNilai
@@ -153,11 +155,11 @@ onMounted(() => {
 // Helper untuk format nilai
 const formatNilai = (nilai) => {
   if (!nilai) return '-'
-  
+
   // Convert to number and display with 2 decimal places
   const num = parseFloat(nilai)
   if (isNaN(num)) return nilai
-  
+
   return num.toFixed(2)
 }
 
@@ -165,7 +167,7 @@ const formatNilai = (nilai) => {
 const getNilaiHuruf = (nilai) => {
   const num = parseFloat(nilai)
   if (isNaN(num)) return '-'
-  
+
   if (num >= 85) return 'A'
   if (num >= 80) return 'A-'
   if (num >= 75) return 'B+'

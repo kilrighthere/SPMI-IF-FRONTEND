@@ -3,21 +3,15 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMKStore } from '@/stores/mataKuliah'
 import { useKurikulumStore } from '@/stores/kurikulum'
-import { useAuthStore } from '@/stores/auth'
-
+import { usePermissions } from '@/composables/usePermissions'
 
 // Initialize stores
 const mkStore = useMKStore()
 const kurikulumStore = useKurikulumStore()
 const route = useRoute()
-const authStore = useAuthStore()
 
-// cek role user
-const userRole = computed(() => authStore.user?.role?.toLowerCase())
-const isAdmin = computed(() => userRole.value === 'admin')
-const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
-const isDosen = computed(() => userRole.value === 'dosen')
-
+// Use centralized permissions
+const { isAdmin, isDosen, isMahasiswa, can } = usePermissions()
 
 // Get kurikulum data
 const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
@@ -223,7 +217,7 @@ onMounted(async () => {
               <tr v-for="mk in filteredMataKuliah" :key="mk.id">
                 <td>{{ mk.kode_mk }}</td>
                 <td>{{ mk.nama_mk }}</td>
-                <td>
+                <td v-if="isAdmin">
                   <button class="btn-edit" @click="openEditModal(mk)">
                     <i class="ri-edit-line"></i>
                   </button>

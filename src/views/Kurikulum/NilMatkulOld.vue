@@ -2,7 +2,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useNilaiMkStore } from '@/stores/nilaiMk'
-import { useAuthStore } from '@/stores/auth'
 import { useKurikulumStore } from '@/stores/kurikulum'
 import { useMKStore } from '@/stores/mataKuliah'
 import { usePermissions } from '@/composables/usePermissions'
@@ -12,16 +11,12 @@ const route = useRoute()
 
 // Initialize stores
 const nilaiMkStore = useNilaiMkStore()
-const auth = useAuthStore() 
 const kurikulumStore = useKurikulumStore()
 const mkStore = useMKStore()
-const { canManageKurikulumMk } = usePermissions()
 
-// Role-based logic
-const userRole = computed(() => auth.user?.role?.toLowerCase())
-const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
-const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 'admin')
-const currentUserNim = computed(() => auth.user?.nim)
+// Use centralized permissions
+const { isAdmin, isDosen, isMahasiswa, userId, canManageKurikulumMk } = usePermissions()
+const currentUserNim = userId
 
 // Data
 const isLoading = computed(() => nilaiMkStore.isLoading)
@@ -34,7 +29,7 @@ const formData = ref({
   id_periode: '',
   kode_mk: '',
   nim: '',
-  nilai_akhir: ''
+  nilai_akhir: '',
 })
 
 // Filter dan pencarian
@@ -44,34 +39,35 @@ const searchQuery = ref('')
 const periodeList = computed(() => nilaiMkStore.periodeList)
 const selectedPeriode = computed({
   get: () => nilaiMkStore.selectedPeriode,
-  set: (value) => nilaiMkStore.setPeriode(value)
+  set: (value) => nilaiMkStore.setPeriode(value),
 })
 
 // Data nilai yang difilter berdasarkan periode yang dipilih
 const filteredNilaiList = computed(() => {
   let filtered = nilaiMkStore.filteredNilaiByPeriode
-  
+
   // Filter berdasarkan kurikulum jika ada
   if (selectedKurikulum.value) {
-    filtered = filtered.filter(nilai => nilai.id_kurikulum === selectedKurikulum.value)
+    filtered = filtered.filter((nilai) => nilai.id_kurikulum === selectedKurikulum.value)
   }
-  
+
   // Filter berdasarkan pencarian
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(nilai => 
-      nilai.kode_mk.toLowerCase().includes(query) ||
-      nilai.nim.toLowerCase().includes(query) ||
-      nilaiMkStore.getMataKuliahNama(nilai.kode_mk).toLowerCase().includes(query) ||
-      nilaiMkStore.getMahasiswaNama(nilai.nim).toLowerCase().includes(query)
+    filtered = filtered.filter(
+      (nilai) =>
+        nilai.kode_mk.toLowerCase().includes(query) ||
+        nilai.nim.toLowerCase().includes(query) ||
+        nilaiMkStore.getMataKuliahNama(nilai.kode_mk).toLowerCase().includes(query) ||
+        nilaiMkStore.getMahasiswaNama(nilai.nim).toLowerCase().includes(query),
     )
   }
-  
+
   // Filter untuk mahasiswa (hanya tampilkan nilai mereka sendiri)
   if (isMahasiswa.value && currentUserNim.value) {
-    filtered = filtered.filter(nilai => nilai.nim === currentUserNim.value)
+    filtered = filtered.filter((nilai) => nilai.nim === currentUserNim.value)
   }
-  
+
   return filtered
 })
 
@@ -81,8 +77,12 @@ const availableMataKuliah = computed(() => mkStore.mataKuliahList)
 // Get current kurikulum name
 function getCurrentKurikulumName() {
   if (!selectedKurikulum.value) return 'Semua Kurikulum'
-  const kurikulum = kurikulumStore.kurikulumList.find(k => k.id_kurikulum === selectedKurikulum.value)
-  return kurikulum ? `${kurikulum.nama_kurikulum} (${kurikulum.id_kurikulum})` : `Kurikulum ${selectedKurikulum.value}`
+  const kurikulum = kurikulumStore.kurikulumList.find(
+    (k) => k.id_kurikulum === selectedKurikulum.value,
+  )
+  return kurikulum
+    ? `${kurikulum.nama_kurikulum} (${kurikulum.id_kurikulum})`
+    : `Kurikulum ${selectedKurikulum.value}`
 }
 
 // Modal functions
@@ -91,7 +91,7 @@ function openAddModal() {
     id_periode: selectedPeriode.value,
     kode_mk: '',
     nim: '',
-    nilai_akhir: ''
+    nilai_akhir: '',
   }
   showModal.value = true
 }
@@ -102,7 +102,7 @@ function closeModal() {
     id_periode: '',
     kode_mk: '',
     nim: '',
-    nilai_akhir: ''
+    nilai_akhir: '',
   }
 }
 
@@ -125,11 +125,13 @@ async function submitForm() {
     formData.value.nilai_akhir = nilai.toFixed(2)
 
     console.log('Submitting nilai:', formData.value)
-    
+
     const result = await nilaiMkStore.createNilai(formData.value)
-    
+
     if (result && result.success) {
-      alert(`Nilai berhasil ditambahkan!\nNilai: ${formData.value.nilai_akhir}\nHuruf Mutu: ${nilaiMkStore.getHurufMutu(formData.value.nilai_akhir)}`)
+      alert(
+        `Nilai berhasil ditambahkan!\nNilai: ${formData.value.nilai_akhir}\nHuruf Mutu: ${nilaiMkStore.getHurufMutu(formData.value.nilai_akhir)}`,
+      )
       closeModal()
     } else {
       alert('Gagal menambahkan nilai')
@@ -145,7 +147,7 @@ async function loadData() {
   await Promise.all([
     nilaiMkStore.fetchAllData(),
     kurikulumStore.fetchAllKurikulum(),
-    mkStore.fetchAllMK()
+    mkStore.fetchAllMK(),
   ])
 }
 
@@ -176,15 +178,11 @@ onMounted(() => {
     <div class="period-section">
       <div class="period-filter">
         <label for="periode" class="period-label">Periode:</label>
-        <select 
-          id="periode" 
-          v-model="selectedPeriode" 
-          class="period-select"
-        >
+        <select id="periode" v-model="selectedPeriode" class="period-select">
           <option value="">Pilih Periode</option>
-          <option 
-            v-for="periode in periodeList" 
-            :key="periode.id_periode" 
+          <option
+            v-for="periode in periodeList"
+            :key="periode.id_periode"
             :value="periode.id_periode"
           >
             {{ periode.id_periode }}
@@ -194,8 +192,8 @@ onMounted(() => {
 
       <!-- Action Button -->
       <div class="action-section" v-if="canManageKurikulumMk">
-        <button 
-          @click="openAddModal" 
+        <button
+          @click="openAddModal"
           class="btn-primary"
           :disabled="!selectedPeriode"
           :title="!selectedPeriode ? 'Pilih periode terlebih dahulu' : 'Tambah nilai baru'"
@@ -225,10 +223,10 @@ onMounted(() => {
       <div class="search-section">
         <div class="search-box">
           <i class="ri-search-line"></i>
-          <input 
-            v-model="searchQuery" 
-            type="text" 
-            placeholder="Cari berdasarkan kode MK, NIM, atau nama..." 
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Cari berdasarkan kode MK, NIM, atau nama..."
             class="search-input"
           />
         </div>
@@ -263,7 +261,10 @@ onMounted(() => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(nilai, index) in filteredNilaiList" :key="`${nilai.id_periode}-${nilai.kode_mk}-${nilai.nim}`">
+              <tr
+                v-for="(nilai, index) in filteredNilaiList"
+                :key="`${nilai.id_periode}-${nilai.kode_mk}-${nilai.nim}`"
+              >
                 <td>{{ index + 1 }}</td>
                 <td>
                   <span class="kode-mk">{{ nilai.kode_mk }}</span>
@@ -281,7 +282,10 @@ onMounted(() => {
                   <span class="nilai-akhir">{{ nilaiMkStore.formatNilai(nilai.nilai_akhir) }}</span>
                 </td>
                 <td>
-                  <span class="huruf-mutu" :class="getHurufMutuClass(nilaiMkStore.getHurufMutu(nilai.nilai_akhir))">
+                  <span
+                    class="huruf-mutu"
+                    :class="getHurufMutuClass(nilaiMkStore.getHurufMutu(nilai.nilai_akhir))"
+                  >
                     {{ nilaiMkStore.getHurufMutu(nilai.nilai_akhir) }}
                   </span>
                 </td>
@@ -308,34 +312,25 @@ onMounted(() => {
             <i class="ri-close-line"></i>
           </button>
         </div>
-        
+
         <div class="modal-body">
           <div class="form-group">
             <label for="periode" class="form-label">Periode</label>
-            <input 
-              type="text" 
-              id="periode" 
-              :value="selectedPeriode" 
-              class="form-input" 
-              disabled 
+            <input
+              type="text"
+              id="periode"
+              :value="selectedPeriode"
+              class="form-input"
+              disabled
               readonly
             />
           </div>
 
           <div class="form-group">
             <label for="mata-kuliah" class="form-label">Mata Kuliah *</label>
-            <select 
-              id="mata-kuliah" 
-              v-model="formData.kode_mk" 
-              class="form-select"
-              required
-            >
+            <select id="mata-kuliah" v-model="formData.kode_mk" class="form-select" required>
               <option value="">Pilih Mata Kuliah</option>
-              <option 
-                v-for="mk in availableMataKuliah" 
-                :key="mk.kode_mk" 
-                :value="mk.kode_mk"
-              >
+              <option v-for="mk in availableMataKuliah" :key="mk.kode_mk" :value="mk.kode_mk">
                 {{ mk.kode_mk }} - {{ mk.nama_mk }}
               </option>
             </select>
@@ -343,10 +338,10 @@ onMounted(() => {
 
           <div class="form-group">
             <label for="nim" class="form-label">NIM Mahasiswa *</label>
-            <input 
-              type="text" 
-              id="nim" 
-              v-model="formData.nim" 
+            <input
+              type="text"
+              id="nim"
+              v-model="formData.nim"
               class="form-input"
               placeholder="Masukkan NIM mahasiswa"
               required
@@ -355,10 +350,10 @@ onMounted(() => {
 
           <div class="form-group">
             <label for="nilai" class="form-label">Nilai Akhir *</label>
-            <input 
-              type="number" 
-              id="nilai" 
-              v-model="formData.nilai_akhir" 
+            <input
+              type="number"
+              id="nilai"
+              v-model="formData.nilai_akhir"
               class="form-input"
               placeholder="0-100"
               min="0"
@@ -368,26 +363,19 @@ onMounted(() => {
             />
             <small class="form-help">
               Masukkan nilai 0-100. Contoh: 80 akan menjadi 80.00
-              <br>Huruf mutu: {{ formData.nilai_akhir ? nilaiMkStore.getHurufMutu(formData.nilai_akhir) : '-' }}
+              <br />Huruf mutu:
+              {{ formData.nilai_akhir ? nilaiMkStore.getHurufMutu(formData.nilai_akhir) : '-' }}
             </small>
           </div>
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn-secondary" @click="closeModal">
-            Batal
-          </button>
+          <button type="button" class="btn-secondary" @click="closeModal">Batal</button>
           <button type="button" class="btn-primary" @click="submitForm">
             <i class="ri-save-line"></i>
             Simpan Nilai
           </button>
         </div>
-      </div>
-    </div>
-  </div>
-</template>
-                </div>
-</template>
       </div>
     </div>
   </div>

@@ -2,21 +2,17 @@
 // Import stores
 import { useKurikulumStore } from '@/stores/kurikulum'
 import { usePLStore } from '@/stores/profilLulusan'
-import { useAuthStore } from '@/stores/auth'
+import { usePermissions } from '@/composables/usePermissions'
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 // Initialize stores
 const plStore = usePLStore()
 const kurikulumStore = useKurikulumStore()
-const authStore = useAuthStore()
 const route = useRoute()
 
-// cek role user
-const userRole = computed(() => authStore.user?.role?.toLowerCase())
-const isAdmin = computed(() => userRole.value === 'admin')
-const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
-const isDosen = computed(() => userRole.value === 'dosen')
+// Use centralized permissions
+const { isAdmin, isDosen, isMahasiswa, can } = usePermissions()
 
 // Get kurikulum data
 const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)

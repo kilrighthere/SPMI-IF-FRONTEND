@@ -100,11 +100,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getMahasiswaNilaiPerPeriode, getMahasiswaByNim } from '@/api'
-import { useAuthStore } from '@/stores/auth'
 import { usePermissions } from '@/composables/usePermissions'
 
 const route = useRoute()
-const auth = useAuthStore()
 const { canAccessMahasiswaData, isMahasiswa } = usePermissions()
 
 const nim = ref(route.params.nim)

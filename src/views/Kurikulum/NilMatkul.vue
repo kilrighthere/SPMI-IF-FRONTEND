@@ -2,7 +2,6 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useNilaiMkStore } from '@/stores/nilaiMk'
-import { useAuthStore } from '@/stores/auth'
 import { useKurikulumStore } from '@/stores/kurikulum'
 import { useMKStore } from '@/stores/mataKuliah'
 import { usePermissions } from '@/composables/usePermissions'
@@ -12,16 +11,12 @@ const route = useRoute()
 
 // Initialize stores
 const nilaiMkStore = useNilaiMkStore()
-const auth = useAuthStore() 
 const kurikulumStore = useKurikulumStore()
 const mkStore = useMKStore()
-const { canManageKurikulumMk } = usePermissions()
 
-// Role-based logic
-const userRole = computed(() => auth.user?.role?.toLowerCase())
-const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
-const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 'admin')
-const currentUserNim = computed(() => auth.user?.nim)
+// Use centralized permissions
+const { isAdmin, isDosen, isMahasiswa, userId, canManageKurikulumMk } = usePermissions()
+const currentUserNim = userId
 
 // Data
 const isLoading = computed(() => nilaiMkStore.isLoading)
@@ -34,13 +29,13 @@ const formData = ref({
   id_periode: '',
   kode_mk: '',
   nim: '',
-  nilai_akhir: ''
+  nilai_akhir: '',
 })
 
 // Info mahasiswa untuk validasi NIM
 const mahasiswaInfo = ref({
   nim: '',
-  nama: ''
+  nama: '',
 })
 
 // Combobox mata kuliah
@@ -60,45 +55,46 @@ const selectedPeriode = computed({
   set: async (value) => {
     selectedMataKuliah.value = '' // Reset mata kuliah filter
     nilaiMkStore.selectedPeriode = value
-    
+
     if (value) {
       await loadNilaiData() // Load data ketika periode dipilih
     } else {
       nilaiMkStore.nilaiList = [] // Clear data jika tidak ada periode
     }
-  }
+  },
 })
 
 // Data nilai yang difilter berdasarkan periode yang dipilih
 const filteredNilaiList = computed(() => {
   let filtered = nilaiMkStore.filteredNilaiByPeriode
-  
+
   // Filter berdasarkan kurikulum jika ada
   if (selectedKurikulum.value) {
-    filtered = filtered.filter(nilai => nilai.id_kurikulum === selectedKurikulum.value)
+    filtered = filtered.filter((nilai) => nilai.id_kurikulum === selectedKurikulum.value)
   }
-  
+
   // Filter berdasarkan mata kuliah yang dipilih
   if (selectedMataKuliah.value) {
-    filtered = filtered.filter(nilai => nilai.kode_mk === selectedMataKuliah.value)
+    filtered = filtered.filter((nilai) => nilai.kode_mk === selectedMataKuliah.value)
   }
-  
+
   // Filter berdasarkan pencarian
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(nilai => 
-      nilai.kode_mk.toLowerCase().includes(query) ||
-      nilai.nim.toLowerCase().includes(query) ||
-      nilaiMkStore.getMataKuliahNama(nilai.kode_mk).toLowerCase().includes(query) ||
-      nilaiMkStore.getMahasiswaNama(nilai.nim).toLowerCase().includes(query)
+    filtered = filtered.filter(
+      (nilai) =>
+        nilai.kode_mk.toLowerCase().includes(query) ||
+        nilai.nim.toLowerCase().includes(query) ||
+        nilaiMkStore.getMataKuliahNama(nilai.kode_mk).toLowerCase().includes(query) ||
+        nilaiMkStore.getMahasiswaNama(nilai.nim).toLowerCase().includes(query),
     )
   }
-  
+
   // Filter untuk mahasiswa (hanya tampilkan nilai mereka sendiri)
   if (isMahasiswa.value && currentUserNim.value) {
-    filtered = filtered.filter(nilai => nilai.nim === currentUserNim.value)
+    filtered = filtered.filter((nilai) => nilai.nim === currentUserNim.value)
   }
-  
+
   return filtered
 })
 
@@ -108,23 +104,25 @@ const availableMataKuliah = computed(() => mkStore.mataKuliahList)
 // Mata kuliah yang tersedia dalam periode yang dipilih
 const availableMataKuliahInPeriode = computed(() => {
   if (!selectedPeriode.value) return []
-  
+
   // Ambil kode MK unik dari nilai yang ada di periode ini
-  const uniqueKodeMK = [...new Set(
-    nilaiMkStore.filteredNilaiByPeriode.map(nilai => nilai.kode_mk)
-  )]
-  
+  const uniqueKodeMK = [
+    ...new Set(nilaiMkStore.filteredNilaiByPeriode.map((nilai) => nilai.kode_mk)),
+  ]
+
   // Return mata kuliah yang ada dalam periode ini
-  return availableMataKuliah.value.filter(mk => 
-    uniqueKodeMK.includes(mk.kode_mk)
-  )
+  return availableMataKuliah.value.filter((mk) => uniqueKodeMK.includes(mk.kode_mk))
 })
 
 // Get current kurikulum name
 function getCurrentKurikulumName() {
   if (!selectedKurikulum.value) return 'Semua Kurikulum'
-  const kurikulum = kurikulumStore.kurikulumList.find(k => k.id_kurikulum === selectedKurikulum.value)
-  return kurikulum ? `${kurikulum.nama_kurikulum} (${kurikulum.id_kurikulum})` : `Kurikulum ${selectedKurikulum.value}`
+  const kurikulum = kurikulumStore.kurikulumList.find(
+    (k) => k.id_kurikulum === selectedKurikulum.value,
+  )
+  return kurikulum
+    ? `${kurikulum.nama_kurikulum} (${kurikulum.id_kurikulum})`
+    : `Kurikulum ${selectedKurikulum.value}`
 }
 
 // Modal functions
@@ -133,26 +131,26 @@ async function openAddModal() {
   if (Object.keys(nilaiMkStore.mahasiswaMap).length === 0) {
     await nilaiMkStore.fetchMahasiswaData()
   }
-  
+
   formData.value = {
     id_periode: selectedPeriode.value,
     kode_mk: '',
     nim: '',
-    nilai_akhir: ''
+    nilai_akhir: '',
   }
-  
+
   // Reset mahasiswa info
   mahasiswaInfo.value = {
     nim: '',
-    nama: ''
+    nama: '',
   }
-  
+
   // Reset combobox mata kuliah
   selectedMK.value = null
   mkSearchQuery.value = ''
   showMkDropdown.value = false
   filteredMK.value = availableMataKuliah.value
-  
+
   showModal.value = true
 }
 
@@ -162,12 +160,12 @@ function closeModal() {
     id_periode: '',
     kode_mk: '',
     nim: '',
-    nilai_akhir: ''
+    nilai_akhir: '',
   }
   // Reset mahasiswa info
   mahasiswaInfo.value = {
     nim: '',
-    nama: ''
+    nama: '',
   }
   // Reset combobox mata kuliah
   selectedMK.value = null
@@ -179,17 +177,18 @@ function closeModal() {
 // Check nama mahasiswa berdasarkan NIM
 function checkMahasiswaNama() {
   const nim = formData.value.nim.trim()
-  
-  if (nim.length >= 10) { // Minimal 10 karakter untuk mulai check
+
+  if (nim.length >= 10) {
+    // Minimal 10 karakter untuk mulai check
     const nama = nilaiMkStore.getMahasiswaNama(nim)
     mahasiswaInfo.value = {
       nim: nim,
-      nama: nama !== nim ? nama : '' // Jika sama dengan NIM, berarti tidak ditemukan
+      nama: nama !== nim ? nama : '', // Jika sama dengan NIM, berarti tidak ditemukan
     }
   } else {
     mahasiswaInfo.value = {
       nim: '',
-      nama: ''
+      nama: '',
     }
   }
 }
@@ -197,13 +196,12 @@ function checkMahasiswaNama() {
 // Mata kuliah combobox functions
 function filterMataKuliah() {
   const query = mkSearchQuery.value.toLowerCase().trim()
-  
+
   if (query === '') {
     filteredMK.value = availableMataKuliah.value
   } else {
-    filteredMK.value = availableMataKuliah.value.filter(mk => 
-      mk.kode_mk.toLowerCase().includes(query) ||
-      mk.nama_mk.toLowerCase().includes(query)
+    filteredMK.value = availableMataKuliah.value.filter(
+      (mk) => mk.kode_mk.toLowerCase().includes(query) || mk.nama_mk.toLowerCase().includes(query),
     )
   }
 }
@@ -255,13 +253,15 @@ async function submitForm() {
     formData.value.nilai_akhir = nilai.toFixed(2)
 
     console.log('Submitting nilai:', formData.value)
-    
+
     const result = await nilaiMkStore.createNilai(formData.value)
-    
+
     console.log('Create nilai result:', result)
-    
+
     if (result && (result.success === true || result.success === undefined)) {
-      alert(`Nilai berhasil ditambahkan!\nNilai: ${formData.value.nilai_akhir}\nHuruf Mutu: ${nilaiMkStore.getHurufMutu(formData.value.nilai_akhir)}`)
+      alert(
+        `Nilai berhasil ditambahkan!\nNilai: ${formData.value.nilai_akhir}\nHuruf Mutu: ${nilaiMkStore.getHurufMutu(formData.value.nilai_akhir)}`,
+      )
       closeModal()
     } else {
       alert('Gagal menambahkan nilai: ' + (result?.message || 'Unknown error'))
@@ -290,17 +290,17 @@ async function loadPeriodeOnly() {
 // Load nilai berdasarkan filter dan data yang diperlukan
 async function loadNilaiData() {
   if (!selectedPeriode.value) return
-  
+
   const filters = { id_periode: selectedPeriode.value }
   if (selectedMataKuliah.value) {
     filters.kode_mk = selectedMataKuliah.value
   }
-  
+
   // Load data yang diperlukan secara bersamaan hanya ketika dibutuhkan
   await Promise.all([
     nilaiMkStore.fetchNilaiByFilter(filters),
     mkStore.fetchAllMK(), // untuk dropdown mata kuliah
-    nilaiMkStore.fetchMahasiswaData() // untuk nama mahasiswa di tabel
+    nilaiMkStore.fetchMahasiswaData(), // untuk nama mahasiswa di tabel
   ])
 }
 
@@ -329,15 +329,11 @@ onMounted(() => {
       <div class="filters-container">
         <div class="filter-group">
           <label for="periode" class="filter-label">Periode:</label>
-          <select 
-            id="periode" 
-            v-model="selectedPeriode" 
-            class="filter-select"
-          >
+          <select id="periode" v-model="selectedPeriode" class="filter-select">
             <option value="">Pilih Periode</option>
-            <option 
-              v-for="periode in periodeList" 
-              :key="periode.id_periode" 
+            <option
+              v-for="periode in periodeList"
+              :key="periode.id_periode"
               :value="periode.id_periode"
             >
               {{ periode.id_periode }}
@@ -347,16 +343,16 @@ onMounted(() => {
 
         <div class="filter-group">
           <label for="matakuliah" class="filter-label">Mata Kuliah:</label>
-          <select 
-            id="matakuliah" 
-            v-model="selectedMataKuliah" 
+          <select
+            id="matakuliah"
+            v-model="selectedMataKuliah"
             class="filter-select"
             :disabled="!selectedPeriode"
           >
             <option value="">Semua Mata Kuliah</option>
-            <option 
-              v-for="mk in availableMataKuliahInPeriode" 
-              :key="mk.kode_mk" 
+            <option
+              v-for="mk in availableMataKuliahInPeriode"
+              :key="mk.kode_mk"
               :value="mk.kode_mk"
             >
               {{ mk.kode_mk }} - {{ mk.nama_mk }}
@@ -367,8 +363,8 @@ onMounted(() => {
 
       <!-- Action Button -->
       <div class="action-section" v-if="canManageKurikulumMk">
-        <button 
-          @click="openAddModal" 
+        <button
+          @click="openAddModal"
           class="btn-primary"
           :disabled="!selectedPeriode"
           :title="!selectedPeriode ? 'Pilih periode terlebih dahulu' : 'Tambah nilai baru'"
@@ -398,10 +394,10 @@ onMounted(() => {
       <div class="search-section">
         <div class="search-box">
           <i class="ri-search-line"></i>
-          <input 
-            v-model="searchQuery" 
-            type="text" 
-            placeholder="Cari berdasarkan kode MK, NIM, atau nama..." 
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Cari berdasarkan kode MK, NIM, atau nama..."
             class="search-input"
           />
         </div>
@@ -436,7 +432,10 @@ onMounted(() => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(nilai, index) in filteredNilaiList" :key="`${nilai.id_periode}-${nilai.kode_mk}-${nilai.nim}`">
+              <tr
+                v-for="(nilai, index) in filteredNilaiList"
+                :key="`${nilai.id_periode}-${nilai.kode_mk}-${nilai.nim}`"
+              >
                 <td>{{ index + 1 }}</td>
                 <td>
                   <span class="kode-mk">{{ nilai.kode_mk }}</span>
@@ -454,7 +453,10 @@ onMounted(() => {
                   <span class="nilai-akhir">{{ nilaiMkStore.formatNilai(nilai.nilai_akhir) }}</span>
                 </td>
                 <td>
-                  <span class="huruf-mutu" :class="getHurufMutuClass(nilaiMkStore.getHurufMutu(nilai.nilai_akhir))">
+                  <span
+                    class="huruf-mutu"
+                    :class="getHurufMutuClass(nilaiMkStore.getHurufMutu(nilai.nilai_akhir))"
+                  >
                     {{ nilaiMkStore.getHurufMutu(nilai.nilai_akhir) }}
                   </span>
                 </td>
@@ -481,16 +483,16 @@ onMounted(() => {
             <i class="ri-close-line"></i>
           </button>
         </div>
-        
+
         <div class="modal-body">
           <div class="form-group">
             <label for="periode" class="form-label">Periode</label>
-            <input 
-              type="text" 
-              id="periode" 
-              :value="selectedPeriode" 
-              class="form-input" 
-              disabled 
+            <input
+              type="text"
+              id="periode"
+              :value="selectedPeriode"
+              class="form-input"
+              disabled
               readonly
             />
           </div>
@@ -498,9 +500,9 @@ onMounted(() => {
           <div class="form-group">
             <label for="mata-kuliah" class="form-label">Mata Kuliah *</label>
             <div class="combobox-container">
-              <input 
-                type="text" 
-                id="mata-kuliah" 
+              <input
+                type="text"
+                id="mata-kuliah"
                 v-model="mkSearchQuery"
                 class="form-input combobox-input"
                 placeholder="Ketik kode atau nama mata kuliah..."
@@ -514,8 +516,8 @@ onMounted(() => {
                 <div v-if="mkSearchQuery" class="combobox-header">
                   {{ filteredMK.length }} mata kuliah ditemukan
                 </div>
-                <div 
-                  v-for="mk in filteredMK" 
+                <div
+                  v-for="mk in filteredMK"
                   :key="mk.kode_mk"
                   class="combobox-option"
                   @mousedown="selectMataKuliah(mk)"
@@ -524,13 +526,18 @@ onMounted(() => {
                   <span class="mk-nama">{{ mk.nama_mk }}</span>
                 </div>
               </div>
-              <div v-if="showMkDropdown && filteredMK.length === 0 && mkSearchQuery" class="combobox-empty">
+              <div
+                v-if="showMkDropdown && filteredMK.length === 0 && mkSearchQuery"
+                class="combobox-empty"
+              >
                 Mata kuliah tidak ditemukan
               </div>
             </div>
             <div v-if="selectedMK" class="selected-mk-info">
               <i class="ri-book-line"></i>
-              <span class="selected-mk-text">{{ selectedMK.kode_mk }} - {{ selectedMK.nama_mk }}</span>
+              <span class="selected-mk-text"
+                >{{ selectedMK.kode_mk }} - {{ selectedMK.nama_mk }}</span
+              >
               <button type="button" class="clear-mk-btn" @click="clearMataKuliah">
                 <i class="ri-close-line"></i>
               </button>
@@ -539,10 +546,10 @@ onMounted(() => {
 
           <div class="form-group">
             <label for="nim" class="form-label">NIM Mahasiswa *</label>
-            <input 
-              type="text" 
-              id="nim" 
-              v-model="formData.nim" 
+            <input
+              type="text"
+              id="nim"
+              v-model="formData.nim"
               class="form-input"
               placeholder="Masukkan NIM mahasiswa"
               required
@@ -563,10 +570,10 @@ onMounted(() => {
 
           <div class="form-group">
             <label for="nilai" class="form-label">Nilai Akhir *</label>
-            <input 
-              type="number" 
-              id="nilai" 
-              v-model="formData.nilai_akhir" 
+            <input
+              type="number"
+              id="nilai"
+              v-model="formData.nilai_akhir"
               class="form-input"
               placeholder="0-100"
               min="0"
@@ -576,15 +583,14 @@ onMounted(() => {
             />
             <small class="form-help">
               Masukkan nilai 0-100. Contoh: 80 akan menjadi 80.00
-              <br>Huruf mutu: {{ formData.nilai_akhir ? nilaiMkStore.getHurufMutu(formData.nilai_akhir) : '-' }}
+              <br />Huruf mutu:
+              {{ formData.nilai_akhir ? nilaiMkStore.getHurufMutu(formData.nilai_akhir) : '-' }}
             </small>
           </div>
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn-secondary" @click="closeModal">
-            Batal
-          </button>
+          <button type="button" class="btn-secondary" @click="closeModal">Batal</button>
           <button type="button" class="btn-primary" @click="submitForm">
             <i class="ri-save-line"></i>
             Simpan Nilai
@@ -692,7 +698,8 @@ onMounted(() => {
   opacity: 0.6;
 }
 
-.loading-container, .error-container {
+.loading-container,
+.error-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -712,8 +719,12 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error-container i {
@@ -871,7 +882,8 @@ onMounted(() => {
   color: white;
 }
 
-.empty-state, .no-period-state {
+.empty-state,
+.no-period-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -881,20 +893,23 @@ onMounted(() => {
   color: #6b7280;
 }
 
-.empty-state i, .no-period-state i {
+.empty-state i,
+.no-period-state i {
   font-size: 64px;
   margin-bottom: 16px;
   color: #d1d5db;
 }
 
-.empty-state h3, .no-period-state h3 {
+.empty-state h3,
+.no-period-state h3 {
   font-size: 18px;
   font-weight: 600;
   color: #374151;
   margin: 0 0 8px 0;
 }
 
-.empty-state p, .no-period-state p {
+.empty-state p,
+.no-period-state p {
   font-size: 14px;
   margin: 0;
 }
@@ -962,7 +977,8 @@ onMounted(() => {
   color: #374151;
 }
 
-.form-input, .form-select {
+.form-input,
+.form-select {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid #d1d5db;
@@ -971,7 +987,8 @@ onMounted(() => {
   transition: border-color 0.2s;
 }
 
-.form-input:focus, .form-select:focus {
+.form-input:focus,
+.form-select:focus {
   outline: none;
   border-color: #4caf50;
   box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);

@@ -12,11 +12,11 @@
       <div v-if="showForm" class="form-container">
         <div class="form-group">
           <label>Kode BK</label>
-          <input 
-            type="text" 
-            v-model="form.id_bk" 
-            placeholder="Kode BK (contoh: BK001)" 
-            :disabled="isEditing" 
+          <input
+            type="text"
+            v-model="form.id_bk"
+            placeholder="Kode BK (contoh: BK001)"
+            :disabled="isEditing"
           />
         </div>
         <div class="form-group">
@@ -73,17 +73,10 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useBKStore } from '@/stores/bk'
-import { useAuthStore } from '@/stores/auth'
+import { usePermissions } from '@/composables/usePermissions'
 
-const authStore = useAuthStore()
-
-
-// cek role user
-const userRole = computed(() => authStore.user?.role?.toLowerCase())
-const isAdmin = computed(() => userRole.value === 'admin')
-const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
-const isDosen = computed(() => userRole.value === 'dosen')
-
+// Use centralized permissions
+const { isAdmin, isDosen, isMahasiswa, can } = usePermissions()
 
 // Initialize store
 const bkStore = useBKStore()
@@ -96,7 +89,7 @@ const error = computed(() => bkStore.error)
 // Form untuk tambah/edit BK
 const form = ref({
   id_bk: '',
-  deskripsi: ''
+  deskripsi: '',
 })
 
 const isEditing = ref(false)
