@@ -362,7 +362,7 @@ onMounted(() => {
       </div>
 
       <!-- Action Button -->
-      <div class="action-section" v-if="canManageKurikulumMk">
+      <div class="action-section" v-if="isAdmin || isDosen">
         <button
           @click="openAddModal"
           class="btn-primary"

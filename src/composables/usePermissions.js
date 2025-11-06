@@ -101,7 +101,7 @@ export function usePermissions() {
     // Kurikulum Mata Kuliah
     kurikulumMk: {
       view: isAdmin.value || isDosen.value,
-      create: isAdmin.value || isDosen.value,
+      create: isAdmin.value || isDosen.value, // Dosen bisa manage mata kuliah
       edit: isAdmin.value,
       delete: isAdmin.value,
     },

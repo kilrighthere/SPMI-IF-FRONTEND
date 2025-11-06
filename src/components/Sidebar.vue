@@ -133,14 +133,14 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
               <i class="ri-file-list-3-line"></i>
               <span class="submenu-title" v-show="!sidebarStore.isMinimized">Kurikulum MK</span>
             </RouterLink>
-            <RouterLink
+            <!-- <RouterLink
               :to="`/kurikulum/${kurikulumId}/rps`"
               class="menu-kurikulum"
               :title="sidebarStore.isMinimized ? 'RPS Mata Kuliah' : ''"
             >
               <i class="ri-book-2-line"></i>
               <span class="submenu-title" v-show="!sidebarStore.isMinimized">RPS Mata Kuliah</span>
-            </RouterLink>
+            </RouterLink> -->
           </template>
 
           <!-- Menu Nilai Mata Kuliah - untuk semua role -->

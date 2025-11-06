@@ -139,7 +139,7 @@ onMounted(() => {
     <div v-else-if="isDosen" class="section-box">
       <div class="section-header">
         <h3>Data Mahasiswa</h3>
-        <button class="btn-add" @click="showForm ? resetForm() : (showForm = true)">
+        <button class="btn-add" @click="showForm ? resetForm() : (showForm = true)" v-if="isAdmin">
           {{ showForm ? 'Batal' : 'Tambah Mahasiswa' }}
         </button>
       </div>
@@ -190,7 +190,7 @@ onMounted(() => {
               <th width="10%">No.</th>
               <th width="20%">NIM</th>
               <th width="50%">Nama Mahasiswa</th>
-              <th width="20%" class="aksi-title">Aksi</th>
+              <th width="20%" class="aksi-title" v-if="isAdmin">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -198,7 +198,7 @@ onMounted(() => {
               <td class="text-center">{{ index + 1 }}</td>
               <td>{{ mahasiswa.nim }}</td>
               <td>{{ mahasiswa.nama }}</td>
-              <td class="action-button">
+              <td class="action-button" v-if="isAdmin">
                 <button class="btn-edit" @click="editMahasiswa(mahasiswa)">Edit</button>
                 <button class="btn-delete" @click="removeMahasiswa(mahasiswa.nim)">Hapus</button>
               </td>

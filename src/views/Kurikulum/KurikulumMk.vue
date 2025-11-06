@@ -6,7 +6,7 @@
     </div>
 
     <!-- Action Button -->
-    <div class="action-section">
+    <div class="action-section" v-if="isAdmin">
       <button 
         v-if="canManageKurikulumMk"
         @click="openAddModal" 
@@ -65,7 +65,7 @@
               <th>Nama Mata Kuliah</th>
               <th>SKS</th>
               <th>Semester</th>
-              <th class="actions-column">Aksi</th>
+              <th class="actions-column" v-if="isAdmin">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -83,7 +83,7 @@
               <td>
                 <span class="semester-badge">Semester {{ item.semester }}</span>
               </td>
-              <td class="actions">
+              <td class="actions" v-if="isAdmin">
                 <button 
                   v-if="canManageKurikulumMk"
                   @click="openEditModal(item)" 
