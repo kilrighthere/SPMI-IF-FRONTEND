@@ -76,17 +76,6 @@ function togglePasswordVisibility() {
                 <span class="wave-emoji">👋</span>
               </h1>
               <p class="welcome-subtitle">Please enter your details.</p>
-
-              <!-- Dummy Auth Info - Remove when server is back online -->
-              <div class="dummy-auth-info">
-                <i class="ri-information-line"></i>
-                <div>
-                  <strong>Development Mode:</strong> Akun dummy tersedia:<br />
-                  <strong>Admin:</strong> 444444444444444444 |
-                  <strong>Dosen:</strong> 5555555555555555555<br />
-                  <strong>Mahasiswa:</strong> 24060120140005 atau 24060120111111
-                </div>
-              </div>
             </div>
 
             <!-- Role Selection Toggle -->
@@ -358,33 +347,7 @@ function togglePasswordVisibility() {
   letter-spacing: 2px;
 }
 
-/* Dummy Auth Info Box */
-.dummy-auth-info {
-  margin-top: 16px;
-  padding: 14px 16px;
-  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
-  border: 1.5px solid #fdba74;
-  border-radius: 12px;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  font-family: 'Montserrat', sans-serif;
-  color: #92400e;
-  font-size: 13px;
-  line-height: 1.5;
-}
 
-.dummy-auth-info i {
-  font-size: 20px;
-  color: #f59e0b;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.dummy-auth-info strong {
-  color: #78350f;
-  font-weight: 700;
-}
 
 /* Role Toggle */
 .role-toggle-container {

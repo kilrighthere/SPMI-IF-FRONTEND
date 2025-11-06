@@ -11,9 +11,19 @@ import {
   Legend
 } from 'chart.js'
 import { getMahasiswaList, getMahasiswaPetaNilai, getMahasiswaCplPerGrades } from '@/api'
+import { useAuthStore } from '@/stores/auth'
 
 // Register Chart.js components
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
+
+// Auth store
+const auth = useAuthStore()
+
+// Role-based logic
+const userRole = computed(() => auth.user?.role?.toLowerCase())
+const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
+const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 'admin')
+const currentUserNim = computed(() => auth.user?.nim)
 
 // State
 const mahasiswaList = ref([])
@@ -104,12 +114,31 @@ async function fetchMahasiswaList() {
   isLoading.value = true
   try {
     const response = await getMahasiswaList()
+    let allMahasiswa = []
+    
     if (response.data && response.data.success) {
-      mahasiswaList.value = response.data.data
-      filteredMahasiswaList.value = response.data.data
+      allMahasiswa = response.data.data
     } else {
-      mahasiswaList.value = response.data || []
-      filteredMahasiswaList.value = response.data || []
+      allMahasiswa = response.data || []
+    }
+
+    // Filter berdasarkan role
+    if (isMahasiswa.value && currentUserNim.value) {
+      // Untuk mahasiswa, hanya tampilkan data mereka sendiri
+      const currentUserData = allMahasiswa.find(mhs => mhs.nim === currentUserNim.value)
+      mahasiswaList.value = currentUserData ? [currentUserData] : []
+      filteredMahasiswaList.value = mahasiswaList.value
+      
+      // Auto-select mahasiswa jika mereka login
+      if (currentUserData) {
+        selectedMahasiswa.value = currentUserData
+        await fetchPetaNilai(currentUserData.nim)
+        await fetchCplPerGrades(currentUserData.nim)
+      }
+    } else {
+      // Untuk dosen/admin, tampilkan semua mahasiswa
+      mahasiswaList.value = allMahasiswa
+      filteredMahasiswaList.value = allMahasiswa
     }
   } catch (err) {
     console.error('Error fetching mahasiswa:', err)
@@ -240,25 +269,20 @@ onMounted(() => {
 
 <template>
   <div class="ukur-cpl-container">
-    <h1 class="page-title">Pengukuran CPL Mahasiswa</h1>
+    <h1 class="page-title">{{ isMahasiswa ? 'Pengukuran CPL Saya' : 'Pengukuran CPL Mahasiswa' }}</h1>
           
-        <!-- Search Bar -->
-        <div class="search-section">
+        <!-- Search Bar - Hanya untuk Dosen/Admin -->
+        <div v-if="isDosen" class="search-section">
           <div class="search-box">
             <i class="ri-search-line search-icon"></i>
             <input 
               type="text" 
               v-model="searchQuery" 
-              class="form-control search-input" 
-              placeholder="Cari mahasiswa berdasarkan NIM atau Nama..."
+              placeholder="Cari mahasiswa berdasarkan NIM atau nama..." 
+              class="search-input"
             />
           </div>
-          <div class="search-info">
-            Menampilkan {{ filteredMahasiswaList.length }} dari {{ mahasiswaList.length }} mahasiswa
-          </div>
-        </div>
-
-        <!-- Loading State -->
+        </div>        <!-- Loading State -->
         <div v-if="isLoading" class="text-center my-5">
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
@@ -266,8 +290,8 @@ onMounted(() => {
           <p class="mt-2">Memuat daftar mahasiswa...</p>
         </div>
 
-        <!-- Mahasiswa Catalog - Table -->
-        <div v-else-if="!selectedMahasiswa" class="table-container">
+        <!-- Mahasiswa Catalog - Table (Hanya untuk Dosen/Admin) -->
+        <div v-else-if="isDosen && !selectedMahasiswa" class="table-container">
           <div class="table-header">
             <h5 class="table-title">
               <i class="ri-user-line"></i>
@@ -321,9 +345,9 @@ onMounted(() => {
         </div>
 
         <!-- Chart Section -->
-        <div v-else id="chart-section">
-          <!-- Selected Mahasiswa Info -->
-          <div class="selected-mahasiswa-banner">
+        <div v-else-if="selectedMahasiswa || isMahasiswa" id="chart-section">
+          <!-- Selected Mahasiswa Info (Hanya untuk Dosen/Admin) -->
+          <div v-if="isDosen" class="selected-mahasiswa-banner">
             <div class="selected-info-content">
               <div class="selected-details">
                 <h4>{{ selectedMahasiswa.nama }}</h4>
@@ -333,6 +357,16 @@ onMounted(() => {
             <button class="btn btn-back" @click="clearSelection">
               <i class="ri-arrow-left-line"></i> Kembali ke Daftar
             </button>
+          </div>
+          
+          <!-- Mahasiswa Profile (Untuk Mahasiswa) -->
+          <div v-else-if="isMahasiswa && selectedMahasiswa" class="mahasiswa-profile-banner">
+            <div class="profile-content">
+              <div class="profile-details">
+                <h4>{{ selectedMahasiswa.nama }}</h4>
+                <p class="nim-display">NIM: {{ selectedMahasiswa.nim }}</p>
+              </div>
+            </div>
           </div>
 
           <!-- Error Message -->
@@ -672,6 +706,30 @@ onMounted(() => {
   background: rgba(44, 62, 80, 0.2);
   border-color: #2c3e50;
   color: #2c3e50;
+}
+
+/* Mahasiswa Profile Banner */
+.mahasiswa-profile-banner {
+  background: linear-gradient(90deg, #a6d600 0%, #d5ff5f 100%);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  color: #2c3e50;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(166, 214, 0, 0.2);
+  margin-bottom: 1.25rem;
+}
+
+.profile-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.profile-details h4 {
+  margin: 0 0 0.4rem 0;
+  font-weight: 600;
+  font-size: 1.4rem;
 }
 
 /* Chart Card */

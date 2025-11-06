@@ -1,12 +1,27 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useMahasiswaStore } from '@/stores/mahasiswa'
+import { useAuthStore } from '@/stores/auth'
 
 const mahasiswaStore = useMahasiswaStore()
+const auth = useAuthStore()
 
 const mahasiswaList = computed(() => mahasiswaStore.mahasiswaList)
 const isLoading = computed(() => mahasiswaStore.isLoading)
 const error = computed(() => mahasiswaStore.error)
+
+// Role-based logic
+const userRole = computed(() => auth.user?.role?.toLowerCase())
+const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
+const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 'admin')
+
+// For mahasiswa, show only their own data
+const currentUserData = computed(() => {
+  if (isMahasiswa.value) {
+    return mahasiswaList.value.find(mhs => mhs.nim === auth.user?.nim) || null
+  }
+  return null
+})
 
 const form = ref({
   nim: '',
@@ -92,7 +107,41 @@ onMounted(() => {
 
 <template>
   <div class="mahasiswa-container">
-    <div class="section-box">
+    <!-- View untuk Mahasiswa - hanya profil sendiri -->
+    <div v-if="isMahasiswa" class="section-box">
+      <div class="section-header">
+        <h3>Profil Saya</h3>
+      </div>
+      
+      <!-- Loading indicator -->
+      <div v-if="isLoading" class="loading">Loading...</div>
+      
+      <!-- Error message -->
+      <div v-else-if="error" class="error-message">{{ error }}</div>
+      
+      <!-- Profile data -->
+      <div v-else-if="currentUserData" class="profile-container">
+        <div class="profile-card">
+          <div class="profile-header">
+            <div class="profile-avatar">
+              {{ currentUserData.nama?.substring(0, 2).toUpperCase() }}
+            </div>
+            <div class="profile-info">
+              <h4>{{ currentUserData.nama }}</h4>
+              <p>NIM: {{ currentUserData.nim }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- No data found -->
+      <div v-else class="no-data">
+        Data profil tidak ditemukan
+      </div>
+    </div>
+
+    <!-- View untuk Dosen/Admin - manajemen semua mahasiswa -->
+    <div v-else-if="isDosen" class="section-box">
       <div class="section-header">
         <h3>Data Mahasiswa</h3>
         <button class="btn-add" @click="showForm ? resetForm() : (showForm = true)">
@@ -331,6 +380,62 @@ onMounted(() => {
 
 .btn-delete:hover {
   opacity: 0.9;
+}
+
+/* Profile Styles for Mahasiswa */
+.profile-container {
+  margin-top: 20px;
+}
+
+.profile-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  font-family: 'Montserrat', sans-serif;
+  box-shadow: 0 4px 16px rgba(166, 214, 0, 0.3);
+}
+
+.profile-info h4 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+}
+
+.profile-info p {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  font-style: italic;
 }
 
 .loading {

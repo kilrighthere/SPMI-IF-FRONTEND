@@ -27,12 +27,12 @@ const variantClass = computed(() => {
 
 // Get user initials for avatar
 const userInitials = computed(() => {
-  if (!auth.user?.nama) return 'U'
-  const names = auth.user.nama.split(' ')
+  if (!auth.user?.name) return 'U'
+  const names = auth.user.name.split(' ')
   if (names.length >= 2) {
     return (names[0][0] + names[names.length - 1][0]).toUpperCase()
   }
-  return auth.user.nama.substring(0, 2).toUpperCase()
+  return auth.user.name.substring(0, 2).toUpperCase()
 })
 
 // Toggle dropdown
@@ -85,8 +85,8 @@ onUnmounted(() => {
                 {{ userInitials }}
               </div>
               <div class="user-info">
-                <span class="user-name">{{ auth.user?.nama || 'User' }}</span>
-                <span class="user-role">Dosen</span>
+                <span class="user-name">{{ auth.user?.name || 'User' }}</span>
+                <span class="user-role">{{ auth.user?.role || 'User' }}</span>
               </div>
               <svg
                 class="chevron-icon"
@@ -113,8 +113,10 @@ onUnmounted(() => {
                     {{ userInitials }}
                   </div>
                   <div class="dropdown-user-info">
-                    <p class="dropdown-name">{{ auth.user?.nama || 'User' }}</p>
-                    <p class="dropdown-nip">NIP: {{ auth.user?.nip || '-' }}</p>
+                    <p class="dropdown-name">{{ auth.user?.name || 'User' }}</p>
+                    <p class="dropdown-nip" v-if="auth.user?.nip">NIP: {{ auth.user.nip }}</p>
+                    <p class="dropdown-nip" v-else-if="auth.user?.nim">NIM: {{ auth.user.nim }}</p>
+                    <p class="dropdown-nip" v-else>ID: -</p>
                   </div>
                 </div>
 
@@ -398,6 +400,7 @@ onUnmounted(() => {
   font-family: 'Montserrat', sans-serif;
   margin: 0;
   line-height: 1.3;
+  font-weight: 500;
 }
 
 .dropdown-divider {

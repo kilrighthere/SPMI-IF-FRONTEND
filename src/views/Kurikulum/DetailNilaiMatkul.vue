@@ -3,7 +3,7 @@
     <div class="section-box">
       <div class="section-header">
         <div>
-          <h3>Nilai Mata Kuliah: {{ mataKuliah ? mataKuliah.nama : kodeMk }}</h3>
+          <h3>{{ isMahasiswa ? 'Nilai Saya:' : 'Nilai Mata Kuliah:' }} {{ mataKuliah ? mataKuliah.nama : kodeMk }}</h3>
           <p class="mk-info" v-if="mataKuliah">
             {{ mataKuliah.kode_mk }}
           </p>
@@ -29,7 +29,7 @@
             <input 
               v-model="searchQuery" 
               type="text" 
-              placeholder="Cari mahasiswa..." 
+              :placeholder="isMahasiswa ? 'Cari periode...' : 'Cari mahasiswa...'" 
               class="search-input"
             />
           </div>
@@ -76,13 +76,21 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNilaiMkStore } from '@/stores/nilaiMk'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
 const kodeMk = route.params.kodeMk
 
-// Initialize store
+// Initialize stores
 const nilaiMkStore = useNilaiMkStore()
+const auth = useAuthStore()
+
+// Role-based logic
+const userRole = computed(() => auth.user?.role?.toLowerCase())
+const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
+const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 'admin')
+const currentUserNim = computed(() => auth.user?.nim)
 
 // Data untuk nilai mata kuliah
 const isLoading = computed(() => nilaiMkStore.isLoading)
@@ -113,11 +121,27 @@ const loadNilaiData = () => {
   if (nilaiMkStore.nilaiList.length === 0) {
     // Jika belum ada data, fetch semua data terlebih dahulu
     nilaiMkStore.fetchAllData().then(() => {
-      nilaiMahasiswa.value = nilaiMkStore.getNilaiByMataKuliah(kodeMk)
+      const allNilai = nilaiMkStore.getNilaiByMataKuliah(kodeMk)
+      
+      if (isMahasiswa.value && currentUserNim.value) {
+        // Untuk mahasiswa, hanya tampilkan nilai mereka sendiri
+        nilaiMahasiswa.value = allNilai.filter(nilai => nilai.nim === currentUserNim.value)
+      } else {
+        // Untuk dosen/admin, tampilkan semua nilai
+        nilaiMahasiswa.value = allNilai
+      }
     })
   } else {
     // Jika sudah ada data, langsung filter untuk mata kuliah ini
-    nilaiMahasiswa.value = nilaiMkStore.getNilaiByMataKuliah(kodeMk)
+    const allNilai = nilaiMkStore.getNilaiByMataKuliah(kodeMk)
+    
+    if (isMahasiswa.value && currentUserNim.value) {
+      // Untuk mahasiswa, hanya tampilkan nilai mereka sendiri
+      nilaiMahasiswa.value = allNilai.filter(nilai => nilai.nim === currentUserNim.value)
+    } else {
+      // Untuk dosen/admin, tampilkan semua nilai
+      nilaiMahasiswa.value = allNilai
+    }
   }
 }
 
@@ -155,10 +179,7 @@ const getNilaiHuruf = (nilai) => {
 
 // Kembali ke halaman daftar mata kuliah
 const goBack = () => {
-  router.push({
-    name: 'NilaiMatkul',
-    params: { id: route.params.id }
-  })
+  router.push(`/kurikulum/${route.params.id}/nilai-matkul`)
 }
 </script>
 

@@ -2,12 +2,20 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useNilaiMkStore } from '@/stores/nilaiMk'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const route = useRoute()
 
-// Initialize store
+// Initialize stores
 const nilaiMkStore = useNilaiMkStore()
+const auth = useAuthStore()
+
+// Role-based logic
+const userRole = computed(() => auth.user?.role?.toLowerCase())
+const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
+const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 'admin')
+const currentUserNim = computed(() => auth.user?.nim)
 
 // Data untuk mata kuliah
 const isLoading = computed(() => nilaiMkStore.isLoading)
@@ -15,9 +23,19 @@ const error = computed(() => nilaiMkStore.error)
 
 // Hanya tampilkan mata kuliah yang sudah ada nilainya
 const mataKuliahList = computed(() => {
-  return nilaiMkStore.mataKuliahList.filter(mk => 
-    nilaiMkStore.nilaiList.some(nilai => nilai.kode_mk === mk.kode_mk)
-  )
+  if (isMahasiswa.value && currentUserNim.value) {
+    // Untuk mahasiswa, hanya tampilkan mata kuliah yang ada nilainya untuk mereka
+    return nilaiMkStore.mataKuliahList.filter(mk => 
+      nilaiMkStore.nilaiList.some(nilai => 
+        nilai.kode_mk === mk.kode_mk && nilai.nim === currentUserNim.value
+      )
+    )
+  } else {
+    // Untuk dosen/admin, tampilkan semua mata kuliah yang ada nilainya
+    return nilaiMkStore.mataKuliahList.filter(mk => 
+      nilaiMkStore.nilaiList.some(nilai => nilai.kode_mk === mk.kode_mk)
+    )
+  }
 })
 
 // Filter
@@ -48,9 +66,53 @@ const viewNilaiMatkul = (kodeMk) => {
   })
 }
 
-// Hitung jumlah mahasiswa untuk mata kuliah tertentu
+// Hitung jumlah mahasiswa untuk mata kuliah tertentu (untuk dosen/admin)
+// Untuk mahasiswa, return 1 jika ada nilai untuk mereka
 const getJumlahMahasiswa = (kodeMk) => {
-  return nilaiMkStore.nilaiList.filter(nilai => nilai.kode_mk === kodeMk).length
+  if (isMahasiswa.value && currentUserNim.value) {
+    return nilaiMkStore.nilaiList.some(nilai => 
+      nilai.kode_mk === kodeMk && nilai.nim === currentUserNim.value
+    ) ? 1 : 0
+  } else {
+    return nilaiMkStore.nilaiList.filter(nilai => nilai.kode_mk === kodeMk).length
+  }
+}
+
+// Get nilai mahasiswa untuk mata kuliah tertentu (khusus untuk mahasiswa)
+const getNilaiMahasiswa = (kodeMk) => {
+  if (isMahasiswa.value && currentUserNim.value) {
+    const nilai = nilaiMkStore.nilaiList.find(nilai => 
+      nilai.kode_mk === kodeMk && nilai.nim === currentUserNim.value
+    )
+    return nilai ? parseFloat(nilai.nilai_akhir) : null
+  }
+  return null
+}
+
+// Convert nilai angka ke huruf mutu
+const getHurufMutu = (nilai) => {
+  if (!nilai) return '-'
+  if (nilai >= 85) return 'A'
+  if (nilai >= 80) return 'A-'
+  if (nilai >= 75) return 'B+'
+  if (nilai >= 70) return 'B'
+  if (nilai >= 65) return 'B-'
+  if (nilai >= 60) return 'C+'
+  if (nilai >= 55) return 'C'
+  if (nilai >= 50) return 'C-'
+  if (nilai >= 45) return 'D+'
+  if (nilai >= 40) return 'D'
+  return 'E'
+}
+
+// Get CSS class untuk huruf mutu
+const getHurufMutuClass = (huruf) => {
+  if (huruf === 'A' || huruf === 'A-') return 'huruf-a'
+  if (huruf === 'B+' || huruf === 'B' || huruf === 'B-') return 'huruf-b'
+  if (huruf === 'C+' || huruf === 'C' || huruf === 'C-') return 'huruf-c'
+  if (huruf === 'D+' || huruf === 'D') return 'huruf-d'
+  if (huruf === 'E') return 'huruf-e'
+  return 'huruf-default'
 }
 
 // Cek apakah mata kuliah memiliki nilai
@@ -63,7 +125,7 @@ const hasMataKuliahNilai = (kodeMk) => {
   <div class="nilai-matkul-container">
     <div class="section-box">
       <div class="section-header">
-        <h3>Daftar Mata Kuliah</h3>
+        <h3>{{ isMahasiswa ? 'Nilai Mata Kuliah Saya' : 'Daftar Mata Kuliah' }}</h3>
       </div>
 
       <!-- Loading indicator -->
@@ -91,8 +153,8 @@ const hasMataKuliahNilai = (kodeMk) => {
           Belum ada data nilai mata kuliah yang tersedia.
         </div>
 
-        <!-- Mata Kuliah Table -->
-        <div v-else class="table-responsive">
+        <!-- Mata Kuliah Table untuk Dosen/Admin -->
+        <div v-if="isDosen" class="table-responsive">
           <table class="nilai-table">
             <thead>
               <tr>
@@ -115,11 +177,41 @@ const hasMataKuliahNilai = (kodeMk) => {
                   <button 
                     @click="viewNilaiMatkul(mk.kode_mk)" 
                     class="btn-action"
-                    :title="'Lihat detail nilai'"
+                    title="Lihat detail nilai"
                   >
                     <i class="ri-file-list-3-line"></i>
                     Lihat Nilai
                   </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mata Kuliah Table untuk Mahasiswa (Simple View) -->
+        <div v-else class="table-responsive">
+          <table class="nilai-table">
+            <thead>
+              <tr>
+                <th>Kode MK</th>
+                <th>Nama Mata Kuliah</th>
+                <th>Semester</th>
+                <th>SKS</th>
+                <th>Nilai Akhir</th>
+                <th>Huruf Mutu</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="mk in filteredMataKuliahList" :key="mk.kode_mk">
+                <td>{{ mk.kode_mk }}</td>
+                <td>{{ mk.nama_mk }}</td>
+                <td>{{ mk.semester || '-' }}</td>
+                <td>{{ mk.sks || '-' }}</td>
+                <td class="nilai-cell">{{ getNilaiMahasiswa(mk.kode_mk) || '-' }}</td>
+                <td class="huruf-mutu">
+                  <span class="huruf-badge" :class="getHurufMutuClass(getHurufMutu(getNilaiMahasiswa(mk.kode_mk)))">
+                    {{ getHurufMutu(getNilaiMahasiswa(mk.kode_mk)) }}
+                  </span>
                 </td>
               </tr>
             </tbody>
@@ -279,8 +371,23 @@ const hasMataKuliahNilai = (kodeMk) => {
   color: #f44336;
   padding: 10px;
   background-color: #ffebee;
-  border-radius: 4px;
+  border-radius: 5px;
   margin-bottom: 15px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.status-ada {
+  background-color: var(--color-buttonsec);
+  color: var(--color-text);
 }
 
 .table-info {
@@ -288,5 +395,50 @@ const hasMataKuliahNilai = (kodeMk) => {
   font-size: 14px;
   color: #666;
   margin-top: 10px;
+}
+
+.huruf-mutu {
+  text-align: center;
+}
+
+.huruf-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  font-family: 'Montserrat', sans-serif;
+  min-width: 30px;
+}
+
+.huruf-a {
+  background-color: #16a34a;
+  color: white;
+}
+
+.huruf-b {
+  background-color: #2563eb;
+  color: white;
+}
+
+.huruf-c {
+  background-color: #eab308;
+  color: white;
+}
+
+.huruf-d {
+  background-color: #ea580c;
+  color: white;
+}
+
+.huruf-e {
+  background-color: #dc2626;
+  color: white;
+}
+
+.huruf-default {
+  background-color: #6b7280;
+  color: white;
 }
 </style>

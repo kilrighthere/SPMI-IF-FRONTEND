@@ -2,9 +2,11 @@
 import { useRoute } from 'vue-router'
 import { computed } from 'vue'
 import { useSidebarStore } from '@/stores/sidebar'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const sidebarStore = useSidebarStore()
+const auth = useAuthStore()
 
 // cek login page
 const isLoginPage = computed(() => route.path.toLowerCase() === '/login')
@@ -12,6 +14,11 @@ const isLoginPage = computed(() => route.path.toLowerCase() === '/login')
 // cek kurikulum
 const isKurikulumActive = computed(() => route.path.toLowerCase().startsWith('/kurikulum'))
 const kurikulumId = computed(() => route.params.id)
+
+// cek role user
+const userRole = computed(() => auth.user?.role?.toLowerCase())
+const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
+const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 'admin')
 </script>
 
 <template>
@@ -73,63 +80,70 @@ const kurikulumId = computed(() => route.params.id)
             <i class="ri-file-list-3-line"></i>
             <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPL Prodi</span>
           </RouterLink>
-          <RouterLink
-            :to="`/kurikulum/${kurikulumId}/cpl-sndikti`"
-            class="menu-kurikulum"
-            :title="sidebarStore.isMinimized ? 'CPL SNDIKTI' : ''"
-          >
-            <i class="ri-government-line"></i>
-            <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPL SNDIKTI</span>
-          </RouterLink>
-          <RouterLink
-            :to="`/kurikulum/${kurikulumId}/korelasi-cpl-pl`"
-            class="menu-kurikulum"
-            :title="sidebarStore.isMinimized ? 'Korelasi CPL-PL' : ''"
-          >
-            <i class="ri-table-line"></i>
-            <span class="submenu-title" v-show="!sidebarStore.isMinimized">Korelasi CPL-PL</span>
-          </RouterLink>
-          <RouterLink
-            :to="`/kurikulum/${kurikulumId}/cpmk`"
-            class="menu-kurikulum"
-            :title="sidebarStore.isMinimized ? 'CPMK' : ''"
-          >
-            <i class="ri-file-text-line"></i>
-            <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPMK</span>
-          </RouterLink>
-          <RouterLink
-            :to="`/kurikulum/${kurikulumId}/bahan-kajian`"
-            class="menu-kurikulum"
-            :title="sidebarStore.isMinimized ? 'Bahan Kajian' : ''"
-          >
-            <i class="ri-book-open-line"></i>
-            <span class="submenu-title" v-show="!sidebarStore.isMinimized">Bahan Kajian</span>
-          </RouterLink>
-          <RouterLink
-            :to="`/kurikulum/${kurikulumId}/struktur-matkul`"
-            class="menu-kurikulum"
-            :title="sidebarStore.isMinimized ? 'Struktur Mata Kuliah' : ''"
-          >
-            <i class="ri-organization-chart"></i>
-            <span class="submenu-title" v-show="!sidebarStore.isMinimized"
-              >Struktur Mata Kuliah</span
+          <!-- Menu khusus untuk Dosen/Admin -->
+          <template v-if="isDosen">
+            <RouterLink
+              :to="`/kurikulum/${kurikulumId}/cpl-sndikti`"
+              class="menu-kurikulum"
+              :title="sidebarStore.isMinimized ? 'CPL SNDIKTI' : ''"
             >
-          </RouterLink>
-          <RouterLink
-            :to="`/kurikulum/${kurikulumId}/rps`"
-            class="menu-kurikulum"
-            :title="sidebarStore.isMinimized ? 'RPS Mata Kuliah' : ''"
-          >
-            <i class="ri-book-2-line"></i>
-            <span class="submenu-title" v-show="!sidebarStore.isMinimized">RPS Mata Kuliah</span>
-          </RouterLink>
+              <i class="ri-government-line"></i>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPL SNDIKTI</span>
+            </RouterLink>
+            <RouterLink
+              :to="`/kurikulum/${kurikulumId}/korelasi-cpl-pl`"
+              class="menu-kurikulum"
+              :title="sidebarStore.isMinimized ? 'Korelasi CPL-PL' : ''"
+            >
+              <i class="ri-table-line"></i>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized">Korelasi CPL-PL</span>
+            </RouterLink>
+            <RouterLink
+              :to="`/kurikulum/${kurikulumId}/cpmk`"
+              class="menu-kurikulum"
+              :title="sidebarStore.isMinimized ? 'CPMK' : ''"
+            >
+              <i class="ri-file-text-line"></i>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPMK</span>
+            </RouterLink>
+            <RouterLink
+              :to="`/kurikulum/${kurikulumId}/bahan-kajian`"
+              class="menu-kurikulum"
+              :title="sidebarStore.isMinimized ? 'Bahan Kajian' : ''"
+            >
+              <i class="ri-book-open-line"></i>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized">Bahan Kajian</span>
+            </RouterLink>
+            <RouterLink
+              :to="`/kurikulum/${kurikulumId}/struktur-matkul`"
+              class="menu-kurikulum"
+              :title="sidebarStore.isMinimized ? 'Struktur Mata Kuliah' : ''"
+            >
+              <i class="ri-organization-chart"></i>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized"
+                >Struktur Mata Kuliah</span
+              >
+            </RouterLink>
+            <RouterLink
+              :to="`/kurikulum/${kurikulumId}/rps`"
+              class="menu-kurikulum"
+              :title="sidebarStore.isMinimized ? 'RPS Mata Kuliah' : ''"
+            >
+              <i class="ri-book-2-line"></i>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized">RPS Mata Kuliah</span>
+            </RouterLink>
+          </template>
+
+          <!-- Menu Nilai Mata Kuliah - untuk semua role -->
           <RouterLink
             :to="`/kurikulum/${kurikulumId}/nilai-matkul`"
             class="menu-kurikulum"
-            :title="sidebarStore.isMinimized ? 'Nilai Mata Kuliah' : ''"
+            :title="sidebarStore.isMinimized ? (isMahasiswa ? 'Nilai Saya' : 'Nilai Mata Kuliah') : ''"
           >
             <i class="ri-bar-chart-box-line"></i>
-            <span class="submenu-title" v-show="!sidebarStore.isMinimized">Nilai Mata Kuliah</span>
+            <span class="submenu-title" v-show="!sidebarStore.isMinimized">
+              {{ isMahasiswa ? 'Nilai Saya' : 'Nilai Mata Kuliah' }}
+            </span>
           </RouterLink>
           <RouterLink
             :to="`/kurikulum/${kurikulumId}/ukur-cpl`"
@@ -141,13 +155,24 @@ const kurikulumId = computed(() => route.params.id)
               >Pengukuran CPL Mahasiswa</span
             >
           </RouterLink>
+          <!-- Menu Mahasiswa - berbeda untuk mahasiswa dan dosen -->
           <RouterLink
+            v-if="isDosen"
             :to="`/kurikulum/${kurikulumId}/mahasiswa`"
             class="menu-kurikulum"
             :title="sidebarStore.isMinimized ? 'Mahasiswa' : ''"
           >
             <i class="ri-group-line"></i>
             <span class="submenu-title" v-show="!sidebarStore.isMinimized">Mahasiswa</span>
+          </RouterLink>
+          <RouterLink
+            v-else-if="isMahasiswa"
+            :to="`/kurikulum/${kurikulumId}/mahasiswa`"
+            class="menu-kurikulum"
+            :title="sidebarStore.isMinimized ? 'Profil Saya' : ''"
+          >
+            <i class="ri-user-line"></i>
+            <span class="submenu-title" v-show="!sidebarStore.isMinimized">Profil Saya</span>
           </RouterLink>
         </div>
       </template>

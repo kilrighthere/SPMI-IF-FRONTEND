@@ -34,23 +34,23 @@ const routes = [
   {
     path: '/kurikulum',
     component: Kurikulum,
-    meta: { title: 'Kurikulum', requiresAuth: true, roles: ['admin', 'dosen'] },
+    meta: { title: 'Kurikulum', requiresAuth: true, roles: ['admin', 'dosen', 'mahasiswa'] },
   },
   {
     path: '/kurikulum/:id',
     component: DetailKur,
-    meta: { title: 'Detail Kurikulum', requiresAuth: true, roles: ['admin', 'dosen'] },
+    meta: { title: 'Detail Kurikulum', requiresAuth: true, roles: ['admin', 'dosen', 'mahasiswa'] },
     children: [
       { path: '', redirect: 'profil-lulusan' },
       {
         path: 'profil-lulusan',
         component: ProfilLulusan,
-        meta: { title: 'Profil Lulusan', requiresAuth: true, roles: ['admin', 'dosen'] },
+        meta: { title: 'Profil Lulusan', requiresAuth: true, roles: ['admin', 'dosen', 'mahasiswa'] },
       },
       {
         path: 'cpl-prodi',
         component: CPLProdi,
-        meta: { title: 'CPL Prodi', requiresAuth: true, roles: ['admin', 'dosen'] },
+        meta: { title: 'CPL Prodi', requiresAuth: true, roles: ['admin', 'dosen', 'mahasiswa'] },
       },
       {
         path: 'cpl-sndikti',
@@ -85,13 +85,13 @@ const routes = [
       {
         path: 'nilai-matkul',
         component: NilMatkul,
-        meta: { title: 'Nilai Mata Kuliah', requiresAuth: true, roles: ['admin', 'dosen'] },
+        meta: { title: 'Nilai Mata Kuliah', requiresAuth: true, roles: ['admin', 'dosen', 'mahasiswa'] },
       },
       {
         path: 'nilai-matkul/:kodeMk',
         component: DetailNilaiMatkul,
         name: 'DetailNilaiMatkul',
-        meta: { title: 'Detail Nilai Mata Kuliah', requiresAuth: true, roles: ['admin', 'dosen'] },
+        meta: { title: 'Detail Nilai Mata Kuliah', requiresAuth: true, roles: ['admin', 'dosen', 'mahasiswa'] },
       },
       {
         path: 'ukur-cpl',
@@ -105,7 +105,7 @@ const routes = [
       {
         path: 'mahasiswa',
         component: Mahasiswa,
-        meta: { title: 'Mahasiswa', requiresAuth: true, roles: ['admin', 'dosen'] },
+        meta: { title: 'Mahasiswa', requiresAuth: true, roles: ['admin', 'dosen', 'mahasiswa'] },
       },
     ],
   },
