@@ -9,6 +9,7 @@ import CPLSndikti from '@/views/Kurikulum/CPLSndikti.vue'
 import CPMK from '@/views/Kurikulum/CPMK.vue'
 import NilMatkul from '@/views/Kurikulum/NilMatkul.vue'
 import DetailNilaiMatkul from '@/views/Kurikulum/DetailNilaiMatkul.vue'
+import NilaiMahasiswaPerPeriode from '@/views/Kurikulum/NilaiMahasiswaPerPeriode.vue'
 import RPS from '@/views/Kurikulum/RPS.vue'
 import StrukMatkul from '@/views/Kurikulum/StrukMatkul.vue'
 import UkurCPL from '@/views/Kurikulum/UkurCPL.vue'
@@ -19,67 +20,92 @@ import Mahasiswa from '@/views/Kurikulum/Mahasiswa.vue'
 const routes = [
   { path: '/', redirect: '/login' },
   { path: '/login', component: Login, meta: { title: 'Login' } },
+  // {
+  //   path: '/Login',
+  //   component: Dashboard,
+  //   meta: { title: 'Dashboard', requiresAuth: true },
+  // },
   {
     path: '/dashboard',
     component: Dashboard,
-    meta: { title: 'Dashboard', requiresAuth: true },
+    meta: { title: 'Dashboard', requiresAuth: true, roles: ['admin', 'dosen', 'mahasiswa'] },
   },
 
-  { path: '/kurikulum', component: Kurikulum, meta: { title: 'Kurikulum' } },
+  {
+    path: '/kurikulum',
+    component: Kurikulum,
+    meta: { title: 'Kurikulum', requiresAuth: true, roles: ['admin', 'dosen'] },
+  },
   {
     path: '/kurikulum/:id',
     component: DetailKur,
-    meta: { title: 'Detail Kurikulum', requiresAuth: true },
+    meta: { title: 'Detail Kurikulum', requiresAuth: true, roles: ['admin', 'dosen'] },
     children: [
       { path: '', redirect: 'profil-lulusan' },
       {
         path: 'profil-lulusan',
         component: ProfilLulusan,
-        meta: { title: 'Profil Lulusan', requiresAuth: true },
+        meta: { title: 'Profil Lulusan', requiresAuth: true, roles: ['admin', 'dosen'] },
       },
-      { path: 'cpl-prodi', component: CPLProdi, meta: { title: 'CPL Prodi', requiresAuth: true } },
+      {
+        path: 'cpl-prodi',
+        component: CPLProdi,
+        meta: { title: 'CPL Prodi', requiresAuth: true, roles: ['admin', 'dosen'] },
+      },
       {
         path: 'cpl-sndikti',
         component: CPLSndikti,
-        meta: { title: 'CPL SNDIKTI', requiresAuth: true },
+        meta: { title: 'CPL SNDIKTI', requiresAuth: true, roles: ['admin', 'dosen'] },
       },
       {
         path: 'korelasi-cpl-pl',
         component: KorelasiCPLPL,
-        meta: { title: 'Korelasi CPL-PL', requiresAuth: true },
+        meta: { title: 'Korelasi CPL-PL', requiresAuth: true, roles: ['admin', 'dosen'] },
       },
-      { path: 'cpmk', component: CPMK, meta: { title: 'CPMK', requiresAuth: true } },
+      {
+        path: 'cpmk',
+        component: CPMK,
+        meta: { title: 'CPMK', requiresAuth: true, roles: ['admin', 'dosen'] },
+      },
       {
         path: 'bahan-kajian',
         component: BahanKajian,
-        meta: { title: 'Bahan Kajian', requiresAuth: true },
+        meta: { title: 'Bahan Kajian', requiresAuth: true, roles: ['admin', 'dosen'] },
       },
       {
         path: 'struktur-matkul',
         component: StrukMatkul,
-        meta: { title: 'Struktur Mata Kuliah', requiresAuth: true },
+        meta: { title: 'Struktur Mata Kuliah', requiresAuth: true, roles: ['admin', 'dosen'] },
       },
-      { path: 'rps', component: RPS, meta: { title: 'RPS Mata Kuliah', requiresAuth: true } },
+      {
+        path: 'rps',
+        component: RPS,
+        meta: { title: 'RPS Mata Kuliah', requiresAuth: true, roles: ['admin', 'dosen'] },
+      },
       {
         path: 'nilai-matkul',
         component: NilMatkul,
-        meta: { title: 'Nilai Mata Kuliah', requiresAuth: true },
+        meta: { title: 'Nilai Mata Kuliah', requiresAuth: true, roles: ['admin', 'dosen'] },
       },
       {
         path: 'nilai-matkul/:kodeMk',
         component: DetailNilaiMatkul,
         name: 'DetailNilaiMatkul',
-        meta: { title: 'Detail Nilai Mata Kuliah', requiresAuth: true },
+        meta: { title: 'Detail Nilai Mata Kuliah', requiresAuth: true, roles: ['admin', 'dosen'] },
       },
       {
         path: 'ukur-cpl',
         component: UkurCPL,
-        meta: { title: 'Pengukuran CPL Mahasiswa', requiresAuth: true },
+        meta: {
+          title: 'Pengukuran CPL Mahasiswa',
+          requiresAuth: true,
+          roles: ['admin', 'dosen', 'mahasiswa'],
+        },
       },
       {
         path: 'mahasiswa',
         component: Mahasiswa,
-        meta: { title: 'Mahasiswa', requiresAuth: true },
+        meta: { title: 'Mahasiswa', requiresAuth: true, roles: ['admin', 'dosen'] },
       },
     ],
   },
@@ -89,6 +115,17 @@ const routes = [
     redirect: (to) => {
       const kurikulumId = import.meta.env.VITE_DEFAULT_KURIKULUM_ID || '2020'
       return `/kurikulum/${kurikulumId}/profil-lulusan`
+    },
+  },
+  // Route untuk view nilai mahasiswa per periode
+  {
+    path: '/mahasiswa/:nim/:periode',
+    component: NilaiMahasiswaPerPeriode,
+    name: 'NilaiMahasiswaPerPeriode',
+    meta: {
+      title: 'Nilai CPL per Periode',
+      requiresAuth: true,
+      roles: ['admin', 'dosen', 'mahasiswa'],
     },
   },
 ]
@@ -112,6 +149,23 @@ router.beforeEach(async (to, from, next) => {
       // try to refresh once (checkAuth will return boolean)
       const ok = await auth.checkAuth()
       if (!ok) return next({ path: '/login' })
+    }
+
+    // Check role-based access
+    if (to.meta.roles && to.meta.roles.length > 0) {
+      const userRole = auth.user?.role
+      if (!userRole || !to.meta.roles.includes(userRole)) {
+        // Redirect based on role
+        if (userRole === 'mahasiswa') {
+          // Mahasiswa hanya bisa akses dashboard dan view nilai sendiri
+          return next({ path: '/dashboard' })
+        } else if (userRole === 'dosen') {
+          // Dosen bisa akses kurikulum
+          return next({ path: '/dashboard' })
+        }
+        // Default redirect ke login jika role tidak cocok
+        return next({ path: '/login' })
+      }
     }
   }
 

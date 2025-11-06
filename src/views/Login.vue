@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import Footer from '../components/Footer.vue'
 import Header from '@/components/Header.vue'
@@ -8,8 +8,26 @@ import { useAuthStore } from '@/stores/auth'
 const username = ref('')
 const password = ref('')
 const showPassword = ref(false)
+const rememberMe = ref(false)
+const selectedRole = ref('mahasiswa') // default mahasiswa
 const router = useRouter()
 const auth = useAuthStore()
+
+// Computed untuk label input username berdasarkan role
+const usernameLabel = computed(() => {
+  return selectedRole.value === 'mahasiswa' ? 'NIM' : 'NIP'
+})
+
+// Computed untuk placeholder input username
+const usernamePlaceholder = computed(() => {
+  return selectedRole.value === 'mahasiswa' ? 'Contoh: 12345678' : 'Enter your NIP'
+})
+
+function toggleRole(role) {
+  selectedRole.value = role
+  // Clear error when switching role
+  auth.error = null
+}
 
 async function loginHandler(e) {
   e.preventDefault()
@@ -20,7 +38,18 @@ async function loginHandler(e) {
     return
   }
 
-  const res = await auth.login({ nip: username.value, password: password.value })
+  // Prepare credentials based on role
+  const credentials = {
+    password: password.value,
+  }
+
+  if (selectedRole.value === 'mahasiswa') {
+    credentials.nim = username.value
+  } else {
+    credentials.nip = username.value
+  }
+
+  const res = await auth.login(credentials, selectedRole.value)
   if (res.success) {
     router.push('/dashboard')
   } else {
@@ -52,38 +81,55 @@ function togglePasswordVisibility() {
               <div class="dummy-auth-info">
                 <i class="ri-information-line"></i>
                 <div>
-                  <strong>Development Mode:</strong> Server sedang down.<br />
-                  Gunakan <strong>111111111111111111</strong> untuk username dan password
+                  <strong>Development Mode:</strong> Akun dummy tersedia:<br />
+                  <strong>Admin:</strong> 444444444444444444 |
+                  <strong>Dosen:</strong> 5555555555555555555<br />
+                  <strong>Mahasiswa:</strong> 24060120140005 atau 24060120111111
                 </div>
               </div>
             </div>
 
+            <!-- Role Selection Toggle -->
+            <div class="role-toggle-container">
+              <button
+                type="button"
+                class="role-toggle-btn"
+                :class="{
+                  'active-mahasiswa': selectedRole === 'mahasiswa',
+                  'active-dosen': selectedRole === 'dosen',
+                }"
+                @click="toggleRole('mahasiswa')"
+              >
+                Mahasiswa
+              </button>
+              <button
+                type="button"
+                class="role-toggle-btn"
+                :class="{
+                  'active-mahasiswa': selectedRole === 'mahasiswa',
+                  'active-dosen': selectedRole === 'dosen',
+                }"
+                @click="toggleRole('dosen')"
+              >
+                Dosen
+              </button>
+            </div>
+
             <div class="main-form">
               <div class="input-group">
-                <label for="Username" class="input-label">Username</label>
+                <label for="Username" class="input-label">{{ usernameLabel }}</label>
                 <div class="input-wrapper">
-                  <svg
-                    class="input-icon"
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
                   <input
                     v-model="username"
                     type="text"
                     name="Username"
                     id="Username"
-                    placeholder="Enter your username"
+                    :placeholder="usernamePlaceholder"
                     class="form-input"
+                    :class="{
+                      'input-mahasiswa': selectedRole === 'mahasiswa',
+                      'input-dosen': selectedRole === 'dosen',
+                    }"
                   />
                 </div>
               </div>
@@ -91,21 +137,6 @@ function togglePasswordVisibility() {
               <div class="input-group">
                 <label for="Password" class="input-label">Password</label>
                 <div class="input-wrapper">
-                  <svg
-                    class="input-icon"
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                  </svg>
                   <input
                     v-model="password"
                     :type="showPassword ? 'text' : 'password'"
@@ -113,6 +144,10 @@ function togglePasswordVisibility() {
                     id="Password"
                     placeholder="Enter your password"
                     class="form-input password-input"
+                    :class="{
+                      'input-mahasiswa': selectedRole === 'mahasiswa',
+                      'input-dosen': selectedRole === 'dosen',
+                    }"
                   />
                   <button
                     v-if="password"
@@ -155,9 +190,14 @@ function togglePasswordVisibility() {
                     </svg>
                   </button>
                 </div>
-                <div class="forgot-password-container">
-                  <a href="#" class="forgot-password">Forgot password?</a>
-                </div>
+              </div>
+
+              <!-- Remember Me Checkbox -->
+              <div class="remember-me-container">
+                <label class="remember-me-label">
+                  <input type="checkbox" v-model="rememberMe" class="remember-checkbox" />
+                  <span>Ingat saya</span>
+                </label>
               </div>
 
               <p v-if="auth.error" class="error-message">
@@ -181,7 +221,15 @@ function togglePasswordVisibility() {
             </div>
 
             <div class="submit-section">
-              <button type="submit" class="btn-login" :disabled="auth.isLoading">
+              <button
+                type="submit"
+                class="btn-login"
+                :class="{
+                  'btn-mahasiswa': selectedRole === 'mahasiswa',
+                  'btn-dosen': selectedRole === 'dosen',
+                }"
+                :disabled="auth.isLoading"
+              >
                 <span v-if="auth.isLoading" class="btn-content">
                   <svg
                     class="spinner"
@@ -206,12 +254,10 @@ function togglePasswordVisibility() {
                   </svg>
                   Signing in...
                 </span>
-                <span v-else class="btn-content">Sign In</span>
+                <span v-else class="btn-content">Masuk</span>
               </button>
 
-              <p class="signup-text">
-                Don't have an account? <a href="#" class="signup-link">Sign up</a>
-              </p>
+              <p class="version-text">Versi beta © 2025</p>
             </div>
           </form>
         </div>
@@ -299,44 +345,17 @@ function togglePasswordVisibility() {
 .header-form {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+  text-align: center;
 }
 
 .welcome-title {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 700;
   font-family: 'Montserrat', sans-serif;
   color: var(--color-text);
   line-height: 1.2;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.wave-emoji {
-  display: inline-block;
-  animation: wave 0.6s ease-in-out;
-  font-size: 32px;
-}
-
-@keyframes wave {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(20deg);
-  }
-  75% {
-    transform: rotate(-20deg);
-  }
-}
-
-.welcome-subtitle {
-  font-size: 15px;
-  font-weight: 400;
-  color: #6b7280;
-  font-family: 'Montserrat', sans-serif;
+  letter-spacing: 2px;
 }
 
 /* Dummy Auth Info Box */
@@ -365,6 +384,48 @@ function togglePasswordVisibility() {
 .dummy-auth-info strong {
   color: #78350f;
   font-weight: 700;
+}
+
+/* Role Toggle */
+.role-toggle-container {
+  display: flex;
+  gap: 0;
+  background-color: #e5e7eb;
+  border-radius: 50px;
+  padding: 4px;
+  position: relative;
+}
+
+.role-toggle-btn {
+  flex: 1;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 50px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: transparent;
+  color: #6b7280;
+  position: relative;
+  z-index: 1;
+}
+
+.role-toggle-btn.active-mahasiswa:first-child {
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  box-shadow: 0 2px 8px rgba(166, 214, 0, 0.3);
+}
+
+.role-toggle-btn.active-dosen:last-child {
+  background: linear-gradient(135deg, var(--spmi-c-dgray) 0%, var(--color-button) 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(46, 45, 51, 0.3);
+}
+
+.role-toggle-btn:hover:not(.active-mahasiswa):not(.active-dosen) {
+  color: var(--color-text);
 }
 
 /* Main Form */
@@ -404,7 +465,7 @@ function togglePasswordVisibility() {
 
 .form-input {
   width: 100%;
-  padding: 13px 16px 13px 44px;
+  padding: 13px 16px;
   border-radius: 12px;
   border: 1.5px solid #e5e7eb;
   background-color: #f9fafb;
@@ -415,15 +476,22 @@ function togglePasswordVisibility() {
   box-sizing: border-box;
 }
 
-.password-input {
-  padding-right: 44px;
+.form-input.input-mahasiswa:focus {
+  outline: none;
+  border-color: var(--spmi-c-green2);
+  background-color: white;
+  box-shadow: 0 0 0 4px rgba(166, 214, 0, 0.1);
 }
 
-.form-input:focus {
+.form-input.input-dosen:focus {
   outline: none;
   border-color: var(--color-button);
   background-color: white;
-  box-shadow: 0 0 0 4px var(--spmi-color-green2);
+  box-shadow: 0 0 0 4px rgba(46, 45, 51, 0.1);
+}
+
+.password-input {
+  padding-right: 44px;
 }
 
 .form-input::placeholder {
@@ -456,6 +524,30 @@ function togglePasswordVisibility() {
 }
 
 /* Form Options */
+.remember-me-container {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 4px;
+}
+
+.remember-me-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+  cursor: pointer;
+  user-select: none;
+}
+
+.remember-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--spmi-c-green2);
+}
+
 .forgot-password-container {
   display: flex;
   justify-content: flex-end;
@@ -500,8 +592,7 @@ function togglePasswordVisibility() {
 .btn-login {
   width: 100%;
   padding: 14px 24px;
-  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
-  color: var(--color-text);
+  color: white;
   border: none;
   border-radius: 12px;
   font-size: 16px;
@@ -509,12 +600,27 @@ function togglePasswordVisibility() {
   font-family: 'Montserrat', sans-serif;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px var(--color-text) 0.35;
 }
 
-.btn-login:hover:not(:disabled) {
+.btn-login.btn-mahasiswa {
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  box-shadow: 0 4px 12px rgba(166, 214, 0, 0.35);
+}
+
+.btn-login.btn-mahasiswa:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(76, 76, 76, 0.4);
+  box-shadow: 0 6px 20px rgba(166, 214, 0, 0.4);
+}
+
+.btn-login.btn-dosen {
+  background: linear-gradient(135deg, var(--spmi-c-dgray) 0%, var(--color-button) 100%);
+  box-shadow: 0 4px 12px rgba(46, 45, 51, 0.35);
+}
+
+.btn-login.btn-dosen:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(46, 45, 51, 0.4);
 }
 
 .btn-login:active:not(:disabled) {
@@ -524,6 +630,13 @@ function togglePasswordVisibility() {
 .btn-login:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+.version-text {
+  text-align: center;
+  font-size: 13px;
+  color: #9ca3af;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .btn-content {
@@ -570,57 +683,6 @@ function togglePasswordVisibility() {
   font-size: 14px;
   color: #6b7280;
   font-family: 'Montserrat', sans-serif;
-}
-
-/* Secondary Button */
-.btn-secondary {
-  width: 100%;
-  padding: 13px 24px;
-  background-color: white;
-  color: var(--color-text);
-  border: 1.5px solid #e5e7eb;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  font-family: 'Montserrat', sans-serif;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
-.btn-secondary:hover {
-  background-color: #f9fafb;
-  border-color: #d1d5db;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.btn-secondary svg {
-  width: 20px;
-  height: 20px;
-}
-
-/* Sign Up Text */
-.signup-text {
-  text-align: center;
-  font-size: 14px;
-  color: #6b7280;
-  font-family: 'Montserrat', sans-serif;
-}
-
-.signup-link {
-  color: var(--color-button);
-  text-decoration: none;
-  font-weight: 600;
-  transition: color 0.2s ease;
-}
-
-.signup-link:hover {
-  color: var(--color-buttonsec);
-  text-decoration: underline;
 }
 
 /* Responsive Design */

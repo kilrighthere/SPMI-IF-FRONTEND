@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { login as apiLogin, logout as apiLogout, refreshToken, axiosInstance } from '@/api'
+import { loginDosen, loginMahasiswa, logout as apiLogout, refreshToken, axiosInstance } from '@/api'
 const api = axiosInstance
 
 export const useAuthStore = defineStore('auth', () => {
@@ -44,31 +44,90 @@ export const useAuthStore = defineStore('auth', () => {
   if (isTokenValid(token.value)) setAuthHeader(token.value)
 
   // Actions
-  async function login(credentials) {
+  async function login(credentials, role = 'dosen') {
     isLoading.value = true
     error.value = null
 
     // ========================================
     // DUMMY AUTH - Static Login (Server Down)
     // ========================================
-    // Gunakan NIP dan Password: 111111111111111111
-    try {
-      const dummyNip = '111111111111111111'
-      const dummyPassword = '111111111111111111'
-
-      if (credentials.nip === dummyNip && credentials.password === dummyPassword) {
-        // Generate dummy token (fake JWT format)
-        const dummyToken =
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuaXAiOiIxMTExMTExMTExMTExMTExMTEiLCJuYW1lIjoiRHVtbXkgVXNlciIsInJvbGUiOiJkb3NlbiIsImV4cCI6OTk5OTk5OTk5OX0.dummysignature'
-        const dummyUser = {
-          nip: dummyNip,
-          name: 'Dummy User',
+    // Data dummy users
+    const dummyUsers = {
+      // Admin - shakilaAdmin
+      '444444444444444444': {
+        password: '444444444444444444',
+        user: {
+          nip: '444444444444444444',
+          name: 'shakilaAdmin',
+          role: 'admin',
+          email: 'shakila.admin@if.undip.ac.id',
+        },
+      },
+      // Dosen - haidarDosen
+      '5555555555555555555': {
+        password: '5555555555555555555',
+        user: {
+          nip: '5555555555555555555',
+          name: 'haidarDosen',
           role: 'dosen',
-          email: 'dummy@example.com',
+          email: 'haidar.dosen@if.undip.ac.id',
+        },
+      },
+      // Mahasiswa 1 - Galih Nanda Wibowo
+      24060120140005: {
+        password: '24060120140005',
+        user: {
+          nim: '24060120140005',
+          name: 'Galih Nanda Wibowo',
+          role: 'mahasiswa',
+          email: 'galih@students.undip.ac.id',
+        },
+      },
+      // Mahasiswa 2 - Gibran Mahasiswa
+      24060120111111: {
+        password: '24060120111111',
+        user: {
+          nim: '24060120111111',
+          name: 'Gibran Mahasiswa',
+          role: 'mahasiswa',
+          email: 'gibran@students.undip.ac.id',
+        },
+      },
+    }
+
+    try {
+      const inputCredential = credentials.nip || credentials.nim
+      const dummyAccount = dummyUsers[inputCredential]
+
+      if (dummyAccount && dummyAccount.password === credentials.password) {
+        // Validasi role: admin dan dosen harus login lewat endpoint dosen
+        if (
+          (dummyAccount.user.role === 'admin' || dummyAccount.user.role === 'dosen') &&
+          role !== 'dosen'
+        ) {
+          error.value = 'Admin dan Dosen harus login melalui pilihan "Dosen"'
+          isLoading.value = false
+          return { success: false, error: error.value }
         }
 
+        // Validasi role: mahasiswa harus login lewat endpoint mahasiswa
+        if (dummyAccount.user.role === 'mahasiswa' && role !== 'mahasiswa') {
+          error.value = 'Mahasiswa harus login melalui pilihan "Mahasiswa"'
+          isLoading.value = false
+          return { success: false, error: error.value }
+        }
+
+        // Generate dummy token (fake JWT format)
+        const dummyToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${btoa(
+          JSON.stringify({
+            id: inputCredential,
+            role: dummyAccount.user.role,
+            exp: 9999999999,
+          }),
+        )}.dummysignature`
+
         token.value = dummyToken
-        user.value = dummyUser
+        user.value = dummyAccount.user
 
         // Persist token/user
         localStorage.setItem('token', token.value)
@@ -80,7 +139,7 @@ export const useAuthStore = defineStore('auth', () => {
         isLoading.value = false
         return { success: true }
       } else {
-        error.value = 'NIP atau password salah. Gunakan: 111111111111111111'
+        error.value = 'NIP/NIM atau password salah'
         isLoading.value = false
         return { success: false, error: error.value }
       }
@@ -96,7 +155,10 @@ export const useAuthStore = defineStore('auth', () => {
     // ========================================
     /*
     try {
-      const response = await apiLogin(credentials)
+       // Pilih endpoint berdasarkan role
+      const loginApi = role === 'mahasiswa' ? loginMahasiswa : loginDosen
+      const response = await loginApi(credentials)
+      
       // Backend should return { accessToken, user }
       const accessToken = response.data.accessToken || response.data.token
       const respUser = response.data.user

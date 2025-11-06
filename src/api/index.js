@@ -98,6 +98,8 @@ export const refreshToken = () => api.post('/refresh')
 
 // Auth
 export const login = (data) => api.post('/login', data)
+export const loginDosen = (data) => api.post('/login/dosen', data)
+export const loginMahasiswa = (data) => api.post('/login/mahasiswa', data)
 export const logout = () => api.post('/logout')
 
 // Profil Lulusan (PL)
@@ -139,17 +141,18 @@ export const deleteRPS = (id) => api.delete(`/delete/rps/${id}`)
 // Tambahkan handling fallback untuk endpoint CPL-PL yang belum diimplementasi di backend
 export const addCplPl = (data) => {
   return new Promise((resolve) => {
-    api.post('/add/cpl-pl', data)
-      .then(response => {
+    api
+      .post('/add/cpl-pl', data)
+      .then((response) => {
         resolve(response)
       })
-      .catch(error => {
+      .catch((error) => {
         console.warn('Endpoint /add/cpl-pl not available, using fallback data', error)
         resolve({
           data: {
             success: true,
-            data: { id_cpl: data.id_cpl, id_pl: data.id_pl }
-          }
+            data: { id_cpl: data.id_cpl, id_pl: data.id_pl },
+          },
         })
       })
   })
@@ -158,11 +161,12 @@ export const addCplPl = (data) => {
 // Fungsi ini tidak digunakan lagi karena relasi diambil dari response getCPLList
 export const getCplPlList = () => {
   return new Promise((resolve) => {
-    api.get('/list/cpl-pl')
-      .then(response => {
+    api
+      .get('/list/cpl-pl')
+      .then((response) => {
         resolve(response)
       })
-      .catch(error => {
+      .catch((error) => {
         console.warn('Endpoint /list/cpl-pl not available, using fallback data', error)
         // Return format yang konsisten dengan API response sukses
         resolve({
@@ -173,9 +177,9 @@ export const getCplPlList = () => {
               { id_cpl: 'CPL-02', id_pl: 'PL-01' },
               { id_cpl: 'CPL-02', id_pl: 'PL-02' },
               { id_cpl: 'CPL-03', id_pl: 'PL-01' },
-              { id_cpl: 'CPL-03', id_pl: 'PL-03' }
-            ]
-          }
+              { id_cpl: 'CPL-03', id_pl: 'PL-03' },
+            ],
+          },
         })
       })
   })
@@ -183,17 +187,21 @@ export const getCplPlList = () => {
 
 export const deleteCplPl = (id_cpl, id_pl) => {
   return new Promise((resolve) => {
-    api.delete(`/delete/cpl-pl/${id_cpl}/${id_pl}`)
-      .then(response => {
+    api
+      .delete(`/delete/cpl-pl/${id_cpl}/${id_pl}`)
+      .then((response) => {
         resolve(response)
       })
-      .catch(error => {
-        console.warn(`Endpoint /delete/cpl-pl/${id_cpl}/${id_pl} not available, using fallback`, error)
+      .catch((error) => {
+        console.warn(
+          `Endpoint /delete/cpl-pl/${id_cpl}/${id_pl} not available, using fallback`,
+          error,
+        )
         resolve({
           data: {
             success: true,
-            message: "CPL-PL relation deleted successfully (fallback)"
-          }
+            message: 'CPL-PL relation deleted successfully (fallback)',
+          },
         })
       })
   })
@@ -207,64 +215,71 @@ export const updateStrukturMK = (id, data) => api.put(`/update/struktur-mk/${id}
 export const deleteStrukturMK = (id) => api.delete(`/delete/struktur-mk/${id}`)
 
 // Mahasiswa
-export const getMahasiswaList = () => api.get('/list/mahasiswa');
-export const getMahasiswaByNim = (nim) => api.get(`/view/mahasiswa/${nim}`);
-export const getMahasiswaPetaNilai = (nim) => api.get(`/view/mahasiswa/peta-nilai/${nim}`);
-export const getMahasiswaCplPerGrades = (nim) => api.get(`/view/mahasiswa/cpl-per-grades/${nim}`);
-export const addMahasiswa = (data) => api.post('/add/mahasiswa', data);
-export const updateMahasiswa = (nim, data) => api.put(`/update/mahasiswa/${nim}`, data);
-export const deleteMahasiswa = (nim) => api.delete(`/delete/mahasiswa/${nim}`);
+export const getMahasiswaList = () => api.get('/list/mahasiswa')
+export const getMahasiswaByNim = (nim) => api.get(`/view/mahasiswa/${nim}`)
+export const getMahasiswaPetaNilai = (nim) => api.get(`/view/mahasiswa/peta-nilai/${nim}`)
+export const getMahasiswaCplPerGrades = (nim) => api.get(`/view/mahasiswa/cpl-per-grades/${nim}`)
+export const getMahasiswaNilaiPerPeriode = (nim, periode) =>
+  api.get(`/view/mahasiswa/${nim}/${periode}`)
+export const addMahasiswa = (data) => api.post('/add/mahasiswa', data)
+export const updateMahasiswa = (nim, data) => api.put(`/update/mahasiswa/${nim}`, data)
+export const deleteMahasiswa = (nim) => api.delete(`/delete/mahasiswa/${nim}`)
 
 // Kurikulum
-export const getKurikulumList = () => api.get('/list/kurikulum');
-export const getKurikulumById = (id) => api.get(`/view/kurikulum/${id}`);
-export const addKurikulum = (data) => api.post('/add/kurikulum', data);
-export const updateKurikulum = (id, data) => api.put(`/update/kurikulum/${id}`, data);
-export const deleteKurikulum = (id) => api.delete(`/delete/kurikulum/${id}`);
+export const getKurikulumList = () => api.get('/list/kurikulum')
+export const getKurikulumById = (id) => api.get(`/view/kurikulum/${id}`)
+export const addKurikulum = (data) => api.post('/add/kurikulum', data)
+export const updateKurikulum = (id, data) => api.put(`/update/kurikulum/${id}`, data)
+export const deleteKurikulum = (id) => api.delete(`/delete/kurikulum/${id}`)
 
 // BK
-export const getBKList = () => api.get('/list/bk');
-export const getBKById = (id) => api.get(`/view/bk/${id}`);
-export const addBK = (data) => api.post('/add/bk', data);
-export const updateBK = (id, data) => api.put(`/update/bk/${id}`, data);
-export const deleteBK = (id) => api.delete(`/delete/bk/${id}`);
+export const getBKList = () => api.get('/list/bk')
+export const getBKById = (id) => api.get(`/view/bk/${id}`)
+export const addBK = (data) => api.post('/add/bk', data)
+export const updateBK = (id, data) => api.put(`/update/bk/${id}`, data)
+export const deleteBK = (id) => api.delete(`/delete/bk/${id}`)
 
 // CPL SNDIKTI
-export const getCplSndiktiList = () => api.get('/list/cpl-sndikti');
-export const getCplSndiktiById = (id) => api.get(`/view/cpl-sndikti/${id}`);
-export const addCplSndikti = (data) => api.post('/add/cpl-sndikti', data);
-export const updateCplSndikti = (id, data) => api.put(`/update/cpl-sndikti/${id}`, data);
-export const deleteCplSndikti = (id) => api.delete(`/delete/cpl-sndikti/${id}`);
+export const getCplSndiktiList = () => api.get('/list/cpl-sndikti')
+export const getCplSndiktiById = (id) => api.get(`/view/cpl-sndikti/${id}`)
+export const addCplSndikti = (data) => api.post('/add/cpl-sndikti', data)
+export const updateCplSndikti = (id, data) => api.put(`/update/cpl-sndikti/${id}`, data)
+export const deleteCplSndikti = (id) => api.delete(`/delete/cpl-sndikti/${id}`)
 
 // Nilai MK
-export const getNilaiMkList = () => api.get('/list/nilai-mk');
-export const getNilaiMkById = (id_periode, kode_mk, nim) => api.get(`/view/nilai-mk/${id_periode}/${kode_mk}/${nim}`);
-export const addNilaiMk = (data) => api.post('/add/nilai-mk', data);
-export const updateNilaiMk = (id_periode, kode_mk, nim, data) => api.put(`/update/nilai-mk/${id_periode}/${kode_mk}/${nim}`, data);
-export const deleteNilaiMk = (id_periode, kode_mk, nim) => api.delete(`/delete/nilai-mk/${id_periode}/${kode_mk}/${nim}`);
+export const getNilaiMkList = () => api.get('/list/nilai-mk')
+export const getNilaiMkById = (id_periode, kode_mk, nim) =>
+  api.get(`/view/nilai-mk/${id_periode}/${kode_mk}/${nim}`)
+export const addNilaiMk = (data) => api.post('/add/nilai-mk', data)
+export const updateNilaiMk = (id_periode, kode_mk, nim, data) =>
+  api.put(`/update/nilai-mk/${id_periode}/${kode_mk}/${nim}`, data)
+export const deleteNilaiMk = (id_periode, kode_mk, nim) =>
+  api.delete(`/delete/nilai-mk/${id_periode}/${kode_mk}/${nim}`)
 
 // Asosiasi
 // BK-MK
-export const addBkMk = (data) => api.post('/add/bk-mk', data);
-export const getBkMkList = () => api.get('/list/bk-mk');
-export const deleteBkMk = (id_bk, id_mk) => api.delete(`/delete/bk-mk/${id_bk}/${id_mk}`);
+export const addBkMk = (data) => api.post('/add/bk-mk', data)
+export const getBkMkList = () => api.get('/list/bk-mk')
+export const deleteBkMk = (id_bk, id_mk) => api.delete(`/delete/bk-mk/${id_bk}/${id_mk}`)
 
 // CPL-BK
-export const addCplBk = (data) => api.post('/add/cpl-bk', data);
-export const getCplBkList = () => api.get('/list/cpl-bk');
-export const deleteCplBk = (id_cpl, id_bk) => api.delete(`/delete/cpl-bk/${id_cpl}/${id_bk}`);
+export const addCplBk = (data) => api.post('/add/cpl-bk', data)
+export const getCplBkList = () => api.get('/list/cpl-bk')
+export const deleteCplBk = (id_cpl, id_bk) => api.delete(`/delete/cpl-bk/${id_cpl}/${id_bk}`)
 
 // CPMK-MK
-export const addCpmkMk = (data) => api.post('/add/cpmk-mk', data);
-export const getCpmkMkList = () => api.get('/list/cpmk-mk');
-export const deleteCpmkMk = (id_cpmk, id_mk) => api.delete(`/delete/cpmk-mk/${id_cpmk}/${id_mk}`);
+export const addCpmkMk = (data) => api.post('/add/cpmk-mk', data)
+export const getCpmkMkList = () => api.get('/list/cpmk-mk')
+export const deleteCpmkMk = (id_cpmk, id_mk) => api.delete(`/delete/cpmk-mk/${id_cpmk}/${id_mk}`)
 
 // Auth
-export const register = (data) => api.post('/register', data);
+export const register = (data) => api.post('/register', data)
 
 // Export semua API
 export default {
   login,
+  loginDosen,
+  loginMahasiswa,
   logout,
   register,
   // PL
@@ -312,6 +327,7 @@ export default {
   getMahasiswaByNim,
   getMahasiswaPetaNilai,
   getMahasiswaCplPerGrades,
+  getMahasiswaNilaiPerPeriode,
   addMahasiswa,
   updateMahasiswa,
   deleteMahasiswa,
