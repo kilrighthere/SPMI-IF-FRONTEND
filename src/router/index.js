@@ -12,6 +12,7 @@ import DetailNilaiMatkul from '@/views/Kurikulum/DetailNilaiMatkul.vue'
 import NilaiMahasiswaPerPeriode from '@/views/Kurikulum/NilaiMahasiswaPerPeriode.vue'
 import RPS from '@/views/Kurikulum/RPS.vue'
 import StrukMatkul from '@/views/Kurikulum/StrukMatkul.vue'
+import KurikulumMk from '@/views/Kurikulum/KurikulumMk.vue'
 import UkurCPL from '@/views/Kurikulum/UkurCPL.vue'
 import BahanKajian from '@/views/Kurikulum/BahanKajian.vue'
 import KorelasiCPLPL from '@/views/Kurikulum/KorelasiCPLPL.vue'
@@ -76,6 +77,11 @@ const routes = [
         path: 'struktur-matkul',
         component: StrukMatkul,
         meta: { title: 'Struktur Mata Kuliah', requiresAuth: true, roles: ['admin', 'dosen'] },
+      },
+      {
+        path: 'kurikulum-mk',
+        component: KurikulumMk,
+        meta: { title: 'Kurikulum Mata Kuliah', requiresAuth: true, roles: ['admin', 'dosen'] },
       },
       {
         path: 'rps',

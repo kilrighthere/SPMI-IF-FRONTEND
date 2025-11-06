@@ -232,6 +232,13 @@ export const addKurikulum = (data) => api.post('/add/kurikulum', data)
 export const updateKurikulum = (id, data) => api.put(`/update/kurikulum/${id}`, data)
 export const deleteKurikulum = (id) => api.delete(`/delete/kurikulum/${id}`)
 
+// Kurikulum MK
+export const getAllKurikulumMk = () => api.get('/list/kurikulum-mk')
+export const getKurikulumMkById = (id) => api.get(`/view/kurikulum-mk/${id}`)
+export const createKurikulumMk = (data) => api.post('/add/kurikulum-mk', data)
+export const updateKurikulumMk = (id, data) => api.put(`/update/kurikulum-mk/${id}`, data)
+export const deleteKurikulumMk = (id) => api.delete(`/delete/kurikulum-mk/${id}`)
+
 // BK
 export const getBKList = () => api.get('/list/bk')
 export const getBKById = (id) => api.get(`/view/bk/${id}`)
@@ -247,7 +254,14 @@ export const updateCplSndikti = (id, data) => api.put(`/update/cpl-sndikti/${id}
 export const deleteCplSndikti = (id) => api.delete(`/delete/cpl-sndikti/${id}`)
 
 // Nilai MK
-export const getNilaiMkList = () => api.get('/list/nilai-mk')
+export const getNilaiMkList = (params = {}) => {
+  const queryParams = new URLSearchParams()
+  if (params.id_periode) queryParams.append('id_periode', params.id_periode)
+  if (params.kode_mk) queryParams.append('kode_mk', params.kode_mk)
+  
+  const queryString = queryParams.toString()
+  return api.get(`/list/nilai-mk${queryString ? `?${queryString}` : ''}`)
+}
 export const getNilaiMkById = (id_periode, kode_mk, nim) =>
   api.get(`/view/nilai-mk/${id_periode}/${kode_mk}/${nim}`)
 export const addNilaiMk = (data) => api.post('/add/nilai-mk', data)
@@ -255,6 +269,9 @@ export const updateNilaiMk = (id_periode, kode_mk, nim, data) =>
   api.put(`/update/nilai-mk/${id_periode}/${kode_mk}/${nim}`, data)
 export const deleteNilaiMk = (id_periode, kode_mk, nim) =>
   api.delete(`/delete/nilai-mk/${id_periode}/${kode_mk}/${nim}`)
+
+// Periode
+export const getPeriodeList = () => api.get('/list/periode')
 
 // Asosiasi
 // BK-MK
@@ -337,6 +354,12 @@ export default {
   addKurikulum,
   updateKurikulum,
   deleteKurikulum,
+  // Kurikulum MK
+  getAllKurikulumMk,
+  getKurikulumMkById,
+  createKurikulumMk,
+  updateKurikulumMk,
+  deleteKurikulumMk,
   // BK
   getBKList,
   getBKById,
@@ -355,6 +378,8 @@ export default {
   addNilaiMk,
   updateNilaiMk,
   deleteNilaiMk,
+  // Periode
+  getPeriodeList,
   // Asosiasi
   addBkMk,
   getBkMkList,

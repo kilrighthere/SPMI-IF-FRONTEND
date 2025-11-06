@@ -23,9 +23,9 @@ const formMode = ref('add') // 'add' or 'edit'
 
 // Form data
 const newMK = ref({
-  kode: '',
-  nama: '',
-  sks: 0,
+  kode_mk: '',
+  nama_mk: '',
+  deskripsi: '',
 })
 
 // For filtering
@@ -39,7 +39,7 @@ const filteredMataKuliah = computed(() => {
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     filtered = filtered.filter(
-      (mk) => mk.kode.toLowerCase().includes(query) || mk.nama.toLowerCase().includes(query),
+      (mk) => mk.kode_mk.toLowerCase().includes(query) || mk.nama_mk.toLowerCase().includes(query),
     )
   }
 
@@ -55,9 +55,9 @@ const fetchData = async () => {
 const openAddModal = () => {
   formMode.value = 'add'
   newMK.value = {
-    kode: '',
-    nama: '',
-    sks: 2,
+    kode_mk: '',
+    nama_mk: '',
+    deskripsi: '',
   }
   showModal.value = true
 }
@@ -72,10 +72,12 @@ const openEditModal = (mk) => {
 // Save mata kuliah (add or edit)
 const saveMK = async () => {
   try {
-    if (!newMK.value.kode || !newMK.value.nama || !newMK.value.sks) {
-      error.value = 'Mohon lengkapi semua data yang diperlukan'
+    if (!newMK.value.kode_mk || !newMK.value.nama_mk) {
+      alert('Mohon lengkapi kode dan nama mata kuliah')
       return
     }
+
+    console.log('Saving MK with data:', newMK.value)
 
     let result
     if (formMode.value === 'add') {
@@ -84,7 +86,7 @@ const saveMK = async () => {
         successMessage.value = 'Mata kuliah berhasil ditambahkan'
       }
     } else {
-      result = await mkStore.editMK(newMK.value.id, newMK.value)
+      result = await mkStore.editMK(newMK.value.kode_mk, newMK.value)
       if (result) {
         successMessage.value = 'Mata kuliah berhasil diperbarui'
       }
@@ -93,19 +95,27 @@ const saveMK = async () => {
     if (result) {
       showModal.value = false
       showSuccess.value = true
+      // Reset form
+      newMK.value = {
+        kode_mk: '',
+        nama_mk: '',
+        deskripsi: '',
+      }
       setTimeout(() => {
         showSuccess.value = false
       }, 3000)
+    } else {
+      alert('Gagal menyimpan mata kuliah')
     }
   } catch (err) {
     console.error('Error saving mata kuliah:', err)
-    error.value = 'Terjadi kesalahan saat menyimpan data mata kuliah'
+    alert('Terjadi kesalahan saat menyimpan data mata kuliah: ' + (err.message || err))
   }
 }
 
 // Delete mata kuliah
 const deleteMK = async (mk) => {
-  if (confirm(`Apakah anda yakin ingin menghapus mata kuliah ${mk.kode} - ${mk.nama}?`)) {
+  if (confirm(`Apakah anda yakin ingin menghapus mata kuliah ${mk.kode_mk} - ${mk.nama_mk}?`)) {
     try {
       const result = await mkStore.removeMK(mk.id)
 
@@ -196,15 +206,15 @@ onMounted(async () => {
               <tr>
                 <th>Kode</th>
                 <th>Nama Mata Kuliah</th>
-                <th>SKS</th>
+                <th>Deskripsi</th>
                 <th>Aksi</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="mk in filteredMataKuliah" :key="mk.id">
-                <td>{{ mk.kode }}</td>
-                <td>{{ mk.nama }}</td>
-                <td>{{ mk.sks }}</td>
+              <tr v-for="mk in filteredMataKuliah" :key="mk.kode_mk">
+                <td>{{ mk.kode_mk }}</td>
+                <td>{{ mk.nama_mk }}</td>
+                <td>{{ mk.deskripsi || '-' }}</td>
                 <td>
                   <button class="btn-edit" @click="openEditModal(mk)">
                     <i class="ri-edit-line"></i>
@@ -234,7 +244,7 @@ onMounted(async () => {
             <input
               type="text"
               id="kode"
-              v-model="newMK.kode"
+              v-model="newMK.kode_mk"
               class="form-input"
               placeholder="Contoh: IF2110"
               required
@@ -245,23 +255,22 @@ onMounted(async () => {
             <input
               type="text"
               id="nama"
-              v-model="newMK.nama"
+              v-model="newMK.nama_mk"
               class="form-input"
               placeholder="Nama mata kuliah"
               required
             />
           </div>
           <div class="form-group">
-            <label for="sks">SKS:</label>
-            <input
-              type="number"
-              id="sks"
-              v-model="newMK.sks"
+            <label for="deskripsi">Deskripsi:</label>
+            <textarea
+              id="deskripsi"
+              v-model="newMK.deskripsi"
               class="form-input"
-              min="1"
-              max="6"
-              required
-            />
+              placeholder="Deskripsi mata kuliah (kosong akan diisi dengan '-')"
+              rows="3"
+            ></textarea>
+            <small class="form-help">Jika kosong, akan diisi dengan "-"</small>
           </div>
         </div>
         <div class="modal-footer">
@@ -509,6 +518,7 @@ onMounted(async () => {
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
+  resize: vertical;
 }
 
 .modal-footer {
@@ -559,5 +569,13 @@ onMounted(async () => {
     justify-content: center;
     margin-top: 10px;
   }
+}
+
+.form-help {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+  font-style: italic;
 }
 </style>

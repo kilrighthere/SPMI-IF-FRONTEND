@@ -15,22 +15,13 @@ export const useMKStore = defineStore('mataKuliah', () => {
     
     try {
       const response = await getMKList()
-      // Handle new API response format
-      if (response.data && response.data.success) {
-        // Map API data format to our internal format
-        mataKuliahList.value = response.data.data.map(item => ({
-          id: item.kode_mk || item.id,
-          kode: item.kode_mk,
-          nama: item.nama_mk,
-          sks: item.sks || 0
-        }))
-      } else if (Array.isArray(response.data)) {
-        mataKuliahList.value = response.data.map(item => ({
-          id: item.kode_mk || item.id,
-          kode: item.kode_mk,
-          nama: item.nama_mk,
-          sks: item.sks || 0
-        }))
+      // Handle API response format
+      if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        // New API format with nested data
+        mataKuliahList.value = response.data.data
+      } else if (response.data && Array.isArray(response.data)) {
+        // Direct array format
+        mataKuliahList.value = response.data
       } else {
         console.warn('Unexpected response format:', response.data)
         // Handle unexpected format, use fallback data
@@ -50,52 +41,34 @@ export const useMKStore = defineStore('mataKuliah', () => {
     console.log('Using fallback data for Mata Kuliah')
     mataKuliahList.value = [
       { 
+        id: 'MKE401', 
+        kode: 'MKE401', 
+        nama: 'Sistem Informasi Manajemen',
+        deskripsi: null
+      },
+      { 
         id: 'IF2110', 
         kode: 'IF2110', 
         nama: 'Algoritma dan Pemrograman',
-        sks: 4
+        deskripsi: 'Mata kuliah tentang dasar-dasar algoritma dan pemrograman'
       },
       { 
         id: 'IF2120', 
         kode: 'IF2120', 
         nama: 'Struktur Data',
-        sks: 4
+        deskripsi: 'Mata kuliah tentang struktur data dan implementasinya'
       },
       { 
         id: 'IF2130', 
         kode: 'IF2130', 
         nama: 'Sistem Basis Data',
-        sks: 3
+        deskripsi: 'Mata kuliah tentang desain dan implementasi basis data'
       },
       { 
         id: 'IF2140', 
         kode: 'IF2140', 
         nama: 'Rekayasa Perangkat Lunak',
-        sks: 3
-      },
-      { 
-        id: 'IF2150', 
-        kode: 'IF2150', 
-        nama: 'Pemrograman Web',
-        sks: 3
-      },
-      { 
-        id: 'IF2160', 
-        kode: 'IF2160', 
-        nama: 'Pemrograman Berorientasi Objek',
-        sks: 3
-      },
-      { 
-        id: 'IF2170', 
-        kode: 'IF2170', 
-        nama: 'Keamanan Informasi',
-        sks: 3
-      },
-      { 
-        id: 'IF2180', 
-        kode: 'IF2180', 
-        nama: 'Pengembangan Aplikasi Mobile',
-        sks: 3
+        deskripsi: 'Mata kuliah tentang metodologi pengembangan perangkat lunak'
       }
     ]
   }
@@ -112,8 +85,8 @@ export const useMKStore = defineStore('mataKuliah', () => {
         currentMK.value = {
           id: item.kode_mk || item.id,
           kode: item.kode_mk,
-          nama: item.nama,
-          sks: item.sks || 0
+          nama: item.nama_mk,
+          deskripsi: item.deskripsi
         }
       } else {
         currentMK.value = response.data;
@@ -133,28 +106,37 @@ export const useMKStore = defineStore('mataKuliah', () => {
     error.value = null
     
     try {
-      // Format data for API
+      // Format data for API - handle both old and new format
       const apiData = {
-        kode_mk: mkData.kode,
-        nama: mkData.nama,
-        sks: mkData.sks
+        kode_mk: mkData.kode_mk || mkData.kode,
+        nama_mk: mkData.nama_mk || mkData.nama,
+        deskripsi: mkData.deskripsi || '-'
       };
       
+      console.log('Creating MK with API data:', apiData)
       const response = await addMK(apiData)
+      console.log('API response:', response)
+      
       // Refresh list after adding
       await fetchAllMK()
+      
+      // Return the success response
+      if (response.data && response.data.success) {
+        return { success: true, data: response.data.data }
+      }
       return response.data
     } catch (err) {
       console.error('Error creating Mata Kuliah:', err)
-      error.value = 'Gagal menambahkan Mata Kuliah'
+      console.error('Error details:', err.response?.data || err.message)
+      error.value = 'Gagal menambahkan Mata Kuliah: ' + (err.response?.data?.message || err.message)
       
       // Add to local list if in development/offline mode
       if (import.meta.env.DEV) {
         const newMk = {
-          id: mkData.kode,
-          kode: mkData.kode,
-          nama: mkData.nama,
-          sks: mkData.sks || 0
+          id: mkData.kode_mk || mkData.kode,
+          kode_mk: mkData.kode_mk || mkData.kode,
+          nama_mk: mkData.nama_mk || mkData.nama,
+          deskripsi: mkData.deskripsi || '-'
         };
         mataKuliahList.value.push(newMk);
         return { success: true, data: newMk };
@@ -171,11 +153,11 @@ export const useMKStore = defineStore('mataKuliah', () => {
     error.value = null
     
     try {
-      // Format data for API
+      // Format data for API - handle both old and new format
       const apiData = {
-        kode_mk: mkData.kode || id,
-        nama: mkData.nama,
-        sks: mkData.sks
+        kode_mk: mkData.kode_mk || mkData.kode || id,
+        nama_mk: mkData.nama_mk || mkData.nama,
+        deskripsi: mkData.deskripsi || '-'
       };
       
       const response = await updateMK(id, apiData)

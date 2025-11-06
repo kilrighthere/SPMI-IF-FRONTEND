@@ -21,9 +21,16 @@ export const useKurikulumStore = defineStore('kurikulum', () => {
 
     try {
       const response = await getKurikulumList()
-      // Handle new API response format
-      if (response.data && response.data.success) {
+      // Handle API response format
+      if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        // New API format with nested data array
         kurikulumList.value = response.data.data
+      } else if (response.data && Array.isArray(response.data)) {
+        // Direct array format
+        kurikulumList.value = response.data
+      } else if (response.data && response.data.success && response.data.data) {
+        // Single object format - wrap in array
+        kurikulumList.value = [response.data.data]
       } else {
         kurikulumList.value = response.data
       }

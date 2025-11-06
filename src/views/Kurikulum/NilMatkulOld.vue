@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useNilaiMkStore } from '@/stores/nilaiMk'
 import { useAuthStore } from '@/stores/auth'
@@ -39,22 +39,12 @@ const formData = ref({
 
 // Filter dan pencarian
 const searchQuery = ref('')
-const selectedMataKuliah = ref('')
 
 // Computed
 const periodeList = computed(() => nilaiMkStore.periodeList)
 const selectedPeriode = computed({
   get: () => nilaiMkStore.selectedPeriode,
-  set: async (value) => {
-    selectedMataKuliah.value = '' // Reset mata kuliah filter
-    nilaiMkStore.selectedPeriode = value
-    
-    if (value) {
-      await loadNilaiData() // Load data ketika periode dipilih
-    } else {
-      nilaiMkStore.nilaiList = [] // Clear data jika tidak ada periode
-    }
-  }
+  set: (value) => nilaiMkStore.setPeriode(value)
 })
 
 // Data nilai yang difilter berdasarkan periode yang dipilih
@@ -64,11 +54,6 @@ const filteredNilaiList = computed(() => {
   // Filter berdasarkan kurikulum jika ada
   if (selectedKurikulum.value) {
     filtered = filtered.filter(nilai => nilai.id_kurikulum === selectedKurikulum.value)
-  }
-  
-  // Filter berdasarkan mata kuliah yang dipilih
-  if (selectedMataKuliah.value) {
-    filtered = filtered.filter(nilai => nilai.kode_mk === selectedMataKuliah.value)
   }
   
   // Filter berdasarkan pencarian
@@ -92,21 +77,6 @@ const filteredNilaiList = computed(() => {
 
 // Available mata kuliah untuk dropdown
 const availableMataKuliah = computed(() => mkStore.mataKuliahList)
-
-// Mata kuliah yang tersedia dalam periode yang dipilih
-const availableMataKuliahInPeriode = computed(() => {
-  if (!selectedPeriode.value) return []
-  
-  // Ambil kode MK unik dari nilai yang ada di periode ini
-  const uniqueKodeMK = [...new Set(
-    nilaiMkStore.filteredNilaiByPeriode.map(nilai => nilai.kode_mk)
-  )]
-  
-  // Return mata kuliah yang ada dalam periode ini
-  return availableMataKuliah.value.filter(mk => 
-    uniqueKodeMK.includes(mk.kode_mk)
-  )
-})
 
 // Get current kurikulum name
 function getCurrentKurikulumName() {
@@ -170,6 +140,15 @@ async function submitForm() {
   }
 }
 
+// Load data
+async function loadData() {
+  await Promise.all([
+    nilaiMkStore.fetchAllData(),
+    kurikulumStore.fetchAllKurikulum(),
+    mkStore.fetchAllMK()
+  ])
+}
+
 // Get CSS class untuk huruf mutu
 function getHurufMutuClass(huruf) {
   if (huruf === 'A' || huruf === 'A-') return 'huruf-a'
@@ -180,38 +159,9 @@ function getHurufMutuClass(huruf) {
   return 'huruf-default'
 }
 
-// Load hanya periode di awal
-async function loadPeriodeOnly() {
-  await nilaiMkStore.fetchPeriodeList()
-}
-
-// Load nilai berdasarkan filter dan data yang diperlukan
-async function loadNilaiData() {
-  if (!selectedPeriode.value) return
-  
-  const filters = { id_periode: selectedPeriode.value }
-  if (selectedMataKuliah.value) {
-    filters.kode_mk = selectedMataKuliah.value
-  }
-  
-  // Load data yang diperlukan secara bersamaan hanya ketika dibutuhkan
-  await Promise.all([
-    nilaiMkStore.fetchNilaiByFilter(filters),
-    mkStore.fetchAllMK(), // untuk dropdown mata kuliah
-    nilaiMkStore.fetchMahasiswaData() // untuk nama mahasiswa di tabel
-  ])
-}
-
-// Watch untuk perubahan filter mata kuliah
-watch(selectedMataKuliah, async (newValue, oldValue) => {
-  if (selectedPeriode.value && newValue !== oldValue) {
-    await loadNilaiData()
-  }
-})
-
-// Load hanya periode saat komponen dimuat
+// Load data saat komponen dimuat
 onMounted(() => {
-  loadPeriodeOnly()
+  loadData()
 })
 </script>
 
@@ -222,45 +172,24 @@ onMounted(() => {
       <p class="page-subtitle">{{ getCurrentKurikulumName() }}</p>
     </div>
 
-    <!-- Period & Mata Kuliah Selection -->
-    <div class="filter-section">
-      <div class="filters-container">
-        <div class="filter-group">
-          <label for="periode" class="filter-label">Periode:</label>
-          <select 
-            id="periode" 
-            v-model="selectedPeriode" 
-            class="filter-select"
+    <!-- Period Selection -->
+    <div class="period-section">
+      <div class="period-filter">
+        <label for="periode" class="period-label">Periode:</label>
+        <select 
+          id="periode" 
+          v-model="selectedPeriode" 
+          class="period-select"
+        >
+          <option value="">Pilih Periode</option>
+          <option 
+            v-for="periode in periodeList" 
+            :key="periode.id_periode" 
+            :value="periode.id_periode"
           >
-            <option value="">Pilih Periode</option>
-            <option 
-              v-for="periode in periodeList" 
-              :key="periode.id_periode" 
-              :value="periode.id_periode"
-            >
-              {{ periode.id_periode }}
-            </option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label for="matakuliah" class="filter-label">Mata Kuliah:</label>
-          <select 
-            id="matakuliah" 
-            v-model="selectedMataKuliah" 
-            class="filter-select"
-            :disabled="!selectedPeriode"
-          >
-            <option value="">Semua Mata Kuliah</option>
-            <option 
-              v-for="mk in availableMataKuliahInPeriode" 
-              :key="mk.kode_mk" 
-              :value="mk.kode_mk"
-            >
-              {{ mk.kode_mk }} - {{ mk.nama_mk }}
-            </option>
-          </select>
-        </div>
+            {{ periode.id_periode }}
+          </option>
+        </select>
       </div>
 
       <!-- Action Button -->
@@ -457,151 +386,52 @@ onMounted(() => {
     </div>
   </div>
 </template>
+                </div>
+</template>
+      </div>
+    </div>
+  </div>
+</template>
 
 <style scoped>
 .nilai-matkul-container {
-  padding: 24px;
-  max-width: 1400px;
+  width: 100%;
   margin: 0 auto;
 }
 
-.page-header {
-  margin-bottom: 32px;
+.section-box {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
 }
 
-.page-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 8px 0;
-}
-
-.page-subtitle {
-  font-size: 16px;
-  color: #6b7280;
-  margin: 0;
-}
-
-.filter-section {
+.section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding: 20px;
-  background-color: #f8fafc;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  margin-bottom: 20px;
 }
 
-.filters-container {
+.section-box h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 0;
+  color: var(--color-button);
+}
+
+.search-filter {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 24px;
-}
-
-.filter-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.filter-label {
-  font-weight: 600;
-  color: #374151;
-  min-width: 90px;
-}
-
-.filter-select {
-  padding: 8px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background-color: white;
-  font-size: 14px;
-  min-width: 180px;
-}
-
-.filter-select:disabled {
-  background-color: #f3f4f6;
-  color: #9ca3af;
-  cursor: not-allowed;
-}
-
-.action-section {
-  display: flex;
-  gap: 12px;
-}
-
-.btn-primary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background-color: #45a049;
-}
-
-.btn-primary:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.loading-container, .error-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  text-align: center;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f4f6;
-  border-top: 4px solid #4caf50;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 16px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.error-container i {
-  font-size: 48px;
-  color: #ef4444;
-  margin-bottom: 16px;
-}
-
-.btn-retry {
-  margin-top: 16px;
-  padding: 8px 16px;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.search-section {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .search-box {
   position: relative;
-  max-width: 400px;
+  width: 350px;
 }
 
 .search-box i {
@@ -609,47 +439,20 @@ onMounted(() => {
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #9ca3af;
+  color: #666;
 }
 
 .search-input {
   width: 100%;
-  padding: 12px 12px 12px 40px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  padding: 10px 10px 10px 35px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
   font-size: 14px;
 }
 
-.table-container {
-  background-color: white;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.table-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid #e2e8f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.table-header h2 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-}
-
-.total-items {
-  font-size: 14px;
-  color: #6b7280;
-}
-
-.table-wrapper {
+.table-responsive {
   overflow-x: auto;
+  margin-bottom: 10px;
 }
 
 .nilai-table {
@@ -657,51 +460,122 @@ onMounted(() => {
   border-collapse: collapse;
 }
 
-.nilai-table th {
-  background-color: #f8fafc;
-  padding: 12px 16px;
-  text-align: left;
-  font-weight: 600;
-  color: #374151;
-  border-bottom: 1px solid #e2e8f0;
-}
-
+.nilai-table th,
 .nilai-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
 }
 
-.nilai-table tbody tr:hover {
-  background-color: #f8fafc;
+.nilai-table th {
+  background-color: #f5f5f5;
+  font-weight: bold;
+  color: #333;
 }
 
-.kode-mk {
-  font-family: 'Monaco', 'Menlo', monospace;
-  background-color: #e0f2fe;
-  padding: 4px 8px;
+.nilai-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.nilai-cell {
+  font-weight: 600;
+  text-align: right;
+}
+
+.jumlah-mhs {
+  font-weight: 600;
+  text-align: center;
+}
+
+.action-cell {
+  text-align: center;
+}
+
+.btn-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background-color: var(--color-button);
+  color: white;
+  border: none;
+  padding: 6px 12px;
   border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.btn-action:hover {
+  background-color: var(--color-button-hover);
+  transform: translateY(-1px);
+}
+
+.btn-action:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.btn-action i {
+  font-size: 16px;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-style: italic;
+}
+
+.error-message {
+  color: #f44336;
+  padding: 10px;
+  background-color: #ffebee;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
+  text-align: center;
+  font-family: 'Montserrat', sans-serif;
 }
 
-.nim {
-  font-family: 'Monaco', 'Menlo', monospace;
-  font-weight: 600;
+.status-ada {
+  background-color: var(--color-buttonsec);
+  color: var(--color-text);
 }
 
-.nilai-akhir {
-  font-weight: 600;
-  color: #1f2937;
+.table-info {
+  text-align: right;
+  font-size: 14px;
+  color: #666;
+  margin-top: 10px;
 }
 
 .huruf-mutu {
+  text-align: center;
+}
+
+.huruf-badge {
   display: inline-block;
   padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: 600;
+  border-radius: 6px;
   font-size: 12px;
+  font-weight: 700;
   text-align: center;
-  min-width: 32px;
+  font-family: 'Montserrat', sans-serif;
+  min-width: 30px;
 }
 
 .huruf-a {
@@ -715,12 +589,12 @@ onMounted(() => {
 }
 
 .huruf-c {
-  background-color: #f59e0b;
+  background-color: #eab308;
   color: white;
 }
 
 .huruf-d {
-  background-color: #ef4444;
+  background-color: #ea580c;
   color: white;
 }
 
@@ -732,191 +606,5 @@ onMounted(() => {
 .huruf-default {
   background-color: #6b7280;
   color: white;
-}
-
-.empty-state, .no-period-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  text-align: center;
-  color: #6b7280;
-}
-
-.empty-state i, .no-period-state i {
-  font-size: 64px;
-  margin-bottom: 16px;
-  color: #d1d5db;
-}
-
-.empty-state h3, .no-period-state h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #374151;
-  margin: 0 0 8px 0;
-}
-
-.empty-state p, .no-period-state p {
-  font-size: 14px;
-  margin: 0;
-}
-
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-}
-
-.modal-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid #e2e8f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-header h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: #6b7280;
-  padding: 4px;
-}
-
-.modal-body {
-  padding: 24px;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: 600;
-  color: #374151;
-}
-
-.form-input, .form-select {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: border-color 0.2s;
-}
-
-.form-input:focus, .form-select:focus {
-  outline: none;
-  border-color: #4caf50;
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-}
-
-.form-input:disabled {
-  background-color: #f9fafb;
-  color: #6b7280;
-  cursor: not-allowed;
-}
-
-.form-help {
-  display: block;
-  margin-top: 6px;
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.modal-footer {
-  padding: 16px 24px;
-  border-top: 1px solid #e2e8f0;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.btn-secondary {
-  padding: 8px 16px;
-  background-color: #f3f4f6;
-  color: #374151;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.btn-secondary:hover {
-  background-color: #e5e7eb;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .nilai-matkul-container {
-    padding: 16px;
-  }
-
-  .filter-section {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
-  }
-
-  .filters-container {
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .filter-group {
-    justify-content: center;
-  }
-
-  .filter-label {
-    min-width: auto;
-  }
-
-  .filter-select {
-    min-width: 200px;
-  }
-
-  .action-section {
-    justify-content: center;
-  }
-
-  .table-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-
-  .modal-content {
-    margin: 16px;
-    max-height: calc(100vh - 32px);
-  }
 }
 </style>

@@ -98,6 +98,14 @@ export function usePermissions() {
       delete: isAdmin.value,
     },
 
+    // Kurikulum Mata Kuliah
+    kurikulumMk: {
+      view: isAdmin.value || isDosen.value,
+      create: isAdmin.value,
+      edit: isAdmin.value,
+      delete: isAdmin.value,
+    },
+
     // RPS
     rps: {
       view: isAdmin.value || isDosen.value,
@@ -200,6 +208,11 @@ export function usePermissions() {
     )
   }
 
+  /**
+   * Helper functions for specific features
+   */
+  const canManageKurikulumMk = computed(() => can('kurikulumMk', 'create'))
+
   return {
     userRole,
     userId,
@@ -210,5 +223,6 @@ export function usePermissions() {
     can,
     canAccessMahasiswaData,
     getAllowedMenuItems,
+    canManageKurikulumMk,
   }
 }
