@@ -630,7 +630,7 @@ onMounted(async () => {
       </div>
 
       <!-- Action Button -->
-      <div class="action-section" v-if="isAdmin || isDosen">
+      <div class="action-section" v-if="canManageKurikulumMk">
         <input
           type="file"
           id="excelUpload"
@@ -648,7 +648,7 @@ onMounted(async () => {
           <i class="ri-file-excel-2-line"></i>
           Upload Excel
         </button>
-        <button
+        <button 
           @click="openAddModal"
           class="btn-primary"
           :disabled="!selectedPeriode"

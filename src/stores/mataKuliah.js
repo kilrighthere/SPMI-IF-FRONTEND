@@ -18,15 +18,25 @@ export const useMKStore = defineStore('mataKuliah', () => {
       // Handle API response format
       if (response.data && response.data.data && Array.isArray(response.data.data)) {
         // New API format with nested data
-        mataKuliahList.value = response.data.data
+        mataKuliahList.value = response.data.data.map(mk => ({
+          ...mk,
+          nama_mk: mk.nama_mk || mk.nama || mk.name || `${mk.kode_mk || mk.kode || mk.id}`,
+          kode_mk: mk.kode_mk || mk.kode || mk.id
+        }))
       } else if (response.data && Array.isArray(response.data)) {
         // Direct array format
-        mataKuliahList.value = response.data
+        mataKuliahList.value = response.data.map(mk => ({
+          ...mk,
+          nama_mk: mk.nama_mk || mk.nama || mk.name || `${mk.kode_mk || mk.kode || mk.id}`,
+          kode_mk: mk.kode_mk || mk.kode || mk.id
+        }))
       } else {
         console.warn('Unexpected response format:', response.data)
         // Handle unexpected format, use fallback data
         useFallbackData()
       }
+      
+      console.log('Mata Kuliah loaded:', mataKuliahList.value)
     } catch (err) {
       console.error('Error fetching Mata Kuliah:', err)
       error.value = 'Gagal memuat data Mata Kuliah'
