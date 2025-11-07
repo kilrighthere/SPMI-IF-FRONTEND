@@ -17,7 +17,7 @@ import { usePermissions } from '@/composables/usePermissions'
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
 
 // Use centralized permissions
-const { isAdmin, isDosen, isMahasiswa, userId } = usePermissions()
+const { isAdmin, isDosen, isMahasiswa, userId, userRole } = usePermissions()
 const currentUserNim = userId
 
 // State
@@ -268,7 +268,7 @@ onMounted(() => {
     </h1>
 
     <!-- Search Bar - Hanya untuk Dosen/Admin -->
-    <div v-if="isDosen" class="search-section">
+    <div v-if="isDosen || isAdmin" class="search-section">
       <div class="search-box">
         <i class="ri-search-line search-icon"></i>
         <input
@@ -288,7 +288,7 @@ onMounted(() => {
     </div>
 
     <!-- Mahasiswa Catalog - Table (Hanya untuk Dosen/Admin) -->
-    <div v-else-if="isDosen && !selectedMahasiswa" class="table-container">
+    <div v-else-if="(isDosen || isAdmin) && !selectedMahasiswa" class="table-container">
       <div class="table-header">
         <h5 class="table-title">
           <i class="ri-user-line"></i>
@@ -337,7 +337,7 @@ onMounted(() => {
     <!-- Chart Section -->
     <div v-else-if="selectedMahasiswa || isMahasiswa" id="chart-section">
       <!-- Selected Mahasiswa Info (Hanya untuk Dosen/Admin) -->
-      <div v-if="isDosen" class="selected-mahasiswa-banner">
+      <div v-if="isDosen || isAdmin" class="selected-mahasiswa-banner">
         <div class="selected-info-content">
           <div class="selected-details">
             <h4>{{ selectedMahasiswa.nama }}</h4>

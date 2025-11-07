@@ -646,7 +646,7 @@ onMounted(async () => {
           :title="isLoading ? 'Sedang memproses...' : 'Upload nilai dari Excel SIAP'"
         >
           <i class="ri-file-excel-2-line"></i>
-          Upload Excel
+          Upload SIAP
         </button>
         <button 
           @click="openAddModal"

@@ -21,12 +21,48 @@ export const useMahasiswaStore = defineStore('mahasiswa', () => {
       }
     } catch (err) {
       console.error('Error fetching mahasiswa:', err)
-      error.value = 'Gagal memuat data mahasiswa'
-      // Fallback data
-      mahasiswaList.value = [
-        { nim: '24060120140001', nama: 'Nurul Saputra' },
-        { nim: '24060120140002', nama: 'Dewi Wijaya' }
-      ]
+      
+      // Extract specific error message from API response
+      let errorMessage = 'Gagal memuat data mahasiswa'
+      
+      if (err.response) {
+        // Server responded with error status
+        const status = err.response.status
+        const serverMessage = err.response.data?.message || err.response.data?.error
+        
+        switch (status) {
+          case 401:
+            errorMessage = 'Sesi Anda telah berakhir. Silakan login kembali'
+            break
+          case 403:
+            errorMessage = 'Anda tidak memiliki akses untuk melihat data mahasiswa'
+            break
+          case 404:
+            errorMessage = 'Endpoint data mahasiswa tidak ditemukan'
+            break
+          case 500:
+            errorMessage = 'Terjadi kesalahan pada server. Silakan refresh halaman'
+            break
+          default:
+            errorMessage = serverMessage || `Gagal memuat data mahasiswa (Error ${status})`
+        }
+      } else if (err.request) {
+        // Network error or no response
+        errorMessage = 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda'
+      } else {
+        // Other errors
+        errorMessage = err.message || 'Terjadi kesalahan yang tidak diketahui'
+      }
+      
+      error.value = errorMessage
+      
+      // Fallback data hanya jika bukan error autentikasi
+      if (!err.response || err.response.status !== 401) {
+        mahasiswaList.value = [
+          { nim: '24060120140001', nama: 'Nurul Saputra' },
+          { nim: '24060120140002', nama: 'Dewi Wijaya' }
+        ]
+      }
     } finally {
       isLoading.value = false
     }
@@ -38,11 +74,50 @@ export const useMahasiswaStore = defineStore('mahasiswa', () => {
     try {
       const response = await addMahasiswa(mahasiswaData)
       await fetchMahasiswa()
-      return response.data
+      return { success: true, data: response.data }
     } catch (err) {
       console.error('Error creating mahasiswa:', err)
-      error.value = 'Gagal menambahkan mahasiswa'
-      return null
+      
+      // Extract specific error message from API response
+      let errorMessage = 'Gagal menambahkan mahasiswa'
+      
+      if (err.response) {
+        // Server responded with error status
+        const status = err.response.status
+        const serverMessage = err.response.data?.message || err.response.data?.error
+        
+        switch (status) {
+          case 400:
+            errorMessage = serverMessage || 'Data yang dimasukkan tidak valid'
+            break
+          case 401:
+            errorMessage = 'Anda tidak memiliki akses untuk menambahkan mahasiswa'
+            break
+          case 403:
+            errorMessage = 'Akses ditolak. Hubungi administrator'
+            break
+          case 409:
+            errorMessage = serverMessage || 'NIM sudah terdaftar'
+            break
+          case 422:
+            errorMessage = serverMessage || 'Data tidak sesuai format yang diharapkan'
+            break
+          case 500:
+            errorMessage = 'Terjadi kesalahan pada server. Silakan coba lagi'
+            break
+          default:
+            errorMessage = serverMessage || `Gagal menambahkan mahasiswa (Error ${status})`
+        }
+      } else if (err.request) {
+        // Network error or no response
+        errorMessage = 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda'
+      } else {
+        // Other errors
+        errorMessage = err.message || 'Terjadi kesalahan yang tidak diketahui'
+      }
+      
+      error.value = errorMessage
+      return { success: false, error: errorMessage }
     } finally {
       isLoading.value = false
     }
@@ -54,11 +129,50 @@ export const useMahasiswaStore = defineStore('mahasiswa', () => {
     try {
       const response = await updateMahasiswa(nim, mahasiswaData)
       await fetchMahasiswa()
-      return response.data
+      return { success: true, data: response.data }
     } catch (err) {
       console.error(`Error updating mahasiswa with nim ${nim}:`, err)
-      error.value = 'Gagal memperbarui mahasiswa'
-      return null
+      
+      // Extract specific error message from API response
+      let errorMessage = 'Gagal memperbarui mahasiswa'
+      
+      if (err.response) {
+        // Server responded with error status
+        const status = err.response.status
+        const serverMessage = err.response.data?.message || err.response.data?.error
+        
+        switch (status) {
+          case 400:
+            errorMessage = serverMessage || 'Data yang dimasukkan tidak valid'
+            break
+          case 401:
+            errorMessage = 'Anda tidak memiliki akses untuk memperbarui mahasiswa'
+            break
+          case 403:
+            errorMessage = 'Akses ditolak. Hubungi administrator'
+            break
+          case 404:
+            errorMessage = 'Data mahasiswa tidak ditemukan'
+            break
+          case 422:
+            errorMessage = serverMessage || 'Data tidak sesuai format yang diharapkan'
+            break
+          case 500:
+            errorMessage = 'Terjadi kesalahan pada server. Silakan coba lagi'
+            break
+          default:
+            errorMessage = serverMessage || `Gagal memperbarui mahasiswa (Error ${status})`
+        }
+      } else if (err.request) {
+        // Network error or no response
+        errorMessage = 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda'
+      } else {
+        // Other errors
+        errorMessage = err.message || 'Terjadi kesalahan yang tidak diketahui'
+      }
+      
+      error.value = errorMessage
+      return { success: false, error: errorMessage }
     } finally {
       isLoading.value = false
     }
@@ -73,8 +187,47 @@ export const useMahasiswaStore = defineStore('mahasiswa', () => {
       return { success: true }
     } catch (err) {
       console.error(`Error deleting mahasiswa with nim ${nim}:`, err)
-      error.value = 'Gagal menghapus mahasiswa'
-      return { success: false, error: error.value }
+      
+      // Extract specific error message from API response
+      let errorMessage = 'Gagal menghapus mahasiswa'
+      
+      if (err.response) {
+        // Server responded with error status
+        const status = err.response.status
+        const serverMessage = err.response.data?.message || err.response.data?.error
+        
+        switch (status) {
+          case 400:
+            errorMessage = serverMessage || 'Permintaan tidak valid'
+            break
+          case 401:
+            errorMessage = 'Anda tidak memiliki akses untuk menghapus mahasiswa'
+            break
+          case 403:
+            errorMessage = 'Akses ditolak. Hubungi administrator'
+            break
+          case 404:
+            errorMessage = 'Data mahasiswa tidak ditemukan'
+            break
+          case 409:
+            errorMessage = serverMessage || 'Mahasiswa tidak dapat dihapus karena masih memiliki data terkait'
+            break
+          case 500:
+            errorMessage = 'Terjadi kesalahan pada server. Silakan coba lagi'
+            break
+          default:
+            errorMessage = serverMessage || `Gagal menghapus mahasiswa (Error ${status})`
+        }
+      } else if (err.request) {
+        // Network error or no response
+        errorMessage = 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda'
+      } else {
+        // Other errors
+        errorMessage = err.message || 'Terjadi kesalahan yang tidak diketahui'
+      }
+      
+      error.value = errorMessage
+      return { success: false, error: errorMessage }
     } finally {
       isLoading.value = false
     }
