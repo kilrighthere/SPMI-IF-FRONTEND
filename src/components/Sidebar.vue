@@ -174,7 +174,7 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
             <i class="ri-group-line"></i>
             <span class="submenu-title" v-show="!sidebarStore.isMinimized">Mahasiswa</span>
           </RouterLink>
-          <RouterLink
+          <!-- <RouterLink
             v-else-if="isMahasiswa"
             :to="`/kurikulum/${kurikulumId}/mahasiswa`"
             class="menu-kurikulum"
@@ -182,7 +182,7 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
           >
             <i class="ri-user-line"></i>
             <span class="submenu-title" v-show="!sidebarStore.isMinimized">Profil Saya</span>
-          </RouterLink>
+          </RouterLink> -->
         </div>
       </template>
     </div>
