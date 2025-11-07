@@ -774,7 +774,7 @@ onMounted(async () => {
     </div>
 
     <!-- Search & Content -->
-    <div v-else-if="selectedPeriode" class="content-section">
+    <div v-else-if="selectedPeriode || isMahasiswa" class="content-section">
       <!-- Search -->
       <div class="search-section">
         <div class="search-box">
@@ -795,7 +795,7 @@ onMounted(async () => {
       <!-- Data Table -->
       <div class="table-container">
         <div class="table-header">
-          <h2>Daftar Nilai - Periode {{ selectedPeriode }}</h2>
+          <h2>{{ isMahasiswa ? 'Daftar Nilai Mata Kuliah' : `Daftar Nilai - Periode ${selectedPeriode}` }}</h2>
           <div class="table-info">
             <span class="total-items">Total: {{ filteredNilaiList.length }} data nilai</span>
           </div>
@@ -807,7 +807,7 @@ onMounted(async () => {
           <p>
             {{
               isMahasiswa
-                ? 'Anda belum memiliki nilai untuk periode ' + selectedPeriode
+                ? 'Anda belum memiliki nilai mata kuliah'
                 : 'Periode ' + selectedPeriode + ' belum memiliki data nilai'
             }}
           </p>
@@ -866,8 +866,8 @@ onMounted(async () => {
       </div>
     </div>
 
-    <!-- Empty State for No Period Selected -->
-    <div v-else class="no-period-state">
+    <!-- Empty State for No Period Selected (hanya untuk admin/dosen) -->
+    <div v-else-if="!isMahasiswa" class="no-period-state">
       <i class="ri-calendar-line"></i>
       <h3>Pilih Periode</h3>
       <p>Silakan pilih periode untuk melihat data nilai mata kuliah</p>
