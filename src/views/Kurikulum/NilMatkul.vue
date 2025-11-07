@@ -70,16 +70,32 @@ const selectedPeriode = computed({
 
 // Data nilai yang difilter berdasarkan periode yang dipilih
 const filteredNilaiList = computed(() => {
+  console.log('=== filteredNilaiList computed ===')
+  console.log('nilaiMkStore.filteredNilaiByPeriode:', nilaiMkStore.filteredNilaiByPeriode)
+  console.log('isMahasiswa:', isMahasiswa.value)
+  console.log('currentUserNim:', currentUserNim.value)
+  console.log('selectedKurikulum:', selectedKurikulum.value)
+
   let filtered = nilaiMkStore.filteredNilaiByPeriode
 
-  // Filter berdasarkan kurikulum jika ada
-  if (selectedKurikulum.value) {
+  // Log sample data untuk debugging
+  if (filtered.length > 0) {
+    console.log('Sample nilai data structure:', filtered[0])
+  }
+
+  // Filter berdasarkan kurikulum jika ada - SKIP untuk mahasiswa karena tidak relevan
+  // Mahasiswa tidak perlu filter berdasarkan kurikulum, mereka hanya perlu filter berdasarkan NIM
+  if (selectedKurikulum.value && !isMahasiswa.value) {
     filtered = filtered.filter((nilai) => nilai.id_kurikulum === selectedKurikulum.value)
+    console.log('After kurikulum filter:', filtered)
+  } else {
+    console.log('Skipping kurikulum filter (mahasiswa or no kurikulum selected)')
   }
 
   // Filter berdasarkan mata kuliah yang dipilih
   if (selectedMataKuliah.value) {
     filtered = filtered.filter((nilai) => nilai.kode_mk === selectedMataKuliah.value)
+    console.log('After mata kuliah filter:', filtered)
   }
 
   // Filter berdasarkan pencarian
@@ -92,13 +108,30 @@ const filteredNilaiList = computed(() => {
         nilaiMkStore.getMataKuliahNama(nilai.kode_mk).toLowerCase().includes(query) ||
         nilaiMkStore.getMahasiswaNama(nilai.nim).toLowerCase().includes(query),
     )
+    console.log('After search filter:', filtered)
   }
 
   // Filter untuk mahasiswa (hanya tampilkan nilai mereka sendiri)
   if (isMahasiswa.value && currentUserNim.value) {
-    filtered = filtered.filter((nilai) => nilai.nim === currentUserNim.value)
+    console.log('Filtering for mahasiswa, NIM:', currentUserNim.value)
+    filtered = filtered.filter((nilai) => {
+      // Convert both to string for comparison to handle type mismatch
+      const nilaiNimStr = String(nilai.nim).trim()
+      const currentNimStr = String(currentUserNim.value).trim()
+      console.log(
+        'Comparing nilai.nim:',
+        nilaiNimStr,
+        'with currentUserNim:',
+        currentNimStr,
+        'match:',
+        nilaiNimStr === currentNimStr,
+      )
+      return nilaiNimStr === currentNimStr
+    })
+    console.log('After mahasiswa filter:', filtered)
   }
 
+  console.log('Final filtered result:', filtered)
   return filtered
 })
 
@@ -293,12 +326,20 @@ async function loadPeriodeOnly() {
 
 // Load nilai berdasarkan filter dan data yang diperlukan
 async function loadNilaiData() {
-  if (!selectedPeriode.value) return
+  console.log('=== loadNilaiData called ===')
+  console.log('selectedPeriode:', selectedPeriode.value)
+
+  if (!selectedPeriode.value) {
+    console.log('No periode selected, returning')
+    return
+  }
 
   const filters = { id_periode: selectedPeriode.value }
   if (selectedMataKuliah.value) {
     filters.kode_mk = selectedMataKuliah.value
   }
+
+  console.log('Fetching with filters:', filters)
 
   // Load data yang diperlukan secara bersamaan hanya ketika dibutuhkan
   await Promise.all([
@@ -306,6 +347,9 @@ async function loadNilaiData() {
     mkStore.fetchAllMK(), // untuk dropdown mata kuliah
     nilaiMkStore.fetchMahasiswaData(), // untuk nama mahasiswa di tabel
   ])
+
+  console.log('After fetch - nilaiList:', nilaiMkStore.nilaiList)
+  console.log('After fetch - mahasiswaMap:', nilaiMkStore.mahasiswaMap)
 }
 
 // Fungsi untuk memproses file Excel
@@ -578,18 +622,50 @@ watch(selectedMataKuliah, async (newValue, oldValue) => {
 
 // Load data saat komponen dimuat
 onMounted(async () => {
-  await Promise.all([
-    loadPeriodeOnly(),
-    mkStore.fetchAllMK(), // Load data mata kuliah
-  ])
+  console.log('=== NilMatkul onMounted ===')
+  console.log('isMahasiswa:', isMahasiswa.value)
+  console.log('isDosen:', isDosen.value)
+  console.log('isAdmin:', isAdmin.value)
+  console.log('currentUserNim:', currentUserNim.value)
+
+  // Load periode terlebih dahulu
+  await loadPeriodeOnly()
+  console.log('periodeList after load:', periodeList.value)
+
+  // Jika mahasiswa, otomatis pilih periode terbaru dan load data
+  if (isMahasiswa.value && currentUserNim.value) {
+    console.log('Loading data for mahasiswa...')
+    // Ambil periode terbaru (diasumsikan sorted descending)
+    if (periodeList.value.length > 0) {
+      const latestPeriode = periodeList.value[0].id_periode
+      console.log('Setting latest periode:', latestPeriode)
+      selectedPeriode.value = latestPeriode
+
+      // Load data untuk periode terbaru
+      await loadNilaiData()
+      console.log('filteredNilaiList after load:', filteredNilaiList.value)
+    }
+
+    // Load mata kuliah untuk filter
+    await mkStore.fetchAllMK()
+  } else {
+    console.log('Loading data for admin/dosen...')
+    // Untuk admin/dosen, load data seperti biasa
+    await mkStore.fetchAllMK() // Load data mata kuliah
+  }
 })
 </script>
 
 <template>
   <div class="nilai-matkul-container">
     <div class="page-header">
-      <h1 class="page-title">Nilai Mata Kuliah</h1>
-      <p class="page-subtitle">{{ getCurrentKurikulumName() }}</p>
+      <h1 class="page-title">{{ isMahasiswa ? 'Nilai Mata Kuliah Saya' : 'Nilai Mata Kuliah' }}</h1>
+      <p class="page-subtitle">
+        {{ getCurrentKurikulumName() }}
+        <span v-if="isMahasiswa && currentUserNim" class="nim-badge">
+          NIM: {{ currentUserNim }}
+        </span>
+      </p>
     </div>
 
     <!-- Period & Mata Kuliah Selection -->
@@ -648,7 +724,7 @@ onMounted(async () => {
           <i class="ri-file-excel-2-line"></i>
           Upload SIAP
         </button>
-        <button 
+        <button
           @click="openAddModal"
           class="btn-primary"
           :disabled="!selectedPeriode"
@@ -666,11 +742,11 @@ onMounted(async () => {
       <p>Memuat data...</p>
     </div>
 
-    <!-- Error -->
-    <div v-else-if="error" class="error-container">
+    <!-- Error (hanya tampilkan jika error fatal, bukan untuk empty data) -->
+    <div v-else-if="error && !selectedPeriode" class="error-container">
       <i class="ri-error-warning-line"></i>
       <p>{{ error }}</p>
-      <button @click="loadData" class="btn-retry">Coba Lagi</button>
+      <button @click="loadPeriodeOnly" class="btn-retry">Coba Lagi</button>
     </div>
 
     <!-- Search & Content -->
@@ -682,7 +758,11 @@ onMounted(async () => {
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Cari berdasarkan kode MK, NIM, atau nama..."
+            :placeholder="
+              isMahasiswa
+                ? 'Cari berdasarkan kode MK atau nama mata kuliah...'
+                : 'Cari berdasarkan kode MK, NIM, atau nama...'
+            "
             class="search-input"
           />
         </div>
@@ -699,8 +779,14 @@ onMounted(async () => {
 
         <div v-if="filteredNilaiList.length === 0" class="empty-state">
           <i class="ri-file-list-3-line"></i>
-          <h3>Belum ada data nilai</h3>
-          <p>Periode {{ selectedPeriode }} belum memiliki data nilai</p>
+          <h3>{{ isMahasiswa ? 'Belum ada nilai' : 'Belum ada data nilai' }}</h3>
+          <p>
+            {{
+              isMahasiswa
+                ? 'Anda belum memiliki nilai untuk periode ' + selectedPeriode
+                : 'Periode ' + selectedPeriode + ' belum memiliki data nilai'
+            }}
+          </p>
         </div>
 
         <div v-else class="table-wrapper">
@@ -710,8 +796,9 @@ onMounted(async () => {
                 <th>No</th>
                 <th>Kode MK</th>
                 <th>Mata Kuliah</th>
-                <th>NIM</th>
-                <th>Nama Mahasiswa</th>
+                <th v-if="!isMahasiswa">NIM</th>
+                <th v-if="!isMahasiswa">Nama Mahasiswa</th>
+                <th>Periode</th>
                 <th>Nilai Akhir</th>
                 <th>Huruf Mutu</th>
               </tr>
@@ -728,11 +815,14 @@ onMounted(async () => {
                 <td>
                   <span class="nama-mk">{{ mkStore.getMataKuliahNama(nilai.kode_mk) }}</span>
                 </td>
-                <td>
+                <td v-if="!isMahasiswa">
                   <span class="nim">{{ nilai.nim }}</span>
                 </td>
-                <td>
+                <td v-if="!isMahasiswa">
                   <span class="nama-mhs">{{ nilaiMkStore.getMahasiswaNama(nilai.nim) }}</span>
+                </td>
+                <td>
+                  <span class="periode">{{ nilai.id_periode }}</span>
                 </td>
                 <td>
                   <span class="nilai-akhir">{{ nilaiMkStore.formatNilai(nilai.nilai_akhir) }}</span>
@@ -908,6 +998,20 @@ onMounted(async () => {
   font-size: 16px;
   color: #6b7280;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nim-badge {
+  display: inline-block;
+  background-color: #dbeafe;
+  color: #1e40af;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Monaco', 'Menlo', monospace;
 }
 
 .filter-section {
@@ -1148,6 +1252,12 @@ onMounted(async () => {
 .nim {
   font-family: 'Monaco', 'Menlo', monospace;
   font-weight: 600;
+}
+
+.periode {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-weight: 600;
+  color: #6b7280;
 }
 
 .nilai-akhir {
