@@ -13,11 +13,77 @@ const mahasiswaList = computed(() => mahasiswaStore.mahasiswaList)
 const isLoading = computed(() => mahasiswaStore.isLoading)
 const error = computed(() => mahasiswaStore.error)
 
+// Pagination state
+const currentPage = ref(1)
+const itemsPerPage = ref(10) // Jumlah data per halaman
+
+// Computed untuk pagination
+const totalPages = computed(() => Math.ceil(mahasiswaList.value.length / itemsPerPage.value))
+
+const paginatedMahasiswaList = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return mahasiswaList.value.slice(start, end)
+})
+
+// Fungsi pagination
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+    // Scroll to top of table
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+}
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+}
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+}
+
+// Get page numbers to display (max 5 pages at a time)
+const visiblePages = computed(() => {
+  const pages = []
+  const maxVisible = 5
+
+  if (totalPages.value <= maxVisible) {
+    // Show all pages if total is less than max
+    for (let i = 1; i <= totalPages.value; i++) {
+      pages.push(i)
+    }
+  } else {
+    // Show current page with 2 pages on each side
+    let start = Math.max(1, currentPage.value - 2)
+    let end = Math.min(totalPages.value, currentPage.value + 2)
+
+    // Adjust if we're near the start or end
+    if (currentPage.value <= 3) {
+      end = maxVisible
+    } else if (currentPage.value >= totalPages.value - 2) {
+      start = totalPages.value - maxVisible + 1
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i)
+    }
+  }
+
+  return pages
+})
+
 // Notification state
 const notification = ref({
   show: false,
   type: 'success', // 'success', 'error', 'warning'
-  message: ''
+  message: '',
 })
 
 // For mahasiswa, show only their own data
@@ -51,14 +117,15 @@ const formErrors = ref({
 const fetchMahasiswa = async () => {
   try {
     await mahasiswaStore.fetchMahasiswa()
-    
+
     // Show error notification if there was an error but fallback data was loaded
     if (mahasiswaStore.error) {
       showNotification('warning', mahasiswaStore.error)
     }
   } catch (err) {
     console.error('Error fetching mahasiswa:', err)
-    const errorMessage = mahasiswaStore.error || 'Gagal memuat data mahasiswa. Silakan refresh halaman.'
+    const errorMessage =
+      mahasiswaStore.error || 'Gagal memuat data mahasiswa. Silakan refresh halaman.'
     showNotification('error', errorMessage)
   }
 }
@@ -79,7 +146,7 @@ const validateForm = () => {
     isValid = false
   } else if (!isEditing.value) {
     // Check if NIM already exists (only when adding new)
-    const existingMahasiswa = mahasiswaList.value.find(m => m.nim === form.value.nim.trim())
+    const existingMahasiswa = mahasiswaList.value.find((m) => m.nim === form.value.nim.trim())
     if (existingMahasiswa) {
       formErrors.value.nim = 'NIM sudah terdaftar'
       isValid = false
@@ -105,7 +172,7 @@ const saveMahasiswa = async () => {
   try {
     if (!validateForm()) {
       // Show validation errors as notification
-      const errors = Object.values(formErrors.value).filter(error => error.trim() !== '')
+      const errors = Object.values(formErrors.value).filter((error) => error.trim() !== '')
       if (errors.length > 0) {
         showNotification('warning', `Perbaiki kesalahan berikut: ${errors.join(', ')}`)
       }
@@ -115,7 +182,7 @@ const saveMahasiswa = async () => {
     // Trim form values before submission
     const submitData = {
       nim: form.value.nim.trim(),
-      nama: form.value.nama.trim()
+      nama: form.value.nama.trim(),
     }
 
     let result
@@ -124,6 +191,7 @@ const saveMahasiswa = async () => {
       if (result && result.success) {
         showNotification('success', `Data mahasiswa ${submitData.nama} berhasil diperbarui!`)
         resetForm()
+        // Stay on current page after edit
       } else {
         showNotification('error', result?.error || 'Gagal memperbarui data mahasiswa.')
       }
@@ -132,6 +200,8 @@ const saveMahasiswa = async () => {
       if (result && result.success) {
         showNotification('success', `Data mahasiswa ${submitData.nama} berhasil ditambahkan!`)
         resetForm()
+        // Go to last page after adding new data
+        currentPage.value = Math.ceil(mahasiswaList.value.length / itemsPerPage.value)
       } else {
         showNotification('error', result?.error || 'Gagal menambahkan data mahasiswa.')
       }
@@ -155,14 +225,20 @@ const editMahasiswa = (mahasiswa) => {
 }
 
 const removeMahasiswa = async (nim) => {
-  const mahasiswa = mahasiswaList.value.find(m => m.nim === nim)
+  const mahasiswa = mahasiswaList.value.find((m) => m.nim === nim)
   const namaHapus = mahasiswa ? mahasiswa.nama : nim
-  
+
   if (confirm(`Apakah anda yakin ingin menghapus mahasiswa ${namaHapus}?`)) {
     try {
       const result = await mahasiswaStore.removeMahasiswa(nim)
       if (result && result.success) {
         showNotification('success', `Data mahasiswa ${namaHapus} berhasil dihapus!`)
+
+        // Adjust current page if needed after deletion
+        const newTotalPages = Math.ceil((mahasiswaList.value.length - 1) / itemsPerPage.value)
+        if (currentPage.value > newTotalPages && newTotalPages > 0) {
+          currentPage.value = newTotalPages
+        }
       } else {
         showNotification('error', 'Gagal menghapus data mahasiswa.')
       }
@@ -185,9 +261,9 @@ const showNotification = (type, message) => {
   notification.value = {
     show: true,
     type,
-    message
+    message,
   }
-  
+
   // Auto hide after 5 seconds
   setTimeout(() => {
     hideNotification()
@@ -218,49 +294,51 @@ const downloadTemplate = async () => {
   try {
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet('Template Mahasiswa')
-    
+
     // Set column headers
     worksheet.columns = [
       { header: 'NIM', key: 'nim', width: 20 },
-      { header: 'Nama Mahasiswa', key: 'nama', width: 40 }
+      { header: 'Nama Mahasiswa', key: 'nama', width: 40 },
     ]
-    
+
     // Style the header row
     worksheet.getRow(1).font = { bold: true }
     worksheet.getRow(1).fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FFA6D600' }
+      fgColor: { argb: 'FFA6D600' },
     }
-    
+
     // Add sample data dengan catatan untuk dihapus
     const sampleRow1 = worksheet.addRow({
       nim: '24060120140001',
-      nama: 'Contoh Mahasiswa 1 (HAPUS BARIS INI)'
+      nama: 'Contoh Mahasiswa 1 (HAPUS BARIS INI)',
     })
     const sampleRow2 = worksheet.addRow({
-      nim: '24060120140002', 
-      nama: 'Contoh Mahasiswa 2 (HAPUS BARIS INI)'
+      nim: '24060120140002',
+      nama: 'Contoh Mahasiswa 2 (HAPUS BARIS INI)',
     })
-    
+
     // Style sample rows dengan warna berbeda
     sampleRow1.fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FFFFEAA7' }
+      fgColor: { argb: 'FFFFEAA7' },
     }
     sampleRow2.fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FFFFEAA7' }
+      fgColor: { argb: 'FFFFEAA7' },
     }
-    
+
     // Add instructions sheet
     const instructionSheet = workbook.addWorksheet('Petunjuk')
     instructionSheet.addRow(['PETUNJUK PENGGUNAAN TEMPLATE UPLOAD MAHASISWA'])
     instructionSheet.addRow([])
     instructionSheet.addRow(['1. Isi data mahasiswa pada sheet "Template Mahasiswa"'])
-    instructionSheet.addRow(['2. Kolom NIM: Masukkan NIM mahasiswa (hanya angka, minimal 8 karakter)'])
+    instructionSheet.addRow([
+      '2. Kolom NIM: Masukkan NIM mahasiswa (hanya angka, minimal 8 karakter)',
+    ])
     instructionSheet.addRow(['3. Kolom Nama: Masukkan nama lengkap mahasiswa (2-100 karakter)'])
     instructionSheet.addRow(['4. Hapus baris contoh sebelum upload'])
     instructionSheet.addRow(['5. Simpan file dan upload melalui sistem'])
@@ -269,24 +347,24 @@ const downloadTemplate = async () => {
     instructionSheet.addRow(['- NIM tidak boleh duplikat'])
     instructionSheet.addRow(['- Maksimal 100 mahasiswa per upload'])
     instructionSheet.addRow(['- Format file: .xlsx'])
-    
+
     // Style instruction sheet
     instructionSheet.getRow(1).font = { bold: true, size: 14 }
     instructionSheet.getRow(1).fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FFE6F3FF' }
+      fgColor: { argb: 'FFE6F3FF' },
     }
     instructionSheet.getRow(9).font = { bold: true }
-    
+
     instructionSheet.getColumn(1).width = 60
-    
+
     // Generate and download file
     const buffer = await workbook.xlsx.writeBuffer()
     const blob = new Blob([buffer], {
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     })
-    
+
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -295,7 +373,7 @@ const downloadTemplate = async () => {
     a.click()
     document.body.removeChild(a)
     window.URL.revokeObjectURL(url)
-    
+
     showNotification('success', 'Template berhasil didownload!')
   } catch (error) {
     console.error('Error generating template:', error)
@@ -306,109 +384,108 @@ const downloadTemplate = async () => {
 const handleFileUpload = async (event) => {
   const file = event.target.files[0]
   if (!file) return
-  
+
   // Validate file type
   if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
     showNotification('error', 'File harus berformat Excel (.xlsx atau .xls)')
     return
   }
-  
+
   // Validate file size (max 5MB)
   if (file.size > 5 * 1024 * 1024) {
     showNotification('error', 'Ukuran file maksimal 5MB')
     return
   }
-  
+
   isUploading.value = true
   uploadResults.value = null
-  
+
   try {
     const workbook = new ExcelJS.Workbook()
     await workbook.xlsx.load(file)
-    
+
     const worksheet = workbook.getWorksheet('Template Mahasiswa') || workbook.getWorksheet(1)
     if (!worksheet) {
       throw new Error('Sheet tidak ditemukan')
     }
-    
+
     const mahasiswaData = []
     const errors = []
-    const existingNIMs = new Set(mahasiswaList.value.map(m => m.nim))
+    const existingNIMs = new Set(mahasiswaList.value.map((m) => m.nim))
     const uploadNIMs = new Set()
-    
+
     // Process each row (skip header)
     worksheet.eachRow((row, rowNumber) => {
       if (rowNumber === 1) return // Skip header
-      
+
       const nim = row.getCell(1).text?.trim()
       const nama = row.getCell(2).text?.trim()
-      
+
       // Skip empty rows
       if (!nim && !nama) return
-      
+
       // Validate NIM
       if (!nim) {
         errors.push(`Baris ${rowNumber}: NIM tidak boleh kosong`)
         return
       }
-      
+
       if (nim.length < 8) {
         errors.push(`Baris ${rowNumber}: NIM minimal 8 karakter`)
         return
       }
-      
+
       if (!/^[0-9]+$/.test(nim)) {
         errors.push(`Baris ${rowNumber}: NIM hanya boleh berisi angka`)
         return
       }
-      
+
       if (existingNIMs.has(nim)) {
         errors.push(`Baris ${rowNumber}: NIM ${nim} sudah terdaftar`)
         return
       }
-      
+
       if (uploadNIMs.has(nim)) {
         errors.push(`Baris ${rowNumber}: NIM ${nim} duplikat dalam file`)
         return
       }
-      
+
       // Validate nama
       if (!nama) {
         errors.push(`Baris ${rowNumber}: Nama tidak boleh kosong`)
         return
       }
-      
+
       if (nama.length < 2) {
         errors.push(`Baris ${rowNumber}: Nama minimal 2 karakter`)
         return
       }
-      
+
       if (nama.length > 100) {
         errors.push(`Baris ${rowNumber}: Nama maksimal 100 karakter`)
         return
       }
-      
+
       // Add to upload data
       mahasiswaData.push({ nim, nama })
       uploadNIMs.add(nim)
     })
-    
+
     // Check if no valid data
     if (mahasiswaData.length === 0 && errors.length === 0) {
       errors.push('Tidak ada data mahasiswa yang valid ditemukan')
     }
-    
+
     // Check maximum limit
     if (mahasiswaData.length > 100) {
       errors.push('Maksimal 100 mahasiswa per upload')
     }
-    
+
     uploadResults.value = {
       validData: mahasiswaData,
       errors,
-      totalRows: mahasiswaData.length + errors.length
+      totalRows: mahasiswaData.length + errors.length,
     }
-    
   } catch (error) {
     console.error('Error processing Excel file:', error)
     showNotification('error', 'Gagal memproses file Excel. Pastikan format file benar.')
@@ -421,12 +498,12 @@ const confirmUpload = async () => {
   if (!uploadResults.value || uploadResults.value.validData.length === 0) {
     return
   }
-  
+
   isUploading.value = true
   let successCount = 0
   let failCount = 0
   const failedItems = []
-  
+
   try {
     for (const mahasiswa of uploadResults.value.validData) {
       try {
@@ -435,32 +512,38 @@ const confirmUpload = async () => {
           successCount++
         } else {
           failCount++
-          failedItems.push(`${mahasiswa.nim} - ${mahasiswa.nama}: ${result?.error || 'Unknown error'}`)
+          failedItems.push(
+            `${mahasiswa.nim} - ${mahasiswa.nama}: ${result?.error || 'Unknown error'}`,
+          )
         }
       } catch (error) {
         failCount++
         failedItems.push(`${mahasiswa.nim} - ${mahasiswa.nama}: ${error.message}`)
       }
     }
-    
+
     // Show results
     if (successCount > 0 && failCount === 0) {
       showNotification('success', `Berhasil menambahkan ${successCount} mahasiswa`)
+      // Go to last page after bulk upload
+      currentPage.value = Math.ceil(mahasiswaList.value.length / itemsPerPage.value)
     } else if (successCount > 0 && failCount > 0) {
-      showNotification('warning', `Berhasil: ${successCount}, Gagal: ${failCount}. Periksa detail di bawah.`)
+      showNotification(
+        'warning',
+        `Berhasil: ${successCount}, Gagal: ${failCount}. Periksa detail di bawah.`,
+      )
     } else {
       showNotification('error', `Gagal menambahkan semua data (${failCount} gagal)`)
     }
-    
+
     // Update results for display
     uploadResults.value = {
       ...uploadResults.value,
       uploaded: true,
       successCount,
       failCount,
-      failedItems
+      failedItems,
     }
-    
   } catch (error) {
     console.error('Error during bulk upload:', error)
     showNotification('error', 'Terjadi kesalahan saat upload data')
@@ -589,27 +672,88 @@ onMounted(() => {
       <div v-else class="mahasiswa-content">
         <div v-if="mahasiswaList.length === 0" class="empty-state">Belum ada data mahasiswa.</div>
 
-        <table v-else class="mahasiswa-table">
-          <thead>
-            <tr>
-              <th width="10%">No.</th>
-              <th width="20%">NIM</th>
-              <th width="50%">Nama Mahasiswa</th>
-              <th width="20%" class="aksi-title" v-if="isAdmin">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(mahasiswa, index) in mahasiswaList" :key="mahasiswa.nim">
-              <td class="text-center">{{ index + 1 }}</td>
-              <td>{{ mahasiswa.nim }}</td>
-              <td>{{ mahasiswa.nama }}</td>
-              <td class="action-button" v-if="isAdmin">
-                <button class="btn-edit" @click="editMahasiswa(mahasiswa)">Edit</button>
-                <button class="btn-delete" @click="removeMahasiswa(mahasiswa.nim)">Hapus</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div v-else>
+          <table class="mahasiswa-table">
+            <thead>
+              <tr>
+                <th width="10%">No.</th>
+                <th width="20%">NIM</th>
+                <th width="50%">Nama Mahasiswa</th>
+                <th width="20%" class="aksi-title" v-if="isAdmin">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(mahasiswa, index) in paginatedMahasiswaList" :key="mahasiswa.nim">
+                <td class="text-center">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
+                <td>{{ mahasiswa.nim }}</td>
+                <td>{{ mahasiswa.nama }}</td>
+                <td class="action-button" v-if="isAdmin">
+                  <button class="btn-edit" @click="editMahasiswa(mahasiswa)">Edit</button>
+                  <button class="btn-delete" @click="removeMahasiswa(mahasiswa.nim)">Hapus</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Pagination Controls -->
+          <div class="pagination-container">
+            <div class="pagination-info">
+              Menampilkan {{ (currentPage - 1) * itemsPerPage + 1 }} -
+              {{ Math.min(currentPage * itemsPerPage, mahasiswaList.length) }}
+              dari {{ mahasiswaList.length }} data
+            </div>
+
+            <div class="pagination-controls">
+              <button
+                class="pagination-btn"
+                @click="prevPage"
+                :disabled="currentPage === 1"
+                title="Halaman sebelumnya"
+              >
+                <i class="ri-arrow-left-s-line"></i>
+              </button>
+
+              <button v-if="visiblePages[0] > 1" class="pagination-btn" @click="goToPage(1)">
+                1
+              </button>
+
+              <span v-if="visiblePages[0] > 2" class="pagination-dots">...</span>
+
+              <button
+                v-for="page in visiblePages"
+                :key="page"
+                class="pagination-btn"
+                :class="{ active: page === currentPage }"
+                @click="goToPage(page)"
+              >
+                {{ page }}
+              </button>
+
+              <span
+                v-if="visiblePages[visiblePages.length - 1] < totalPages - 1"
+                class="pagination-dots"
+                >...</span
+              >
+
+              <button
+                v-if="visiblePages[visiblePages.length - 1] < totalPages"
+                class="pagination-btn"
+                @click="goToPage(totalPages)"
+              >
+                {{ totalPages }}
+              </button>
+
+              <button
+                class="pagination-btn"
+                @click="nextPage"
+                :disabled="currentPage === totalPages"
+                title="Halaman berikutnya"
+              >
+                <i class="ri-arrow-right-s-line"></i>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -622,7 +766,7 @@ onMounted(() => {
             <i class="ri-close-line"></i>
           </button>
         </div>
-        
+
         <div class="modal-body">
           <!-- Step 1: Download Template -->
           <div class="upload-step">
@@ -632,13 +776,13 @@ onMounted(() => {
               <i class="ri-file-excel-line"></i> Download Template
             </button>
           </div>
-          
+
           <!-- Step 2: Upload File -->
           <div class="upload-step">
             <h5><i class="ri-upload-line"></i> Langkah 2: Upload File</h5>
             <div class="file-upload-area">
-              <input 
-                type="file" 
+              <input
+                type="file"
                 ref="uploadFileInput"
                 @change="handleFileUpload"
                 accept=".xlsx,.xls"
@@ -652,17 +796,17 @@ onMounted(() => {
               </div>
             </div>
           </div>
-          
+
           <!-- Loading -->
           <div v-if="isUploading && !uploadResults" class="upload-loading">
             <div class="spinner"></div>
             <p>Memproses file Excel...</p>
           </div>
-          
+
           <!-- Upload Results -->
           <div v-if="uploadResults" class="upload-results">
             <h5><i class="ri-file-list-line"></i> Hasil Validasi</h5>
-            
+
             <!-- Summary -->
             <div class="results-summary">
               <div class="summary-item valid" v-if="uploadResults.validData.length > 0">
@@ -674,7 +818,7 @@ onMounted(() => {
                 <span>{{ uploadResults.errors.length }} error</span>
               </div>
             </div>
-            
+
             <!-- Valid Data Preview -->
             <div v-if="uploadResults.validData.length > 0" class="valid-data-preview">
               <h6>Data yang akan diupload:</h6>
@@ -700,7 +844,7 @@ onMounted(() => {
                 </p>
               </div>
             </div>
-            
+
             <!-- Errors -->
             <div v-if="uploadResults.errors.length > 0" class="error-list">
               <h6>Error yang ditemukan:</h6>
@@ -708,7 +852,7 @@ onMounted(() => {
                 <li v-for="error in uploadResults.errors" :key="error">{{ error }}</li>
               </ul>
             </div>
-            
+
             <!-- Upload Results (after upload) -->
             <div v-if="uploadResults.uploaded" class="upload-final-results">
               <div class="final-summary">
@@ -721,7 +865,7 @@ onMounted(() => {
                   <span>{{ uploadResults.failCount }} gagal diupload</span>
                 </div>
               </div>
-              
+
               <div v-if="uploadResults.failedItems.length > 0" class="failed-items">
                 <h6>Item yang gagal diupload:</h6>
                 <ul>
@@ -731,18 +875,16 @@ onMounted(() => {
             </div>
           </div>
         </div>
-        
+
         <div class="modal-footer">
           <button class="btn-cancel" @click="closeUploadModal">Tutup</button>
-          <button 
+          <button
             v-if="uploadResults && uploadResults.validData.length > 0 && !uploadResults.uploaded"
-            class="btn-confirm" 
+            class="btn-confirm"
             @click="confirmUpload"
             :disabled="isUploading"
           >
-            <span v-if="isUploading">
-              <i class="ri-loader-4-line spin"></i> Mengupload...
-            </span>
+            <span v-if="isUploading"> <i class="ri-loader-4-line spin"></i> Mengupload... </span>
             <span v-else>
               <i class="ri-upload-2-line"></i> Upload {{ uploadResults.validData.length }} Data
             </span>
@@ -998,6 +1140,102 @@ onMounted(() => {
   font-style: italic;
 }
 
+/* Pagination Styles */
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding: 16px 0;
+  border-top: 1px solid #e0e0e0;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.pagination-info {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pagination-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #374151;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--color-buttonsec);
+  border-color: var(--color-buttonsec);
+  color: var(--color-text);
+  transform: translateY(-1px);
+}
+
+.pagination-btn.active {
+  background: var(--color-buttonter);
+  border-color: var(--color-buttonter);
+  color: white;
+  font-weight: 600;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f3f4f6;
+}
+
+.pagination-btn i {
+  font-size: 18px;
+}
+
+.pagination-dots {
+  padding: 0 4px;
+  color: #9ca3af;
+  font-weight: 600;
+  user-select: none;
+}
+
+/* Responsive Pagination */
+@media (max-width: 768px) {
+  .pagination-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .pagination-info {
+    text-align: center;
+  }
+
+  .pagination-controls {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .pagination-btn {
+    min-width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+}
+
 :placeholder-shown {
   font-family: 'Inter', Arial, Helvetica, sans-serif;
 }
@@ -1114,11 +1352,11 @@ onMounted(() => {
     min-width: auto;
     max-width: none;
   }
-  
+
   .notification-content {
     padding: 12px 16px;
   }
-  
+
   .notification-content span {
     font-size: 13px;
   }
@@ -1509,29 +1747,29 @@ onMounted(() => {
   .modal-overlay {
     padding: 10px;
   }
-  
+
   .modal-content {
     max-width: none;
   }
-  
+
   .modal-header,
   .modal-body,
   .modal-footer {
     padding: 16px;
   }
-  
+
   .results-summary,
   .final-summary {
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .header-actions {
     flex-direction: column;
     gap: 8px;
     align-items: stretch;
   }
-  
+
   .btn-upload,
   .btn-add {
     width: 100%;

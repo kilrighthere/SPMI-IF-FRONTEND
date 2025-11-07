@@ -169,7 +169,7 @@ export function usePermissions() {
   }
 
   /**
-   * Check if user can access specific mahasiswa data
+   * Check if user can accesgs specific mahasiswa data
    * @param {string} nim - NIM mahasiswa yang ingin diakses
    * @returns {boolean}
    */

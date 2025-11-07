@@ -169,11 +169,11 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
         nilai_akhir: parseFloat(nilaiData.nilai_akhir)
       }
       
-      console.log('Creating nilai with data:', apiData)
+      // console.log('Creating nilai with data:', apiData)
       const response = await addNilaiMk(apiData)
-      console.log('API response:', response)
-      console.log('API response.data:', response.data)
-      console.log('API response.data.success:', response.data?.success)
+      // console.log('API response:', response)
+      // console.log('API response.data:', response.data)
+      // console.log('API response.data.success:', response.data?.success)
       
       // Refresh data after adding - hanya refresh nilai untuk periode yang dipilih
       if (selectedPeriode.value) {
