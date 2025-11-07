@@ -328,7 +328,22 @@ async function loadPeriodeOnly() {
 async function loadNilaiData() {
   console.log('=== loadNilaiData called ===')
   console.log('selectedPeriode:', selectedPeriode.value)
+  console.log('isMahasiswa:', isMahasiswa.value)
 
+  // Untuk mahasiswa, load semua data nilai mereka tanpa filter periode
+  if (isMahasiswa.value && currentUserNim.value) {
+    console.log('Loading all data for mahasiswa with NIM:', currentUserNim.value)
+    const filters = { nim: currentUserNim.value }
+    
+    await Promise.all([
+      nilaiMkStore.fetchNilaiByFilter(filters),
+      mkStore.fetchAllMK(),
+      nilaiMkStore.fetchMahasiswaData(),
+    ])
+    return
+  }
+
+  // Untuk admin/dosen, tetap gunakan filter periode
   if (!selectedPeriode.value) {
     console.log('No periode selected, returning')
     return
@@ -615,7 +630,15 @@ function handleFileUpload(event) {
 
 // Watch untuk perubahan filter mata kuliah
 watch(selectedMataKuliah, async (newValue, oldValue) => {
-  if (selectedPeriode.value && newValue !== oldValue) {
+  // Untuk mahasiswa, tidak perlu selectedPeriode
+  if ((isMahasiswa.value || selectedPeriode.value) && newValue !== oldValue) {
+    await loadNilaiData()
+  }
+})
+
+// Watch untuk perubahan periode (hanya untuk admin/dosen)
+watch(selectedPeriode, async (newValue, oldValue) => {
+  if (!isMahasiswa.value && newValue !== oldValue && newValue) {
     await loadNilaiData()
   }
 })
@@ -632,19 +655,16 @@ onMounted(async () => {
   await loadPeriodeOnly()
   console.log('periodeList after load:', periodeList.value)
 
-  // Jika mahasiswa, otomatis pilih periode terbaru dan load data
+  // Jika mahasiswa, load semua data nilai mereka tanpa filter periode
   if (isMahasiswa.value && currentUserNim.value) {
-    console.log('Loading data for mahasiswa...')
-    // Ambil periode terbaru (diasumsikan sorted descending)
-    if (periodeList.value.length > 0) {
-      const latestPeriode = periodeList.value[0].id_periode
-      console.log('Setting latest periode:', latestPeriode)
-      selectedPeriode.value = latestPeriode
-
-      // Load data untuk periode terbaru
-      await loadNilaiData()
-      console.log('filteredNilaiList after load:', filteredNilaiList.value)
-    }
+    console.log('Loading all data for mahasiswa...')
+    
+    // Load data mahasiswa untuk mendapatkan nama
+    await nilaiMkStore.fetchMahasiswaData()
+    
+    // Load semua data nilai untuk mahasiswa ini (tanpa filter periode)
+    await nilaiMkStore.fetchNilaiByFilter({ nim: currentUserNim.value })
+    console.log('All nilai data for mahasiswa loaded:', nilaiMkStore.nilaiList)
 
     // Load mata kuliah untuk filter
     await mkStore.fetchAllMK()
@@ -660,49 +680,53 @@ onMounted(async () => {
   <div class="nilai-matkul-container">
     <div class="page-header">
       <h1 class="page-title">{{ isMahasiswa ? 'Nilai Mata Kuliah Saya' : 'Nilai Mata Kuliah' }}</h1>
-      <p class="page-subtitle">
-        {{ getCurrentKurikulumName() }}
-        <span v-if="isMahasiswa && currentUserNim" class="nim-badge">
-          NIM: {{ currentUserNim }}
-        </span>
-      </p>
+      <div v-if="isMahasiswa && currentUserNim" class="student-info">
+        <div class="student-details">
+          <p class="student-name">{{ nilaiMkStore.getMahasiswaNama(currentUserNim) }}</p>
+          <p class="student-nim">NIM: {{ currentUserNim }}</p>
+        </div>
+      </div>
+      <p v-else class="page-subtitle">{{ getCurrentKurikulumName() }}</p>
     </div>
 
     <!-- Period & Mata Kuliah Selection -->
     <div class="filter-section">
       <div class="filters-container">
-        <div class="filter-group">
-          <label for="periode" class="filter-label">Periode:</label>
-          <select id="periode" v-model="selectedPeriode" class="filter-select">
-            <option value="">Pilih Periode</option>
-            <option
-              v-for="periode in periodeList"
-              :key="periode.id_periode"
-              :value="periode.id_periode"
-            >
-              {{ periode.id_periode }}
-            </option>
-          </select>
-        </div>
+        <!-- Untuk dosen/admin, tampilkan kedua filter -->
+        <template v-if="!isMahasiswa">
+          <div class="filter-group">
+            <label for="periode" class="filter-label">Periode:</label>
+            <select id="periode" v-model="selectedPeriode" class="filter-select">
+              <option value="">Pilih Periode</option>
+              <option
+                v-for="periode in periodeList"
+                :key="periode.id_periode"
+                :value="periode.id_periode"
+              >
+                {{ periode.id_periode }}
+              </option>
+            </select>
+          </div>
 
-        <div class="filter-group">
-          <label for="matakuliah" class="filter-label">Mata Kuliah:</label>
-          <select
-            id="matakuliah"
-            v-model="selectedMataKuliah"
-            class="filter-select"
-            :disabled="!selectedPeriode"
-          >
-            <option value="">Semua Mata Kuliah</option>
-            <option
-              v-for="mk in availableMataKuliahInPeriode"
-              :key="mk.kode_mk"
-              :value="mk.kode_mk"
+          <div class="filter-group">
+            <label for="matakuliah" class="filter-label">Mata Kuliah:</label>
+            <select
+              id="matakuliah"
+              v-model="selectedMataKuliah"
+              class="filter-select"
+              :disabled="!selectedPeriode"
             >
-              {{ mk.kode_mk }} - {{ mk.nama_mk }}
-            </option>
-          </select>
-        </div>
+              <option value="">Semua Mata Kuliah</option>
+              <option
+                v-for="mk in availableMataKuliahInPeriode"
+                :key="mk.kode_mk"
+                :value="mk.kode_mk"
+              >
+                {{ mk.kode_mk }} - {{ mk.nama_mk }}
+              </option>
+            </select>
+          </div>
+        </template>
       </div>
 
       <!-- Action Button -->
@@ -798,7 +822,7 @@ onMounted(async () => {
                 <th>Mata Kuliah</th>
                 <th v-if="!isMahasiswa">NIM</th>
                 <th v-if="!isMahasiswa">Nama Mahasiswa</th>
-                <th>Periode</th>
+                <th v-if="!isMahasiswa">Periode</th>
                 <th>Nilai Akhir</th>
                 <th>Huruf Mutu</th>
               </tr>
@@ -821,7 +845,7 @@ onMounted(async () => {
                 <td v-if="!isMahasiswa">
                   <span class="nama-mhs">{{ nilaiMkStore.getMahasiswaNama(nilai.nim) }}</span>
                 </td>
-                <td>
+                <td v-if="!isMahasiswa">
                   <span class="periode">{{ nilai.id_periode }}</span>
                 </td>
                 <td>
@@ -1003,15 +1027,34 @@ onMounted(async () => {
   gap: 12px;
 }
 
-.nim-badge {
-  display: inline-block;
-  background-color: #dbeafe;
-  color: #1e40af;
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 14px;
+.student-info {
+  margin-top: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #a6d600 0%, #d5ff5f 100%);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(166, 214, 0, 0.2);
+}
+
+.student-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.student-name {
+  font-size: 18px;
   font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.student-nim {
+  font-size: 14px;
+  color: #2c3e50;
+  margin: 0;
   font-family: 'Monaco', 'Menlo', monospace;
+  font-weight: 500;
+  opacity: 0.8;
 }
 
 .filter-section {
@@ -1231,9 +1274,43 @@ onMounted(async () => {
   border-bottom: 1px solid #e2e8f0;
 }
 
+/* Alignment khusus untuk kolom tertentu */
+.nilai-table th:nth-last-child(-n+2) {
+  text-align: center;
+}
+
+/* Lebar kolom yang spesifik */
+.nilai-table th:first-child,
+.nilai-table td:first-child {
+  width: 60px;
+  text-align: center;
+}
+
+.nilai-table th:nth-last-child(2),
+.nilai-table td:nth-last-child(2) {
+  width: 100px;
+}
+
+.nilai-table th:last-child,
+.nilai-table td:last-child {
+  width: 100px;
+}
+
 .nilai-table td {
   padding: 12px 16px;
   border-bottom: 1px solid #f1f5f9;
+}
+
+/* Alignment khusus untuk kolom nilai akhir dan huruf mutu */
+.nilai-table td:nth-last-child(-n+2) {
+  text-align: center;
+}
+
+/* Kolom No juga center */
+.nilai-table td:first-child {
+  text-align: center;
+  font-weight: 600;
+  color: #6b7280;
 }
 
 .nilai-table tbody tr:hover {
@@ -1263,16 +1340,20 @@ onMounted(async () => {
 .nilai-akhir {
   font-weight: 600;
   color: #1f2937;
+  font-size: 14px;
+  display: inline-block;
+  min-width: 60px;
 }
 
 .huruf-mutu {
   display: inline-block;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 6px 12px;
+  border-radius: 6px;
   font-weight: 600;
   font-size: 12px;
   text-align: center;
-  min-width: 32px;
+  min-width: 40px;
+  letter-spacing: 0.5px;
 }
 
 .huruf-a {
