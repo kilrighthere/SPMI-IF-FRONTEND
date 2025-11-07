@@ -277,9 +277,7 @@ onMounted(async () => {
 <style scoped>
 .section-box {
   background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
 }
 
 .section-header {
@@ -288,12 +286,13 @@ onMounted(async () => {
   align-items: center;
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 2px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .section-box h3 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
+  margin-bottom: 0;
   color: var(--color-text);
   font-family: 'Montserrat', sans-serif;
 }
@@ -306,24 +305,33 @@ onMounted(async () => {
   color: #6b7280;
   margin-bottom: 20px;
   line-height: 1.6;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .cpl-sndikti-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   margin-top: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
   font-family: 'Montserrat', sans-serif;
 }
 
-.cpl-sndikti-table th {
+.cpl-sndikti-table thead {
   background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+}
+
+.cpl-sndikti-table th {
   color: var(--color-text);
   font-weight: 700;
-  padding: 14px 12px;
+  padding: 16px 14px;
   text-align: left;
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  border-bottom: none;
 }
 
 .cpl-sndikti-table th.aksi-title {
@@ -331,10 +339,24 @@ onMounted(async () => {
 }
 
 .cpl-sndikti-table td {
-  padding: 14px 12px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 16px 14px;
+  border-bottom: 1px solid #f3f4f6;
   color: #4b5563;
   font-size: 14px;
+}
+
+.cpl-sndikti-table tbody tr {
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.cpl-sndikti-table tbody tr:hover {
+  background: #faffec;
+  transform: scale(1.001);
+}
+
+.cpl-sndikti-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .sn-id {
@@ -349,7 +371,7 @@ onMounted(async () => {
 
 .aspek-badge {
   display: inline-block;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
@@ -377,7 +399,7 @@ onMounted(async () => {
 }
 
 .desk-item {
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .cpl-id {
@@ -396,51 +418,48 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 6px 12px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
+  transition: all 0.25s ease;
+  border: 1.5px solid;
   font-family: 'Montserrat', sans-serif;
 }
 
 .btn-edit {
-  background: white;
-  color: var(--color-button);
-  border: 1.5px solid var(--color-button);
+  background: var(--color-buttonsec);
+  color: var(--color-text);
+  border-color: var(--color-buttonsec);
 }
 
 .btn-edit:hover {
   background: var(--color-button);
   color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  border-color: var(--color-button);
+  transform: translateY(-1px);
 }
 
 .btn-delete {
   background: white;
-  color: #dc2626;
-  border: 1.5px solid #dc2626;
+  color: #ef4444;
+  border-color: #fca5a5;
 }
 
 .btn-delete:hover {
-  background: #dc2626;
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
-}
-
-.cpl-sndikti-table tr:hover {
-  background-color: #faffec;
+  background: var(--color-buttonsec);
+  color: var(--color-text);
+  border-color: var(--color-buttonsec);
+  transform: translateY(-1px);
 }
 
 .error-text {
-  color: #dc2626;
+  color: #ef4444;
   font-size: 12px;
-  margin-top: 4px;
+  margin-top: 6px;
   display: block;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .loading {
@@ -448,25 +467,27 @@ onMounted(async () => {
   padding: 40px;
   color: #6b7280;
   font-size: 16px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .error-message {
   background-color: #fee2e2;
   border: 1px solid #fecaca;
-  color: #dc2626;
+  color: #b91c1c;
   padding: 12px 16px;
   border-radius: 8px;
   margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .btn-close {
   background: none;
   border: none;
-  color: #dc2626;
-  font-size: 24px;
+  color: #ef4444;
+  font-size: 22px;
   font-weight: 700;
   cursor: pointer;
   padding: 0;
@@ -476,19 +497,21 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  border-radius: 4px;
 }
 
 .btn-close:hover {
-  color: #991b1b;
+  background: rgba(239, 68, 68, 0.1);
   transform: scale(1.1);
 }
 
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
+  padding: 40px;
   color: #9ca3af;
   font-style: italic;
   font-size: 16px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 /* Form Styles */
@@ -497,6 +520,7 @@ onMounted(async () => {
   padding: 20px;
   border-radius: 10px;
   margin-bottom: 24px;
+  border: 1px solid #e5e7eb;
 }
 
 .form-group {
@@ -507,16 +531,17 @@ onMounted(async () => {
   display: block;
   margin-bottom: 8px;
   font-weight: 600;
-  color: var(--color-text);
+  color: #374151;
   font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 10px 12px;
-  border: 1.5px solid #d1d5db;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
   border-radius: 8px;
   font-size: 14px;
   font-family: 'Montserrat', sans-serif;
@@ -528,17 +553,17 @@ onMounted(async () => {
 .form-group textarea:focus {
   outline: none;
   border-color: var(--color-button);
-  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+  box-shadow: 0 0 0 3px rgba(116, 183, 8, 0.1);
 }
 
 .form-group input:disabled {
-  background: #e5e7eb;
+  background: #f3f4f6;
   cursor: not-allowed;
 }
 
 .form-group textarea {
   resize: vertical;
-  min-height: 80px;
+  min-height: 90px;
 }
 
 .form-actions {
@@ -550,46 +575,49 @@ onMounted(async () => {
 .btn-add,
 .btn-save,
 .btn-cancel {
-  padding: 10px 20px;
+  padding: 8px 16px;
   border-radius: 8px;
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
+  transition: all 0.25s ease;
+  border: 1.5px solid;
   font-family: 'Montserrat', sans-serif;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .btn-add {
   background: var(--color-button);
   color: white;
-  border: 1.5px solid var(--color-button);
+  border-color: var(--color-button);
 }
 
 .btn-add:hover {
   background: var(--color-button-hover);
+  border-color: var(--color-button-hover);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 .btn-save {
   background: var(--color-button);
   color: white;
+  border-color: var(--color-button);
 }
 
 .btn-save:hover {
   background: var(--color-button-hover);
+  border-color: var(--color-button-hover);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 .btn-cancel {
   background: white;
   color: #6b7280;
-  border: 1.5px solid #d1d5db;
+  border-color: #d1d5db;
 }
 
 .btn-cancel:hover {
@@ -622,7 +650,7 @@ onMounted(async () => {
 
   .cpl-sndikti-table th,
   .cpl-sndikti-table td {
-    padding: 10px 8px;
+    padding: 12px 10px;
   }
 }
 </style>

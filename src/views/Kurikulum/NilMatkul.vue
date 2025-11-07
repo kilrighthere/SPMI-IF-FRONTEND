@@ -334,7 +334,7 @@ async function loadNilaiData() {
   if (isMahasiswa.value && currentUserNim.value) {
     console.log('Loading all data for mahasiswa with NIM:', currentUserNim.value)
     const filters = { nim: currentUserNim.value }
-    
+
     await Promise.all([
       nilaiMkStore.fetchNilaiByFilter(filters),
       mkStore.fetchAllMK(),
@@ -658,10 +658,10 @@ onMounted(async () => {
   // Jika mahasiswa, load semua data nilai mereka tanpa filter periode
   if (isMahasiswa.value && currentUserNim.value) {
     console.log('Loading all data for mahasiswa...')
-    
+
     // Load data mahasiswa untuk mendapatkan nama
     await nilaiMkStore.fetchMahasiswaData()
-    
+
     // Load semua data nilai untuk mahasiswa ini (tanpa filter periode)
     await nilaiMkStore.fetchNilaiByFilter({ nim: currentUserNim.value })
     console.log('All nilai data for mahasiswa loaded:', nilaiMkStore.nilaiList)
@@ -795,7 +795,11 @@ onMounted(async () => {
       <!-- Data Table -->
       <div class="table-container">
         <div class="table-header">
-          <h2>{{ isMahasiswa ? 'Daftar Nilai Mata Kuliah' : `Daftar Nilai - Periode ${selectedPeriode}` }}</h2>
+          <h2>
+            {{
+              isMahasiswa ? 'Daftar Nilai Mata Kuliah' : `Daftar Nilai - Periode ${selectedPeriode}`
+            }}
+          </h2>
           <div class="table-info">
             <span class="total-items">Total: {{ filteredNilaiList.length }} data nilai</span>
           </div>
@@ -1138,24 +1142,32 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  background-color: #4caf50;
+  padding: 8px 16px;
+  background-color: var(--color-button);
   color: white;
-  border: none;
-  border-radius: 6px;
+  border: 1.5px solid var(--color-button);
+  border-radius: 8px;
   font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.25s ease;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #45a049;
+  background: var(--color-buttonsec);
+  color: var(--color-text);
+  border-color: var(--color-buttonsec);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(166, 214, 0, 0.3);
 }
 
 .btn-primary:disabled {
-  background-color: #cccccc;
+  background-color: #e5e7eb;
+  border-color: #e5e7eb;
+  color: #9ca3af;
   cursor: not-allowed;
   opacity: 0.6;
+  transform: none;
 }
 
 .loading-container,
@@ -1262,20 +1274,31 @@ onMounted(async () => {
 
 .nilai-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.nilai-table thead {
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
 }
 
 .nilai-table th {
-  background-color: #f8fafc;
-  padding: 12px 16px;
+  padding: 16px 14px;
   text-align: left;
-  font-weight: 600;
-  color: #374151;
-  border-bottom: 1px solid #e2e8f0;
+  font-weight: 700;
+  color: var(--color-text);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: none;
 }
 
 /* Alignment khusus untuk kolom tertentu */
-.nilai-table th:nth-last-child(-n+2) {
+.nilai-table th:nth-last-child(-n + 2) {
   text-align: center;
 }
 
@@ -1297,12 +1320,12 @@ onMounted(async () => {
 }
 
 .nilai-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 16px 14px;
+  border-bottom: 1px solid #f3f4f6;
 }
 
 /* Alignment khusus untuk kolom nilai akhir dan huruf mutu */
-.nilai-table td:nth-last-child(-n+2) {
+.nilai-table td:nth-last-child(-n + 2) {
   text-align: center;
 }
 
@@ -1313,8 +1336,18 @@ onMounted(async () => {
   color: #6b7280;
 }
 
+.nilai-table tbody tr {
+  background: white;
+  transition: all 0.2s ease;
+}
+
 .nilai-table tbody tr:hover {
-  background-color: #f8fafc;
+  background: #faffec;
+  transform: scale(1.001);
+}
+
+.nilai-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .kode-mk {

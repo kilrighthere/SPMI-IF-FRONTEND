@@ -7,12 +7,16 @@
 
     <!-- Action Button -->
     <div class="action-section" v-if="isAdmin">
-      <button 
+      <button
         v-if="canManageKurikulumMk"
-        @click="openAddModal" 
+        @click="openAddModal"
         class="btn-primary"
         :disabled="availableMataKuliah.length === 0"
-        :title="availableMataKuliah.length === 0 ? 'Semua mata kuliah sudah ditambahkan' : 'Tambah mata kuliah baru'"
+        :title="
+          availableMataKuliah.length === 0
+            ? 'Semua mata kuliah sudah ditambahkan'
+            : 'Tambah mata kuliah baru'
+        "
       >
         <i class="ri-add-line"></i>
         Tambah Mata Kuliah
@@ -45,14 +49,18 @@
         <i class="ri-file-list-3-line"></i>
         <h3>Belum ada mata kuliah</h3>
         <p>Kurikulum ini belum memiliki mata kuliah</p>
-        <button 
+        <button
           v-if="canManageKurikulumMk"
-          @click="openAddModal" 
+          @click="openAddModal"
           class="btn-primary"
           :disabled="availableMataKuliah.length === 0"
         >
           <i class="ri-add-line"></i>
-          {{ availableMataKuliah.length === 0 ? 'Tidak ada mata kuliah tersedia' : 'Tambah Mata Kuliah Pertama' }}
+          {{
+            availableMataKuliah.length === 0
+              ? 'Tidak ada mata kuliah tersedia'
+              : 'Tambah Mata Kuliah Pertama'
+          }}
         </button>
       </div>
 
@@ -69,7 +77,10 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item, index) in paginatedKurikulumMk" :key="`${item.id_kurikulum}-${item.kode_mk}`">
+            <tr
+              v-for="(item, index) in paginatedKurikulumMk"
+              :key="`${item.id_kurikulum}-${item.kode_mk}`"
+            >
               <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
               <td>
                 <code class="kode-mk">{{ item.kode_mk }}</code>
@@ -84,17 +95,17 @@
                 <span class="semester-badge">Semester {{ item.semester }}</span>
               </td>
               <td class="actions" v-if="isAdmin">
-                <button 
+                <button
                   v-if="canManageKurikulumMk"
-                  @click="openEditModal(item)" 
+                  @click="openEditModal(item)"
                   class="btn-action btn-edit"
                   title="Edit"
                 >
                   <i class="ri-edit-line"></i>
                 </button>
-                <button 
+                <button
                   v-if="canManageKurikulumMk"
-                  @click="confirmDelete(item)" 
+                  @click="confirmDelete(item)"
                   class="btn-action btn-delete"
                   title="Hapus"
                 >
@@ -109,35 +120,27 @@
       <!-- Pagination -->
       <div v-if="totalPages > 1" class="pagination-container">
         <div class="pagination-info">
-          Menampilkan {{ (currentPage - 1) * itemsPerPage + 1 }} - 
-          {{ Math.min(currentPage * itemsPerPage, filteredKurikulumMk.length) }} 
+          Menampilkan {{ (currentPage - 1) * itemsPerPage + 1 }} -
+          {{ Math.min(currentPage * itemsPerPage, filteredKurikulumMk.length) }}
           dari {{ filteredKurikulumMk.length }} data
         </div>
         <div class="pagination">
-          <button 
-            @click="currentPage = 1" 
-            :disabled="currentPage === 1"
-            class="pagination-btn"
-          >
+          <button @click="currentPage = 1" :disabled="currentPage === 1" class="pagination-btn">
             <i class="ri-skip-back-line"></i>
           </button>
-          <button 
-            @click="currentPage--" 
-            :disabled="currentPage === 1"
-            class="pagination-btn"
-          >
+          <button @click="currentPage--" :disabled="currentPage === 1" class="pagination-btn">
             <i class="ri-arrow-left-line"></i>
           </button>
           <span class="pagination-current">{{ currentPage }} / {{ totalPages }}</span>
-          <button 
-            @click="currentPage++" 
+          <button
+            @click="currentPage++"
             :disabled="currentPage === totalPages"
             class="pagination-btn"
           >
             <i class="ri-arrow-right-line"></i>
           </button>
-          <button 
-            @click="currentPage = totalPages" 
+          <button
+            @click="currentPage = totalPages"
             :disabled="currentPage === totalPages"
             class="pagination-btn"
           >
@@ -160,8 +163,8 @@
         <form @submit.prevent="submitForm" class="modal-form">
           <div class="form-group">
             <label for="kurikulum" class="form-label">Kurikulum</label>
-            <input 
-              id="kurikulum" 
+            <input
+              id="kurikulum"
               :value="getCurrentKurikulumName()"
               class="form-input"
               disabled
@@ -172,19 +175,15 @@
 
           <div class="form-group">
             <label for="mata-kuliah" class="form-label">Mata Kuliah *</label>
-            <select 
-              id="mata-kuliah" 
-              v-model="formData.kode_mk" 
+            <select
+              id="mata-kuliah"
+              v-model="formData.kode_mk"
               :disabled="isEditing"
               class="form-select"
               required
             >
               <option value="">Pilih Mata Kuliah</option>
-              <option 
-                v-for="mk in availableMataKuliah" 
-                :key="mk.kode_mk" 
-                :value="mk.kode_mk"
-              >
+              <option v-for="mk in availableMataKuliah" :key="mk.kode_mk" :value="mk.kode_mk">
                 {{ mk.kode_mk }} - {{ mk.nama_mk }}
               </option>
             </select>
@@ -196,11 +195,11 @@
           <div class="form-row">
             <div class="form-group">
               <label for="sks" class="form-label">SKS *</label>
-              <input 
-                id="sks" 
-                v-model.number="formData.sks" 
-                type="number" 
-                min="1" 
+              <input
+                id="sks"
+                v-model.number="formData.sks"
+                type="number"
+                min="1"
                 max="6"
                 class="form-input"
                 placeholder="Masukkan SKS"
@@ -210,24 +209,15 @@
 
             <div class="form-group">
               <label for="semester" class="form-label">Semester *</label>
-              <select 
-                id="semester" 
-                v-model.number="formData.semester" 
-                class="form-select"
-                required
-              >
+              <select id="semester" v-model.number="formData.semester" class="form-select" required>
                 <option value="">Pilih Semester</option>
-                <option v-for="sem in 8" :key="sem" :value="sem">
-                  Semester {{ sem }}
-                </option>
+                <option v-for="sem in 8" :key="sem" :value="sem">Semester {{ sem }}</option>
               </select>
             </div>
           </div>
 
           <div class="form-actions">
-            <button type="button" @click="closeModal" class="btn-secondary">
-              Batal
-            </button>
+            <button type="button" @click="closeModal" class="btn-secondary">Batal</button>
             <button type="submit" class="btn-primary" :disabled="kurikulumMkStore.loading">
               <i class="ri-save-line"></i>
               {{ isEditing ? 'Simpan Perubahan' : 'Tambah Mata Kuliah' }}
@@ -253,16 +243,17 @@
             <p>Apakah Anda yakin ingin menghapus mata kuliah ini dari kurikulum?</p>
             <div class="delete-details">
               <strong>{{ getMataKuliahName(itemToDelete?.kode_mk) }}</strong>
-              <br>
-              <small>Kurikulum: {{ itemToDelete?.id_kurikulum }} | {{ itemToDelete?.sks }} SKS | Semester {{ itemToDelete?.semester }}</small>
+              <br />
+              <small
+                >Kurikulum: {{ itemToDelete?.id_kurikulum }} | {{ itemToDelete?.sks }} SKS |
+                Semester {{ itemToDelete?.semester }}</small
+              >
             </div>
           </div>
         </div>
 
         <div class="form-actions">
-          <button @click="closeDeleteModal" class="btn-secondary">
-            Batal
-          </button>
+          <button @click="closeDeleteModal" class="btn-secondary">Batal</button>
           <button @click="deleteItem" class="btn-danger" :disabled="kurikulumMkStore.loading">
             <i class="ri-delete-bin-line"></i>
             Hapus
@@ -306,7 +297,7 @@ const formData = ref({
   id_kurikulum: '',
   kode_mk: '',
   sks: null,
-  semester: null
+  semester: null,
 })
 
 const originalFormData = ref({})
@@ -334,17 +325,17 @@ const availableMataKuliah = computed(() => {
   if (!mataKuliahStore.mataKuliahList || !filteredKurikulumMk.value) {
     return []
   }
-  
+
   // Get all mata kuliah that are already in this kurikulum
-  const usedKodeMk = filteredKurikulumMk.value.map(item => item.kode_mk)
-  
+  const usedKodeMk = filteredKurikulumMk.value.map((item) => item.kode_mk)
+
   // Filter mata kuliah that haven't been added to this kurikulum
-  return mataKuliahStore.mataKuliahList.filter(mk => !usedKodeMk.includes(mk.kode_mk))
+  return mataKuliahStore.mataKuliahList.filter((mk) => !usedKodeMk.includes(mk.kode_mk))
 })
 
 // Methods
 function getMataKuliahName(kodeMk) {
-  const mk = mataKuliahStore.mataKuliahList.find(item => item.kode_mk === kodeMk)
+  const mk = mataKuliahStore.mataKuliahList.find((item) => item.kode_mk === kodeMk)
   // Debug: log data for troubleshooting
   if (!mk) {
     console.log('Mata kuliah tidak ditemukan untuk kode:', kodeMk)
@@ -354,8 +345,12 @@ function getMataKuliahName(kodeMk) {
 }
 
 function getCurrentKurikulumName() {
-  const kurikulum = kurikulumStore.kurikulumList.find(item => item.id_kurikulum === selectedKurikulum.value)
-  return kurikulum ? `${kurikulum.nama_kurikulum} (${kurikulum.id_kurikulum})` : `Kurikulum ${selectedKurikulum.value}`
+  const kurikulum = kurikulumStore.kurikulumList.find(
+    (item) => item.id_kurikulum === selectedKurikulum.value,
+  )
+  return kurikulum
+    ? `${kurikulum.nama_kurikulum} (${kurikulum.id_kurikulum})`
+    : `Kurikulum ${selectedKurikulum.value}`
 }
 
 function openAddModal() {
@@ -364,13 +359,13 @@ function openAddModal() {
     alert('Semua mata kuliah sudah ditambahkan ke kurikulum ini')
     return
   }
-  
+
   isEditing.value = false
   formData.value = {
     id_kurikulum: selectedKurikulum.value || '',
     kode_mk: '',
     sks: null,
-    semester: null
+    semester: null,
   }
   showModal.value = true
 }
@@ -389,7 +384,7 @@ function closeModal() {
     id_kurikulum: '',
     kode_mk: '',
     sks: null,
-    semester: null
+    semester: null,
   }
   originalFormData.value = {}
 }
@@ -410,14 +405,14 @@ async function submitForm() {
       // Untuk edit, kita perlu ID unik - biasanya kombinasi id_kurikulum dan kode_mk
       const id = `${originalFormData.value.id_kurikulum}_${originalFormData.value.kode_mk}`
       const result = await kurikulumMkStore.editKurikulumMk(id, formData.value)
-      
+
       if (result.success) {
         closeModal()
         // Refresh data jika diperlukan
       }
     } else {
       const result = await kurikulumMkStore.addKurikulumMk(formData.value)
-      
+
       if (result.success) {
         closeModal()
         // Reset filter jika menambah ke kurikulum yang berbeda
@@ -436,7 +431,7 @@ async function deleteItem() {
     // ID unik berdasarkan kombinasi id_kurikulum dan kode_mk
     const id = `${itemToDelete.value.id_kurikulum}_${itemToDelete.value.kode_mk}`
     const result = await kurikulumMkStore.removeKurikulumMk(id)
-    
+
     if (result.success) {
       closeDeleteModal()
     }
@@ -449,16 +444,19 @@ async function loadData() {
   await Promise.all([
     kurikulumMkStore.fetchKurikulumMk(),
     kurikulumStore.fetchAllKurikulum(),
-    mataKuliahStore.fetchAllMK()
+    mataKuliahStore.fetchAllMK(),
   ])
 }
 
 // Watch for page changes when filtering
-watch(() => filteredKurikulumMk.value.length, () => {
-  if (currentPage.value > totalPages.value && totalPages.value > 0) {
-    currentPage.value = totalPages.value
-  }
-})
+watch(
+  () => filteredKurikulumMk.value.length,
+  () => {
+    if (currentPage.value > totalPages.value && totalPages.value > 0) {
+      currentPage.value = totalPages.value
+    }
+  },
+)
 
 // Lifecycle
 onMounted(() => {
@@ -497,33 +495,38 @@ onMounted(() => {
   margin-bottom: 24px;
 }
 
-
-
 .btn-primary {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 6px;
+  padding: 8px 16px;
+  background-color: var(--color-button);
+  color: var(--color-text);
+  border: 1.5px solid var(--color-button);
+  border-radius: 8px;
   font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.25s ease;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #45a049;
+  background: var(--color-button-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 .btn-primary:disabled {
-  background-color: #cccccc;
+  background-color: #e5e7eb;
+  border-color: #e5e7eb;
+  color: #9ca3af;
   cursor: not-allowed;
   opacity: 0.6;
+  transform: none;
 }
 
-.loading-container, .error-container {
+.loading-container,
+.error-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -543,8 +546,12 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error-container i {
@@ -627,27 +634,45 @@ onMounted(() => {
 
 .data-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.data-table thead {
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
 }
 
 .data-table th,
 .data-table td {
   padding: 16px;
   text-align: left;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid #f3f4f6;
 }
 
 .data-table th {
-  background-color: #f8fafc;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text);
-  font-size: 14px;
+  font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.data-table tr:hover {
-  background-color: #f8fafc;
+.data-table tbody tr {
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.data-table tbody tr:hover {
+  background: #faffec;
+  transform: scale(1.001);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .kurikulum-badge {
@@ -707,30 +732,37 @@ onMounted(() => {
   width: 32px;
   height: 32px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .btn-edit {
-  background-color: #e0f2fe;
-  color: #0277bd;
+  background-color: var(--color-buttonsec);
+  color: var(--color-text);
 }
 
 .btn-edit:hover {
-  background-color: #b3e5fc;
+  background-color: var(--color-button);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 .btn-delete {
-  background-color: #ffebee;
-  color: #d32f2f;
+  background-color: #fee2e2;
+  color: #dc2626;
 }
 
 .btn-delete:hover {
-  background-color: #ffcdd2;
+  background-color: var(--color-buttonsec);
+  color: var(--color-text);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(166, 214, 0, 0.3);
 }
 
 .pagination-container {

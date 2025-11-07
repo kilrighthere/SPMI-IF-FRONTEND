@@ -897,24 +897,25 @@ onMounted(() => {
 
 <style scoped>
 .section-box {
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 20px;
-  background-color: #fff;
+  background: white;
+  border-radius: 10px;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .section-box h3 {
   font-size: 18px;
-  font-weight: bold;
+  font-weight: 700;
   margin-bottom: 0;
-  color: var(--color-button);
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
 }
 
 .mahasiswa-content {
@@ -923,27 +924,42 @@ onMounted(() => {
 
 .mahasiswa-table {
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
-  border: 1px solid #ddd;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.mahasiswa-table thead {
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
 }
 
 .mahasiswa-table th {
-  padding: 12px;
-  background-color: #f5f5f5;
-  font-weight: 600;
-  border: 1px solid #ddd;
+  padding: 16px 14px;
+  color: var(--color-text);
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: none;
   text-align: center;
 }
 
 .mahasiswa-table td {
-  padding: 12px;
-  border: 1px solid #ddd;
-  vertical-align: top;
+  padding: 16px 14px;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+  color: #4b5563;
+  font-size: 14px;
 }
 
 .mahasiswa-table .text-center {
   text-align: center;
+  font-weight: 600;
+  color: #6b7280;
 }
 
 .mahasiswa-table .action-button {
@@ -951,8 +967,18 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.mahasiswa-table tr:hover {
-  background-color: #f9f9f9;
+.mahasiswa-table tbody tr {
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.mahasiswa-table tbody tr:hover {
+  background: #faffec;
+  transform: scale(1.001);
+}
+
+.mahasiswa-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .form-container {

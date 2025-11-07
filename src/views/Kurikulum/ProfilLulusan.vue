@@ -211,24 +211,25 @@ onMounted(async () => {
 
 <style scoped>
 .section-box {
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 20px;
-  background-color: #fff;
+  background: white;
+  border-radius: 10px;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .section-box h3 {
   font-size: 18px;
-  font-weight: bold;
+  font-weight: 700;
   margin-bottom: 0;
-  color: var(--color-button);
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
 }
 
 .pl-content {
@@ -236,185 +237,263 @@ onMounted(async () => {
 }
 
 .pl-content p {
-  margin-bottom: 15px;
+  margin-bottom: 16px;
+  color: #6b7280;
+  font-family: 'Montserrat', sans-serif;
 }
-
-/* Tidak digunakan - sebelumnya untuk tampilan list
-.pl-list {
-  list-style-type: none;
-  padding-left: 0;
-  margin-bottom: 15px;
-} */
 
 .pl-table {
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
-  border: 1px solid #ddd;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.pl-table thead {
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
 }
 
 .pl-table th {
-  padding: 12px;
-  background-color: #f5f5f5;
-  font-weight: 600;
-  border: 1px solid #ddd;
+  padding: 16px 14px;
+  color: var(--color-text);
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: none;
   text-align: center;
 }
 
 .pl-table td {
-  padding: 12px;
-  border: 1px solid #ddd;
+  padding: 16px 14px;
+  border-bottom: 1px solid #f3f4f6;
   vertical-align: top;
+  color: #4b5563;
+  font-size: 14px;
 }
 
 .pl-table .pl-id {
   text-align: left;
-  width: 100px; /* Lebar tetap untuk kolom ID */
-  white-space: nowrap;
+  font-weight: 700;
+  color: var(--color-button);
+  width: 120px;
 }
 
 .pl-table .desk-item {
   text-align: left;
-  max-width: 60%; /* Membatasi lebar kolom deskripsi */
+  line-height: 1.6;
 }
 
 .pl-table .action-button {
   text-align: center;
-  width: 150px; /* Lebar tetap untuk kolom aksi */
+  width: 180px;
   white-space: nowrap;
 }
 
-.pl-table tr:hover {
-  background-color: #f9f9f9;
+.pl-table tbody tr {
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.pl-table tbody tr:hover {
+  background: #faffec;
+  transform: scale(1.001);
+}
+
+.pl-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .error-text {
-  color: var(--color-button);
-  font-size: 14px;
-  margin-top: 3px;
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 6px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 :placeholder-shown {
-  font-family: 'Inter', Arial, Helvetica, sans-serif;
+  font-family: 'Montserrat', sans-serif;
 }
 
 textarea {
-  font-family: 'Inter', Arial, Helvetica, sans-serif;
+  font-family: 'Montserrat', sans-serif;
 }
 
-/* Tidak digunakan - duplikat dengan tr:hover atau class lama untuk list
-.pl-item:hover {
-  background-color: #f9f9f9;
-} */
-
-/* Tidak digunakan - class diganti dengan action-button (singular)
-.action-buttons {
-  display: flex;
-  gap: 8px;
-} */
-
+/* Form Styles */
 .form-container {
-  background-color: #f9f9f9;
-  padding: 15px;
-  border-radius: 4px;
-  margin-bottom: 20px;
+  background: #f9fafb;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  border: 1px solid #e5e7eb;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 16px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 5px;
-  font-weight: 500;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .form-group input,
 .form-group textarea {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.form-group input.input-error,
+.form-group textarea.input-error {
+  border-color: #ef4444;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--color-button);
+  box-shadow: 0 0 0 3px rgba(116, 183, 8, 0.1);
 }
 
 .form-group textarea {
   min-height: 100px;
+  resize: vertical;
 }
 
 .form-actions {
   display: flex;
   gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-add,
+.btn-save,
+.btn-edit,
+.btn-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1.5px solid;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .btn-add {
-  background-color: var(--color-buttonsec);
-  color: var(--color-text);
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
+  background: var(--color-button);
+  color: white;
+  border-color: var(--color-button);
+}
+
+.btn-add:hover {
+  background: var(--color-button-hover);
+  border-color: var(--color-button-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 .btn-save {
-  background-color: var(--color-buttonter);
+  background: var(--color-button);
   color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
+  border-color: var(--color-button);
 }
 
-/* Tidak digunakan - tombol cancel dikomentari di template
-.btn-cancel {
-  background-color:var(--color-button);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-} */
+.btn-save:hover {
+  background: var(--color-button-hover);
+  border-color: var(--color-button-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
+}
 
 .btn-edit {
-  background-color: var(--color-buttonsec);
+  background: var(--color-buttonsec);
   color: var(--color-text);
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  margin-right: 5px;
+  border-color: var(--color-buttonsec);
+  padding: 6px 12px;
+  font-size: 13px;
+  margin-right: 6px;
+}
+
+.btn-edit:hover {
+  background: var(--color-button);
+  color: white;
+  border-color: var(--color-button);
 }
 
 .btn-delete {
-  background-color: var(--color-button);
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
+  background: white;
+  color: #ef4444;
+  border-color: #fca5a5;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.btn-delete:hover {
+  background: var(--color-buttonsec);
+  color: var(--color-text);
+  border-color: var(--color-buttonsec);
 }
 
 .loading {
   text-align: center;
-  padding: 20px;
-  color: #666;
+  padding: 40px;
+  color: #6b7280;
+  font-size: 16px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .error-message {
-  color: var(--color-button);
-  padding: 10px;
-  background-color: #ffebee;
-  border-radius: 4px;
-  margin-bottom: 15px;
+  color: #b91c1c;
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .empty-state {
   text-align: center;
-  padding: 20px;
-  color: #666;
+  padding: 40px;
+  color: #9ca3af;
   font-style: italic;
+  font-size: 16px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+@media (max-width: 768px) {
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .pl-table {
+    font-size: 13px;
+  }
+
+  .pl-table th,
+  .pl-table td {
+    padding: 12px 10px;
+  }
 }
 </style>

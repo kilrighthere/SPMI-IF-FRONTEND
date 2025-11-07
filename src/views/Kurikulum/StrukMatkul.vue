@@ -291,11 +291,9 @@ onMounted(async () => {
 }
 
 .section-box {
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 20px;
-  background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   margin-bottom: 20px;
 }
 
@@ -303,22 +301,26 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .section-box h3 {
   font-size: 18px;
-  font-weight: bold;
+  font-weight: 700;
   margin-bottom: 0;
-  color: var(--color-button);
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
 }
 
 .section-box h4 {
   font-size: 16px;
-  font-weight: bold;
+  font-weight: 700;
   margin-top: 20px;
   margin-bottom: 10px;
-  color: var(--color-button);
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
   display: flex;
   align-items: center;
 }
@@ -326,6 +328,7 @@ onMounted(async () => {
 .struktur-content p {
   margin-bottom: 20px;
   line-height: 1.6;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .action-bar {
@@ -349,23 +352,40 @@ onMounted(async () => {
 }
 
 .search-input {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 10px 16px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
   width: 250px;
   font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  transition: all 0.25s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-button);
+  box-shadow: 0 0 0 3px rgba(116, 183, 8, 0.1);
 }
 
 .btn-add {
-  background-color: #4caf50;
-  color: white;
-  border: none;
+  background-color: var(--color-button);
+  color: var(--color-text);
+  border: 1.5px solid var(--color-button);
   padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
+  transition: all 0.25s ease;
+}
+
+.btn-add:hover {
+  background: var(--color-button-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 .btn-add i {
@@ -374,24 +394,46 @@ onMounted(async () => {
 
 .mk-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   margin-top: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .mk-table th,
 .mk-table td {
-  padding: 12px;
+  padding: 16px 14px;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.mk-table thead {
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
 }
 
 .mk-table th {
-  background-color: #f5f5f5;
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--color-text);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.mk-table tr:hover {
-  background-color: #f9f9f9;
+.mk-table tbody tr {
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.mk-table tbody tr:hover {
+  background: #faffec;
+  transform: scale(1.001);
+}
+
+.mk-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .btn-edit,
@@ -404,56 +446,72 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  transition: all 0.25s ease;
 }
 
 .btn-edit {
-  color: #2196f3;
+  color: var(--color-text);
+  background-color: var(--color-buttonsec);
 }
 
 .btn-edit:hover {
-  background-color: #e3f2fd;
+  background-color: var(--color-button);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 .btn-delete {
-  color: #f44336;
+  color: #dc2626;
+  background-color: #fee2e2;
 }
 
 .btn-delete:hover {
-  background-color: #ffebee;
+  background-color: var(--color-buttonsec);
+  color: var(--color-text);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(166, 214, 0, 0.3);
 }
 
 .loading {
   text-align: center;
   padding: 20px;
-  color: #666;
+  color: #6b7280;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
 }
 
 .error-message {
-  color: #f44336;
-  padding: 10px;
-  background-color: #ffebee;
-  border-radius: 4px;
-  margin-bottom: 15px;
+  color: #dc2626;
+  padding: 12px 16px;
+  background-color: #fee2e2;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
 }
 
 .success-message {
-  color: #4caf50;
-  padding: 10px;
-  background-color: #e8f5e9;
-  border-radius: 4px;
-  margin-bottom: 15px;
+  color: #16a34a;
+  padding: 12px 16px;
+  background-color: #dcfce7;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
 }
 
 .empty-state {
   text-align: center;
-  padding: 20px;
-  color: #666;
+  padding: 32px 20px;
+  color: #6b7280;
   font-style: italic;
-  background-color: #f9f9f9;
-  border-radius: 4px;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 /* Modal styles */
@@ -472,15 +530,15 @@ onMounted(async () => {
 
 .modal-content {
   background-color: white;
-  border-radius: 8px;
+  border-radius: 10px;
   width: 500px;
   max-width: 90%;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .modal-header {
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -489,64 +547,105 @@ onMounted(async () => {
 .modal-header h3 {
   margin: 0;
   font-size: 18px;
-  color: var(--color-button);
+  font-weight: 700;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
 }
 
 .close-button {
   background: none;
   border: none;
-  font-size: 22px;
+  font-size: 24px;
   cursor: pointer;
-  color: #666;
+  color: #6b7280;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.close-button:hover {
+  background-color: #f3f4f6;
+  color: var(--color-text);
 }
 
 .modal-body {
-  padding: 20px;
+  padding: 24px;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 5px;
-  font-weight: 500;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
 }
 
 .form-input {
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 10px 14px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
   font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
   resize: vertical;
+  transition: all 0.25s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-button);
+  box-shadow: 0 0 0 3px rgba(116, 183, 8, 0.1);
 }
 
 .modal-footer {
-  padding: 15px 20px;
-  border-top: 1px solid #eee;
+  padding: 20px 24px;
+  border-top: 1px solid #e5e7eb;
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
 }
 
 .btn-cancel {
-  background-color: #f5f5f5;
-  color: #333;
-  border: none;
+  background-color: transparent;
+  color: var(--color-text);
+  border: 1.5px solid #e5e7eb;
   padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
+  font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
+  transition: all 0.25s ease;
+}
+
+.btn-cancel:hover {
+  background-color: #f3f4f6;
 }
 
 .btn-save {
-  background-color: #4caf50;
-  color: white;
-  border: none;
+  background-color: var(--color-button);
+  color: var(--color-text);
+  border: 1.5px solid var(--color-button);
   padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
+  font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
+  transition: all 0.25s ease;
+}
+
+.btn-save:hover {
+  background: var(--color-button-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 /* Responsive adjustments */
@@ -575,9 +674,10 @@ onMounted(async () => {
 
 .form-help {
   display: block;
-  margin-top: 4px;
+  margin-top: 6px;
   font-size: 12px;
   color: #6b7280;
   font-style: italic;
+  font-family: 'Montserrat', sans-serif;
 }
 </style>

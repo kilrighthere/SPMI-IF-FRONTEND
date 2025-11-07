@@ -224,24 +224,25 @@ onMounted(async () => {
 
 <style scoped>
 .section-box {
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 20px;
-  background-color: #fff;
+  background: white;
+  border-radius: 10px;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .section-box h3 {
   font-size: 18px;
-  font-weight: bold;
+  font-weight: 700;
   margin-bottom: 0;
-  color: var(--color-button);
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
 }
 
 .cpmk-content {
@@ -249,41 +250,52 @@ onMounted(async () => {
 }
 
 .cpmk-content p {
-  margin-bottom: 15px;
+  margin-bottom: 16px;
+  color: #6b7280;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .cpmk-list {
   list-style-type: none;
   padding-left: 0;
-  margin-bottom: 15px;
+  margin-bottom: 16px;
 }
 
 .cpmk-item {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 12px;
-  margin-bottom: 10px;
-  border: 1px solid #eee;
-  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: white;
+  transition: all 0.2s ease;
 }
 
 .cpmk-item:hover {
-  background-color: #f9f9f9;
+  background: #faffec;
+  border-color: var(--color-buttonsec);
+  transform: scale(1.001);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .cpmk-cpl {
-  margin-top: 5px;
+  margin-top: 8px;
   font-size: 0.9em;
-  color: #666;
+  color: #6b7280;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .cpl-tag {
   display: inline-block;
-  background-color: #e3f2fd;
-  padding: 2px 6px;
-  border-radius: 4px;
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  color: #0c4a6e;
+  padding: 4px 10px;
+  border-radius: 6px;
   font-size: 0.85em;
+  font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .cpmk-actions {
@@ -292,106 +304,187 @@ onMounted(async () => {
 }
 
 .form-container {
-  background-color: #f9f9f9;
-  padding: 15px;
-  border-radius: 4px;
-  margin-bottom: 20px;
+  background: #f9fafb;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  border: 1px solid #e5e7eb;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 16px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 5px;
-  font-weight: 500;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .form-group input,
 .form-group textarea,
 .form-group select {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--color-button);
+  box-shadow: 0 0 0 3px rgba(116, 183, 8, 0.1);
 }
 
 .form-group textarea {
   min-height: 100px;
+  resize: vertical;
 }
 
 .form-actions {
   display: flex;
   gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-add,
+.btn-save,
+.btn-cancel,
+.btn-edit,
+.btn-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1.5px solid;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .btn-add {
-  background-color: var(--color-button);
+  background: var(--color-button);
   color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
+  border-color: var(--color-button);
+}
+
+.btn-add:hover {
+  background: var(--color-buttonsec);
+  color: var(--color-text);
+  border-color: var(--color-buttonsec);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(166, 214, 0, 0.3);
 }
 
 .btn-save {
-  background-color: #4caf50;
+  background: var(--color-button);
   color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
+  border-color: var(--color-button);
+}
+
+.btn-save:hover {
+  background: var(--color-buttonsec);
+  color: var(--color-text);
+  border-color: var(--color-buttonsec);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(166, 214, 0, 0.3);
 }
 
 .btn-cancel {
-  background-color: #f44336;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
+  background: white;
+  color: #ef4444;
+  border-color: #fca5a5;
+}
+
+.btn-cancel:hover {
+  background: var(--color-buttonsec);
+  color: var(--color-text);
+  border-color: var(--color-buttonsec);
 }
 
 .btn-edit {
-  background-color: #2196f3;
+  background: var(--color-buttonsec);
+  color: var(--color-text);
+  border-color: var(--color-buttonsec);
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.btn-edit:hover {
+  background: var(--color-button);
   color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
+  border-color: var(--color-button);
 }
 
 .btn-delete {
-  background-color: #f44336;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
+  background: white;
+  color: #ef4444;
+  border-color: #fca5a5;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.btn-delete:hover {
+  background: var(--color-buttonsec);
+  color: var(--color-text);
+  border-color: var(--color-buttonsec);
 }
 
 .loading {
   text-align: center;
-  padding: 20px;
-  color: #666;
+  padding: 40px;
+  color: #6b7280;
+  font-size: 16px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .error-message {
-  color: #f44336;
-  padding: 10px;
-  background-color: #ffebee;
-  border-radius: 4px;
-  margin-bottom: 15px;
+  color: #b91c1c;
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .empty-state {
   text-align: center;
-  padding: 20px;
-  color: #666;
+  padding: 40px;
+  color: #9ca3af;
   font-style: italic;
+  font-size: 16px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+@media (max-width: 768px) {
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .cpmk-item {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .cpmk-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 </style>
