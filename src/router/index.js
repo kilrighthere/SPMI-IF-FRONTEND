@@ -16,6 +16,7 @@ import KurikulumMk from '@/views/Kurikulum/KurikulumMk.vue'
 import UkurCPL from '@/views/Kurikulum/UkurCPL.vue'
 import BahanKajian from '@/views/Kurikulum/BahanKajian.vue'
 import KorelasiCPLPL from '@/views/Kurikulum/KorelasiCPLPL.vue'
+import CpmkMk from '@/views/Kurikulum/CpmkMk.vue'
 import Mahasiswa from '@/views/Kurikulum/Mahasiswa.vue'
 
 const routes = [
@@ -72,6 +73,11 @@ const routes = [
         path: 'bahan-kajian',
         component: BahanKajian,
         meta: { title: 'Bahan Kajian', requiresAuth: true, roles: ['admin', 'dosen'] },
+      },
+      {
+        path: 'cpmk-mk',
+        component: CpmkMk,
+        meta: { title: 'Korelasi CPMK vs MK', requiresAuth: true, roles: ['admin', 'dosen'] },
       },
       {
         path: 'struktur-matkul',

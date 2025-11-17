@@ -287,6 +287,7 @@ export const deleteCplBk = (id_cpl, id_bk) => api.delete(`/delete/cpl-bk/${id_cp
 // CPMK-MK
 export const addCpmkMk = (data) => api.post('/add/cpmk-mk', data)
 export const getCpmkMkList = () => api.get('/list/cpmk-mk')
+export const updateCpmkMk = (id_cpmk, id_mk, data) => api.put(`/update/cpmk-mk/${id_cpmk}/${id_mk}`, data)
 export const deleteCpmkMk = (id_cpmk, id_mk) => api.delete(`/delete/cpmk-mk/${id_cpmk}/${id_mk}`)
 
 // Auth

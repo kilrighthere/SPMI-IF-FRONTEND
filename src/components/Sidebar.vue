@@ -116,6 +116,14 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
               <span class="submenu-title" v-show="!sidebarStore.isMinimized">Bahan Kajian</span>
             </RouterLink>
             <RouterLink
+              :to="`/kurikulum/${kurikulumId}/cpmk-mk`"
+              class="menu-kurikulum"
+              :title="sidebarStore.isMinimized ? 'Korelasi CPMK MK' : ''"
+            >
+              <i class="ri-links-line"></i>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPMK MK</span>
+            </RouterLink>
+            <RouterLink
               :to="`/kurikulum/${kurikulumId}/struktur-matkul`"
               class="menu-kurikulum"
               :title="sidebarStore.isMinimized ? 'Struktur Mata Kuliah' : ''"
