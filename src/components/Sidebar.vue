@@ -97,7 +97,7 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
               :title="sidebarStore.isMinimized ? 'Korelasi CPL-PL' : ''"
             >
               <i class="ri-table-line"></i>
-              <span class="submenu-title" v-show="!sidebarStore.isMinimized">Korelasi CPL-PL</span>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPL-PL</span>
             </RouterLink>
             <RouterLink
               :to="`/kurikulum/${kurikulumId}/cpmk`"
@@ -116,12 +116,28 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
               <span class="submenu-title" v-show="!sidebarStore.isMinimized">Bahan Kajian</span>
             </RouterLink>
             <RouterLink
+              :to="`/kurikulum/${kurikulumId}/cpl-bk`"
+              class="menu-kurikulum"
+              :title="sidebarStore.isMinimized ? 'Korelasi CPL vs BK' : ''"
+            >
+              <i class="ri-node-tree"></i>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPL-BK</span>
+            </RouterLink>
+            <RouterLink
               :to="`/kurikulum/${kurikulumId}/cpmk-mk`"
               class="menu-kurikulum"
               :title="sidebarStore.isMinimized ? 'Korelasi CPMK MK' : ''"
             >
               <i class="ri-links-line"></i>
               <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPMK MK</span>
+            </RouterLink>
+            <RouterLink
+              :to="`/kurikulum/${kurikulumId}/bk-mk`"
+              class="menu-kurikulum"
+              :title="sidebarStore.isMinimized ? 'Korelasi BK vs MK' : ''"
+            >
+              <i class="ri-database-2-line"></i>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized">BK MK</span>
             </RouterLink>
             <RouterLink
               :to="`/kurikulum/${kurikulumId}/struktur-matkul`"

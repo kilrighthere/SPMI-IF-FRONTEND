@@ -110,7 +110,7 @@ export const updatePL = (id, data) => api.put(`/update/pl/${id}`, data)
 export const deletePL = (id) => api.delete(`/delete/pl/${id}`)
 
 // CPL (Capaian Pembelajaran Lulusan)
-export const getCPLList = () => api.get('/list/cpl')
+export const getCPLList = (id_kurikulum) => id_kurikulum ? api.get(`/kurikulum/${id_kurikulum}/cpl`) : api.get('/list/cpl')
 export const getCPLById = (id) => api.get(`/view/cpl/${id}`)
 export const addCPL = (data) => api.post('/add/cpl', data)
 export const updateCPL = (id, data) => api.put(`/update/cpl/${id}`, data)
@@ -136,6 +136,12 @@ export const getRPSById = (id) => api.get(`/view/rps/${id}`)
 export const addRPS = (data) => api.post('/add/rps', data)
 export const updateRPS = (id, data) => api.put(`/update/rps/${id}`, data)
 export const deleteRPS = (id) => api.delete(`/delete/rps/${id}`)
+
+// CPL-BK
+export const addCplBk = (data) => api.post('/add/cpl-bk', data)
+export const deleteCplBk = (id_cpl, id_bk) => api.delete(`/delete/cpl-bk/${id_cpl}/${id_bk}`)
+export const getCplBkList = () => api.get('/list/cpl-bk')
+export const updateCplBk = (data) => api.put('/update/cpl-bk', data)
 
 // CPL-PL
 // Tambahkan handling fallback untuk endpoint CPL-PL yang belum diimplementasi di backend
@@ -240,7 +246,7 @@ export const updateKurikulumMk = (id, data) => api.put(`/update/kurikulum-mk/${i
 export const deleteKurikulumMk = (id) => api.delete(`/delete/kurikulum-mk/${id}`)
 
 // BK
-export const getBKList = () => api.get('/list/bk')
+export const getBKList = (id_kurikulum) => id_kurikulum ? api.get(`/kurikulum/${id_kurikulum}/bk`) : api.get('/list/bk')
 export const getBKById = (id) => api.get(`/view/bk/${id}`)
 export const addBK = (data) => api.post('/add/bk', data)
 export const updateBK = (id, data) => api.put(`/update/bk/${id}`, data)
@@ -278,11 +284,6 @@ export const getPeriodeList = () => api.get('/list/periode')
 export const addBkMk = (data) => api.post('/add/bk-mk', data)
 export const getBkMkList = () => api.get('/list/bk-mk')
 export const deleteBkMk = (id_bk, id_mk) => api.delete(`/delete/bk-mk/${id_bk}/${id_mk}`)
-
-// CPL-BK
-export const addCplBk = (data) => api.post('/add/cpl-bk', data)
-export const getCplBkList = () => api.get('/list/cpl-bk')
-export const deleteCplBk = (id_cpl, id_bk) => api.delete(`/delete/cpl-bk/${id_cpl}/${id_bk}`)
 
 // CPMK-MK
 export const addCpmkMk = (data) => api.post('/add/cpmk-mk', data)
@@ -385,10 +386,11 @@ export default {
   addBkMk,
   getBkMkList,
   deleteBkMk,
-  addCplBk,
   getCplBkList,
+  addCplBk,
+  updateCplBk,
   deleteCplBk,
   addCpmkMk,
   getCpmkMkList,
   deleteCpmkMk,
-}
+};
