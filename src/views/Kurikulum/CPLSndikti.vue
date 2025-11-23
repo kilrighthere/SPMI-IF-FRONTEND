@@ -157,7 +157,11 @@ onMounted(async () => {
     <div id="form-section" class="section-box">
       <div class="section-header">
         <h3>CPL SNDIKTI (Standar Nasional Pendidikan Tinggi)</h3>
-        <button class="btn-add" @click="showForm ? resetForm() : (showForm = true)" v-if="isAdmin">
+        <button
+          class="btn-add"
+          @click="showForm ? resetForm() : (showForm = true)"
+          v-if="can('cplSndikti', 'create')"
+        >
           {{ showForm ? 'Batal' : 'Tambah CPL SNDIKTI' }}
         </button>
       </div>
@@ -240,7 +244,7 @@ onMounted(async () => {
               <th width="15%">Aspek</th>
               <th width="45%">Deskripsi</th>
               <th width="10%">CPL Terkait</th>
-              <th width="20%" class="aksi-title" v-if="isAdmin">Aksi</th>
+              <th width="20%" class="aksi-title" v-if="can('cplSndikti', 'edit')">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -256,7 +260,7 @@ onMounted(async () => {
               </td>
               <td class="desk-item">{{ item.deskripsi }}</td>
               <td class="cpl-id">{{ item.id_cpl }}</td>
-              <td class="action-buttons" v-if="isAdmin">
+              <td class="action-buttons" v-if="can('cplSndikti', 'edit')">
                 <button class="action-button btn-edit" @click="editCplSndikti(item)">
                   <i class="ri-edit-line"></i>
                   Edit

@@ -6,7 +6,7 @@
     </div>
 
     <!-- Action Button -->
-    <div class="action-section" v-if="isAdmin">
+    <div class="action-section" v-if="can('kurikulumMk', 'create')">
       <button
         v-if="canManageKurikulumMk"
         @click="openAddModal"
@@ -73,7 +73,7 @@
               <th>Nama Mata Kuliah</th>
               <th>SKS</th>
               <th>Semester</th>
-              <th class="actions-column" v-if="isAdmin">Aksi</th>
+              <th class="actions-column" v-if="can('kurikulumMk', 'edit')">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -94,7 +94,7 @@
               <td>
                 <span class="semester-badge">Semester {{ item.semester }}</span>
               </td>
-              <td class="actions" v-if="isAdmin">
+              <td class="actions" v-if="can('kurikulumMk', 'edit')">
                 <button
                   v-if="canManageKurikulumMk"
                   @click="openEditModal(item)"
@@ -281,7 +281,7 @@ const kurikulumMkStore = useKurikulumMkStore()
 const kurikulumStore = useKurikulumStore()
 const mataKuliahStore = useMKStore()
 const auth = useAuthStore()
-const { canManageKurikulumMk, isAdmin } = usePermissions()
+const { canManageKurikulumMk, isAdmin, can } = usePermissions()
 
 // State - Ambil kurikulum ID dari route params
 const selectedKurikulum = ref(route.params.id || '')

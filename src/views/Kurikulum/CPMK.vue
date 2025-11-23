@@ -156,7 +156,7 @@ onMounted(async () => {
     <div class="section-box">
       <div class="section-header">
         <h3>Capaian Pembelajaran Mata Kuliah (CPMK)</h3>
-        <button class="btn-add" @click="showForm = !showForm" v-if="isAdmin">
+        <button class="btn-add" @click="showForm = !showForm" v-if="can('cpmk', 'create')">
           {{ showForm ? 'Batal' : 'Tambah CPMK' }}
         </button>
       </div>
@@ -211,7 +211,7 @@ onMounted(async () => {
                 <span class="cpl-tag">CPL: {{ getCPLName(cpmk.id_cpl) }}</span>
               </div>
             </div>
-            <div class="cpmk-actions" v-if="isAdmin">
+            <div class="cpmk-actions" v-if="can('cpmk', 'edit')">
               <button class="btn-edit" @click="editCPMK(cpmk)">Edit</button>
               <button class="btn-delete" @click="removeCPMK(cpmk.id_cpmk)">Hapus</button>
             </div>

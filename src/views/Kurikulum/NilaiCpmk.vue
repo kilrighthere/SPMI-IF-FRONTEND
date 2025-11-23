@@ -66,7 +66,7 @@
         </div>
       </div>
 
-      <div v-if="canManageKurikulumMk" class="filter-actions">
+      <div v-if="can('nilaiCpmk', 'create')" class="filter-actions">
         <button class="btn-add" @click="openAddModal" :disabled="!selectedPeriode">
           <i class="ri-add-line"></i>
           Tambah Nilai CPMK
@@ -365,7 +365,7 @@ const formData = ref({ id_periode: '', kode_mk: '', id_mk_periode: '', nilaiMap:
 const cpmkMkStore = useCpmkMkStore()
 const mkStore = useMKStore()
 const mahasiswaStore = useMahasiswaStore()
-const { canManageKurikulumMk } = usePermissions()
+const { canManageKurikulumMk, can } = usePermissions()
 
 const mahasiswaSuggestions = ref([])
 const showMahasiswaDropdown = ref(false)

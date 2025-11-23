@@ -198,7 +198,7 @@ onMounted(async () => {
             </div>
           </div>
 
-          <button class="btn-add" @click="openAddModal" v-if="isAdmin">
+          <button class="btn-add" @click="openAddModal" v-if="can('strukturMatkul', 'create')">
             <i class="ri-add-line"></i> Tambah Mata Kuliah
           </button>
         </div>
@@ -210,14 +210,14 @@ onMounted(async () => {
               <tr>
                 <th>Kode</th>
                 <th>Nama Mata Kuliah</th>
-                <th v-if="isAdmin">Aksi</th>
+                <th v-if="can('strukturMatkul', 'edit')">Aksi</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="mk in filteredMataKuliah" :key="mk.id">
                 <td>{{ mk.kode_mk }}</td>
                 <td>{{ mk.nama_mk }}</td>
-                <td v-if="isAdmin">
+                <td v-if="can('strukturMatkul', 'edit')">
                   <button class="btn-edit" @click="openEditModal(mk)">
                     <i class="ri-edit-line"></i>
                   </button>

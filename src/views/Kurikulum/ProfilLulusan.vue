@@ -131,7 +131,11 @@ onMounted(async () => {
     <div id="form-section" class="section-box">
       <div class="section-header">
         <h3>Profil Lulusan Program Studi</h3>
-        <button class="btn-add" @click="showForm ? resetForm() : (showForm = true)" v-if="isAdmin">
+        <button
+          class="btn-add"
+          @click="showForm ? resetForm() : (showForm = true)"
+          v-if="can('profilLulusan', 'create')"
+        >
           {{ showForm ? 'Batal' : 'Tambah Profil Lulusan' }}
         </button>
       </div>
@@ -190,14 +194,14 @@ onMounted(async () => {
             <tr>
               <th width="15%">ID PL</th>
               <th width="65%">Deskripsi</th>
-              <th width="20%" class="aksi-title" v-if="isAdmin">Aksi</th>
+              <th width="20%" class="aksi-title" v-if="can('profilLulusan', 'edit')">Aksi</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="profil in profilLulusan" :key="profil.id_pl" class="pl-item">
               <td class="pl-id">{{ profil.id_pl }}</td>
               <td class="desk-item">{{ profil.deskripsi }}</td>
-              <td class="action-button" v-if="isAdmin">
+              <td class="action-button" v-if="can('profilLulusan', 'edit')">
                 <button class="btn-edit" @click="editPL(profil)">Edit</button>
                 <button class="btn-delete" @click="removePL(profil.id_pl)">Hapus</button>
               </td>

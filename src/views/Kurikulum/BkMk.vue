@@ -2,8 +2,8 @@
   <div class="bk-mk-container">
     <div class="section-box">
       <div class="section-header">
-        <h3>Korelasi Bahan Kajian dengan Mata Kuliah</h3>
-        <button class="btn-add" @click="showForm = !showForm" v-if="isAdmin">
+        <h3>Korelasi Bahan Kajian (BK) - Mata Kuliah (MK)</h3>
+        <button class="btn-add" @click="showForm = !showForm" v-if="can('bkMk', 'create')">
           {{ showForm ? 'Batal' : 'Tambah Korelasi' }}
         </button>
       </div>
@@ -42,9 +42,7 @@
 
       <!-- Data Table -->
       <div v-if="!isLoading">
-        <p>
-          Halaman ini menampilkan korelasi antara Bahan Kajian (BK) dan Mata Kuliah (MK).
-        </p>
+        <p>Halaman ini menampilkan korelasi antara Bahan Kajian (BK) dan Mata Kuliah (MK).</p>
         <div v-if="itemsList.length === 0" class="empty-state">Belum ada data korelasi.</div>
         <table v-else class="data-table">
           <thead>
@@ -53,7 +51,7 @@
               <th>Nama Bahan Kajian</th>
               <th>Kode MK</th>
               <th>Nama Mata Kuliah</th>
-              <th v-if="isAdmin">Aksi</th>
+              <th v-if="can('bkMk', 'edit')">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -62,8 +60,10 @@
               <td>{{ item.bk.nama }}</td>
               <td>{{ item.mk.kode_mk }}</td>
               <td>{{ item.mk.nama_mk }}</td>
-              <td class="action-buttons" v-if="isAdmin">
-                <button class="btn-delete" @click="removeData(item.id_bk, item.id_mk)">Hapus</button>
+              <td class="action-buttons" v-if="can('bkMk', 'edit')">
+                <button class="btn-delete" @click="removeData(item.id_bk, item.id_mk)">
+                  Hapus
+                </button>
               </td>
             </tr>
           </tbody>
@@ -79,7 +79,7 @@ import { useBkMkStore } from '@/stores/bkMk'
 import { usePermissions } from '@/composables/usePermissions'
 
 const store = useBkMkStore()
-const { isAdmin } = usePermissions()
+const { can } = usePermissions()
 
 // Use the new computed property from the store
 const itemsList = computed(() => store.itemsWithDetails)
@@ -225,7 +225,9 @@ onMounted(fetchData)
 .action-buttons {
   text-align: right;
 }
-.btn-add, .btn-save, .btn-delete {
+.btn-add,
+.btn-save,
+.btn-delete {
   padding: 8px 16px;
   border: none;
   border-radius: 8px;
@@ -258,13 +260,15 @@ onMounted(fetchData)
   background: #ef4444;
   color: white;
 }
-.loading, .empty-state {
+.loading,
+.empty-state {
   text-align: center;
   padding: 40px;
   color: #6b7280;
   font-size: 16px;
 }
-.error-message, .success-message {
+.error-message,
+.success-message {
   padding: 12px 16px;
   border-radius: 8px;
   margin: 20px 0;

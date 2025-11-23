@@ -90,7 +90,7 @@ onMounted(async () => {
     <div class="section-box">
       <div class="section-header">
         <h3>Capaian Pembelajaran Lulusan (CPL) Program Studi</h3>
-        <button v-if="isAdmin" class="btn-add" @click="showForm = !showForm">
+        <button v-if="can('cplProdi', 'create')" class="btn-add" @click="showForm = !showForm">
           {{ showForm ? 'Batal' : 'Tambah CPL' }}
         </button>
       </div>
@@ -134,14 +134,14 @@ onMounted(async () => {
             <tr>
               <th>ID CPL</th>
               <th>Deskripsi</th>
-              <th v-if="isAdmin">Aksi</th>
+              <th v-if="can('cplProdi', 'edit')">Aksi</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="cpl in cplList" :key="cpl.id_cpl">
               <td>{{ cpl.id_cpl }}</td>
               <td>{{ cpl.deskripsi }}</td>
-              <td class="action-buttons" v-if="isAdmin">
+              <td class="action-buttons" v-if="can('cplProdi', 'edit')">
                 <button class="btn-edit" @click="editCPL(cpl)">Edit</button>
                 <button class="btn-delete" @click="removeCPL(cpl.id_cpl)">Hapus</button>
               </td>

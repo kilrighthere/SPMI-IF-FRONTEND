@@ -52,7 +52,11 @@ const routes = [
       {
         path: 'profil-lulusan',
         component: ProfilLulusan,
-        meta: { title: 'Profil Lulusan', requiresAuth: true, roles: ['admin', 'dosen', 'mahasiswa'] },
+        meta: {
+          title: 'Profil Lulusan',
+          requiresAuth: true,
+          roles: ['admin', 'dosen', 'mahasiswa'],
+        },
       },
       {
         path: 'cpl-prodi',
@@ -62,47 +66,71 @@ const routes = [
       {
         path: 'cpl-sndikti',
         component: CPLSndikti,
-        meta: { title: 'CPL SNDIKTI', requiresAuth: true, roles: ['admin', 'dosen'] },
+        meta: { title: 'CPL SNDIKTI', requiresAuth: true, roles: ['admin', 'dosen', 'mahasiswa'] },
       },
       {
         path: 'korelasi-cpl-pl',
         component: KorelasiCPLPL,
-        meta: { title: 'Korelasi CPL-PL', requiresAuth: true, roles: ['admin', 'dosen'] },
+        meta: {
+          title: 'Korelasi CPL-PL',
+          requiresAuth: true,
+          roles: ['admin', 'dosen', 'mahasiswa'],
+        },
       },
       {
         path: 'cpmk',
         component: CPMK,
-        meta: { title: 'CPMK', requiresAuth: true, roles: ['admin', 'dosen'] },
+        meta: { title: 'CPMK', requiresAuth: true, roles: ['admin', 'dosen', 'mahasiswa'] },
       },
       {
         path: 'bahan-kajian',
         component: BahanKajian,
-        meta: { title: 'Bahan Kajian', requiresAuth: true, roles: ['admin', 'dosen'] },
+        meta: { title: 'Bahan Kajian', requiresAuth: true, roles: ['admin', 'dosen', 'mahasiswa'] },
       },
       {
         path: 'cpl-bk',
         component: CPLBk,
-        meta: { title: 'Korelasi CPL vs BK', requiresAuth: true, roles: ['admin', 'dosen'] },
+        meta: {
+          title: 'Korelasi CPL vs BK',
+          requiresAuth: true,
+          roles: ['admin', 'dosen', 'mahasiswa'],
+        },
       },
       {
         path: 'cpmk-mk',
         component: CpmkMk,
-        meta: { title: 'Korelasi CPMK vs MK', requiresAuth: true, roles: ['admin', 'dosen'] },
+        meta: {
+          title: 'Korelasi CPMK vs MK',
+          requiresAuth: true,
+          roles: ['admin', 'dosen', 'mahasiswa'],
+        },
       },
       {
         path: 'bk-mk',
         component: BkMk,
-        meta: { title: 'Korelasi BK vs MK', requiresAuth: true, roles: ['admin', 'dosen'] },
+        meta: {
+          title: 'Korelasi BK vs MK',
+          requiresAuth: true,
+          roles: ['admin', 'dosen', 'mahasiswa'],
+        },
       },
       {
         path: 'struktur-matkul',
         component: StrukMatkul,
-        meta: { title: 'Struktur Mata Kuliah', requiresAuth: true, roles: ['admin', 'dosen'] },
+        meta: {
+          title: 'Struktur Mata Kuliah',
+          requiresAuth: true,
+          roles: ['admin', 'dosen', 'mahasiswa'],
+        },
       },
       {
         path: 'kurikulum-mk',
         component: KurikulumMk,
-        meta: { title: 'Kurikulum Mata Kuliah', requiresAuth: true, roles: ['admin', 'dosen'] },
+        meta: {
+          title: 'Kurikulum Mata Kuliah',
+          requiresAuth: true,
+          roles: ['admin', 'dosen', 'mahasiswa'],
+        },
       },
       {
         path: 'rps',
@@ -112,7 +140,11 @@ const routes = [
       {
         path: 'nilai-matkul',
         component: NilMatkul,
-        meta: { title: 'Nilai Mata Kuliah', requiresAuth: true, roles: ['admin', 'dosen', 'mahasiswa'] },
+        meta: {
+          title: 'Nilai Mata Kuliah',
+          requiresAuth: true,
+          roles: ['admin', 'dosen', 'mahasiswa'],
+        },
       },
       {
         path: 'nilai-cpmk',
@@ -128,7 +160,11 @@ const routes = [
         path: 'nilai-matkul/:kodeMk',
         component: DetailNilaiMatkul,
         name: 'DetailNilaiMatkul',
-        meta: { title: 'Detail Nilai Mata Kuliah', requiresAuth: true, roles: ['admin', 'dosen', 'mahasiswa'] },
+        meta: {
+          title: 'Detail Nilai Mata Kuliah',
+          requiresAuth: true,
+          roles: ['admin', 'dosen', 'mahasiswa'],
+        },
       },
       {
         path: 'ukur-cpl',

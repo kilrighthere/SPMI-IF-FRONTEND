@@ -5,9 +5,10 @@ import { useAuthStore } from '@/stores/auth'
  * Composable untuk mengelola permission berdasarkan role
  *
  * Role hierarchy:
- * - admin: Akses penuh ke semua menu dan submenu
- * - dosen: Akses untuk mengisi nilai forward dan backward (per-CPL)
- * - mahasiswa: Akses untuk melihat grafik nilai akhir (per-CPL) milik sendiri
+ * - ADMIN: Bisa MELIHAT dan MENGEDIT seluruh hal
+ * - DOSEN: Dapat MENGUBAH seluruh hal seputar PENILAIAN saja, sisanya hanya MELIHAT
+ * - MAHASISWA: Hanya dapat MELIHAT kurikulum, profil lulusan, CPL prodi, CPL sndikti, CPL PL,
+ *              CPMK, bahan kajian, mata kuliah, CPL BK, CPMK MK, kurikulum MK, dan NILAI MILIK DIRINYA SENDIRI
  */
 export function usePermissions() {
   const auth = useAuthStore()
@@ -36,7 +37,7 @@ export function usePermissions() {
 
     // Kurikulum Management
     kurikulum: {
-      view: isAdmin.value || isDosen.value,
+      view: true, // Semua bisa lihat
       create: isAdmin.value,
       edit: isAdmin.value,
       delete: isAdmin.value,
@@ -44,7 +45,7 @@ export function usePermissions() {
 
     // Profil Lulusan
     profilLulusan: {
-      view: isAdmin.value || isDosen.value,
+      view: true, // Semua bisa lihat (mahasiswa, dosen, admin)
       create: isAdmin.value,
       edit: isAdmin.value,
       delete: isAdmin.value,
@@ -52,7 +53,7 @@ export function usePermissions() {
 
     // CPL Prodi
     cplProdi: {
-      view: isAdmin.value || isDosen.value,
+      view: true, // Semua bisa lihat (mahasiswa, dosen, admin)
       create: isAdmin.value,
       edit: isAdmin.value,
       delete: isAdmin.value,
@@ -60,7 +61,7 @@ export function usePermissions() {
 
     // CPL SNDIKTI
     cplSndikti: {
-      view: isAdmin.value || isDosen.value,
+      view: true, // Semua bisa lihat (mahasiswa, dosen, admin)
       create: isAdmin.value,
       edit: isAdmin.value,
       delete: isAdmin.value,
@@ -68,7 +69,7 @@ export function usePermissions() {
 
     // Korelasi CPL-PL
     korelasiCplPl: {
-      view: isAdmin.value || isDosen.value,
+      view: true, // Semua bisa lihat (mahasiswa, dosen, admin)
       create: isAdmin.value,
       edit: isAdmin.value,
       delete: isAdmin.value,
@@ -76,7 +77,7 @@ export function usePermissions() {
 
     // CPMK
     cpmk: {
-      view: isAdmin.value || isDosen.value,
+      view: true, // Semua bisa lihat (mahasiswa, dosen, admin)
       create: isAdmin.value,
       edit: isAdmin.value,
       delete: isAdmin.value,
@@ -84,15 +85,15 @@ export function usePermissions() {
 
     // Bahan Kajian
     bahanKajian: {
-      view: isAdmin.value || isDosen.value,
+      view: true, // Semua bisa lihat (mahasiswa, dosen, admin)
       create: isAdmin.value,
       edit: isAdmin.value,
       delete: isAdmin.value,
     },
 
-    // Struktur Mata Kuliah
+    // Mata Kuliah / Struktur Mata Kuliah
     strukturMatkul: {
-      view: isAdmin.value || isDosen.value,
+      view: true, // Semua bisa lihat (mahasiswa, dosen, admin)
       create: isAdmin.value,
       edit: isAdmin.value,
       delete: isAdmin.value,
@@ -100,37 +101,83 @@ export function usePermissions() {
 
     // Kurikulum Mata Kuliah
     kurikulumMk: {
-      view: isAdmin.value || isDosen.value,
-      create: isAdmin.value || isDosen.value, // Dosen bisa manage mata kuliah
+      view: true, // Semua bisa lihat (mahasiswa, dosen, admin)
+      create: isAdmin.value, // Hanya admin
+      edit: isAdmin.value, // Hanya admin
+      delete: isAdmin.value,
+    },
+
+    // CPL BK (Korelasi CPL vs Bahan Kajian)
+    cplBk: {
+      view: true, // Semua bisa lihat (mahasiswa, dosen, admin)
+      create: isAdmin.value,
+      edit: isAdmin.value,
+      delete: isAdmin.value,
+    },
+
+    // CPMK MK (Korelasi CPMK vs Mata Kuliah)
+    cpmkMk: {
+      view: true, // Semua bisa lihat (mahasiswa, dosen, admin)
+      create: isAdmin.value,
+      edit: isAdmin.value,
+      delete: isAdmin.value,
+    },
+
+    // BK MK (Korelasi BK vs Mata Kuliah)
+    bkMk: {
+      view: true, // Semua bisa lihat (mahasiswa, dosen, admin)
+      create: isAdmin.value,
       edit: isAdmin.value,
       delete: isAdmin.value,
     },
 
     // RPS
     rps: {
-      view: isAdmin.value || isDosen.value,
+      view: isAdmin.value || isDosen.value, // Mahasiswa tidak bisa lihat RPS
       create: isAdmin.value,
       edit: isAdmin.value,
       delete: isAdmin.value,
     },
 
-    // Nilai Mata Kuliah
+    // MK Periode
+    mkPeriode: {
+      view: isAdmin.value || isDosen.value, // Mahasiswa tidak bisa lihat
+      create: isAdmin.value,
+      edit: isAdmin.value,
+      delete: isAdmin.value,
+    },
+
+    // Nilai Mata Kuliah - PENILAIAN (Dosen bisa edit)
     nilaiMatkul: {
-      view: isAdmin.value || isDosen.value,
+      view: true, // Semua bisa lihat (mahasiswa hanya milik sendiri)
+      viewOwn: isMahasiswa.value, // Mahasiswa hanya lihat nilai sendiri
+      viewAll: isAdmin.value || isDosen.value, // Admin & dosen bisa lihat semua
       create: isAdmin.value || isDosen.value, // Dosen bisa input nilai
       edit: isAdmin.value || isDosen.value, // Dosen bisa edit nilai
+      delete: isAdmin.value, // Hanya admin bisa delete
+    },
+
+    // Nilai CPMK - PENILAIAN (Dosen bisa edit)
+    nilaiCpmk: {
+      view: isAdmin.value || isDosen.value, // Mahasiswa tidak bisa lihat nilai CPMK
+      create: isAdmin.value || isDosen.value, // Dosen bisa input nilai CPMK
+      edit: isAdmin.value || isDosen.value, // Dosen bisa edit nilai CPMK
       delete: isAdmin.value,
-      // Dosen bisa mengisi nilai forward dan backward (per-CPL)
-      inputNilaiForward: isDosen.value || isAdmin.value,
-      inputNilaiBackward: isDosen.value || isAdmin.value,
+    },
+
+    // Bobot CPMK - PENILAIAN (Dosen bisa edit)
+    bobotCpmk: {
+      view: isAdmin.value || isDosen.value, // Mahasiswa tidak bisa lihat bobot CPMK
+      create: isAdmin.value || isDosen.value, // Dosen bisa input bobot
+      edit: isAdmin.value || isDosen.value, // Dosen bisa edit bobot
+      delete: isAdmin.value,
     },
 
     // Pengukuran CPL (Ukur CPL)
     ukurCpl: {
-      view: isAdmin.value || isDosen.value || isMahasiswa.value,
-      // Mahasiswa hanya bisa lihat milik sendiri
-      viewOwn: isMahasiswa.value,
-      viewAll: isAdmin.value || isDosen.value,
+      view: true, // Semua bisa lihat (mahasiswa hanya milik sendiri)
+      viewOwn: isMahasiswa.value, // Mahasiswa hanya bisa lihat milik sendiri
+      viewAll: isAdmin.value || isDosen.value, // Admin & dosen bisa lihat semua
       create: isAdmin.value || isDosen.value,
       edit: isAdmin.value || isDosen.value,
       delete: isAdmin.value,
@@ -138,8 +185,9 @@ export function usePermissions() {
 
     // Mahasiswa Management
     mahasiswa: {
-      view: isAdmin.value || isDosen.value,
+      view: true, // Semua bisa lihat (mahasiswa hanya data sendiri)
       viewOwn: isMahasiswa.value, // Mahasiswa bisa lihat data diri sendiri
+      viewAll: isAdmin.value || isDosen.value, // Admin & dosen bisa lihat semua
       create: isAdmin.value,
       edit: isAdmin.value,
       delete: isAdmin.value,
@@ -213,6 +261,12 @@ export function usePermissions() {
    */
   const canManageKurikulumMk = computed(() => can('kurikulumMk', 'create'))
 
+  // Helper khusus untuk penilaian (dosen dan admin bisa edit)
+  const canManageNilai = computed(() => isAdmin.value || isDosen.value)
+
+  // Helper untuk view-only mode (mahasiswa dan dosen di halaman non-penilaian)
+  const isViewOnly = computed(() => isMahasiswa.value)
+
   return {
     userRole,
     userId,
@@ -224,5 +278,7 @@ export function usePermissions() {
     canAccessMahasiswaData,
     getAllowedMenuItems,
     canManageKurikulumMk,
+    canManageNilai,
+    isViewOnly,
   }
 }

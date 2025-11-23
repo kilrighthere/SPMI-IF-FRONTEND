@@ -3,7 +3,7 @@
     <div class="section-box">
       <div class="section-header">
         <h3>Bahan Kajian (BK)</h3>
-        <button class="btn-add" @click="showForm = !showForm" v-if="isAdmin">
+        <button class="btn-add" @click="showForm = !showForm" v-if="can('bahanKajian', 'create')">
           {{ showForm ? 'Batal' : 'Tambah BK' }}
         </button>
       </div>
@@ -51,14 +51,14 @@
             <tr>
               <th>Kode BK</th>
               <th>Deskripsi</th>
-              <th v-if="isAdmin">Aksi</th>
+              <th v-if="can('bahanKajian', 'edit')">Aksi</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="bk in bkList" :key="bk.id_bk">
               <td>{{ bk.id_bk }}</td>
               <td>{{ bk.deskripsi }}</td>
-              <td class="action-buttons" v-if="isAdmin">
+              <td class="action-buttons" v-if="can('bahanKajian', 'edit')">
                 <button class="btn-edit" @click="editBK(bk)">Edit</button>
                 <button class="btn-delete" @click="removeBK(bk.id_bk)">Hapus</button>
               </td>

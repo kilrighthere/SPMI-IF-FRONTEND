@@ -393,7 +393,7 @@ onMounted(() => {
       </div>
 
       <!-- Detail Table Section -->
-      <div v-if="!isLoadingChart && !isLoadingTable" class="detail-section">
+      <!-- <div v-if="!isLoadingChart && !isLoadingTable" class="detail-section"> -->
         <h5 class="section-title">
           <i class="ri-table-line"></i>
           Detail Nilai CPL Per Mata Kuliah
@@ -451,7 +451,7 @@ onMounted(() => {
           <i class="ri-file-list-3-line"></i>
           <p>Tidak ada data nilai mata kuliah yang tersedia</p>
         </div>
-      </div>
+      <!-- </div> -->
     </div>
   </div>
 </template>

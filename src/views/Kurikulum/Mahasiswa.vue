@@ -7,7 +7,7 @@ import ExcelJS from 'exceljs'
 const mahasiswaStore = useMahasiswaStore()
 
 // Use centralized permissions
-const { isAdmin, isDosen, isMahasiswa, userId, userRole } = usePermissions()
+const { isAdmin, isDosen, isMahasiswa, userId, userRole, can } = usePermissions()
 
 const mahasiswaList = computed(() => mahasiswaStore.mahasiswaList)
 const isLoading = computed(() => mahasiswaStore.isLoading)
@@ -622,7 +622,7 @@ onMounted(() => {
     <div v-else-if="isDosen || isAdmin" class="section-box">
       <div class="section-header">
         <h3>Data Mahasiswa</h3>
-        <div class="header-actions" v-if="isAdmin">
+        <div class="header-actions" v-if="can('mahasiswa', 'create')">
           <button class="btn-upload" @click="openUploadModal">
             <i class="ri-upload-2-line"></i> Upload Excel
           </button>
@@ -679,7 +679,7 @@ onMounted(() => {
                 <th width="10%">No.</th>
                 <th width="20%">NIM</th>
                 <th width="50%">Nama Mahasiswa</th>
-                <th width="20%" class="aksi-title" v-if="isAdmin">Aksi</th>
+                <th width="20%" class="aksi-title" v-if="can('mahasiswa', 'edit')">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -687,7 +687,7 @@ onMounted(() => {
                 <td class="text-center">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
                 <td>{{ mahasiswa.nim }}</td>
                 <td>{{ mahasiswa.nama }}</td>
-                <td class="action-button" v-if="isAdmin">
+                <td class="action-button" v-if="can('mahasiswa', 'edit')">
                   <button class="btn-edit" @click="editMahasiswa(mahasiswa)">Edit</button>
                   <button class="btn-delete" @click="removeMahasiswa(mahasiswa.nim)">Hapus</button>
                 </td>
