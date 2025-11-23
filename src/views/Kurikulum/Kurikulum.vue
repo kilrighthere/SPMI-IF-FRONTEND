@@ -47,16 +47,6 @@ onMounted(() => {
               <span class="current">Data Kurikulum Program Studi</span>
             </p>
           </div>
-          <div class="page-actions">
-            <button type="button" class="btn-secondary">
-              <i class="ri-file-excel-2-line"></i>
-              <span>Export Excel</span>
-            </button>
-            <button type="button" class="btn-secondary">
-              <i class="ri-printer-line"></i>
-              <span>Print</span>
-            </button>
-          </div>
         </div>
 
         <!-- Loading indicator -->
