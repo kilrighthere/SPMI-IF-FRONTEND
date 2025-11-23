@@ -84,6 +84,14 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
           <!-- Menu khusus untuk Dosen/Admin -->
           <template v-if="isDosen">
             <RouterLink
+              :to="`/kurikulum/${kurikulumId}/korelasi-cpl-pl`"
+              class="menu-kurikulum"
+              :title="sidebarStore.isMinimized ? 'CPL-PL' : ''"
+            >
+              <i class="ri-table-line"></i>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPL-PL</span>
+            </RouterLink>
+            <RouterLink
               :to="`/kurikulum/${kurikulumId}/cpl-sndikti`"
               class="menu-kurikulum"
               :title="sidebarStore.isMinimized ? 'CPL SNDIKTI' : ''"
@@ -92,36 +100,12 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
               <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPL SNDIKTI</span>
             </RouterLink>
             <RouterLink
-              :to="`/kurikulum/${kurikulumId}/korelasi-cpl-pl`"
+              :to="`/kurikulum/${kurikulumId}/cpl-bk`"
               class="menu-kurikulum"
-              :title="sidebarStore.isMinimized ? 'Korelasi CPL-PL' : ''"
+              :title="sidebarStore.isMinimized ? 'CPL vs BK' : ''"
             >
-              <i class="ri-table-line"></i>
-              <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPL-PL</span>
-            </RouterLink>
-            <RouterLink
-              :to="`/kurikulum/${kurikulumId}/cpmk`"
-              class="menu-kurikulum"
-              :title="sidebarStore.isMinimized ? 'CPMK' : ''"
-            >
-              <i class="ri-file-text-line"></i>
-              <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPMK</span>
-            </RouterLink>
-            <RouterLink
-              :to="`/kurikulum/${kurikulumId}/nilai-cpmk`"
-              class="menu-kurikulum"
-              :title="sidebarStore.isMinimized ? 'Nilai CPMK' : ''"
-            >
-              <i class="ri-line-chart-line"></i>
-              <span class="submenu-title" v-show="!sidebarStore.isMinimized">Nilai CPMK</span>
-            </RouterLink>
-            <RouterLink
-              :to="`/kurikulum/${kurikulumId}/bobot-cpmk`"
-              class="menu-kurikulum"
-              :title="sidebarStore.isMinimized ? 'Bobot CPMK' : ''"
-            >
-              <i class="ri-bar-chart-2-line"></i>
-              <span class="submenu-title" v-show="!sidebarStore.isMinimized">Bobot CPMK</span>
+              <i class="ri-node-tree"></i>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPL-BK</span>
             </RouterLink>
             <RouterLink
               :to="`/kurikulum/${kurikulumId}/bahan-kajian`"
@@ -132,20 +116,12 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
               <span class="submenu-title" v-show="!sidebarStore.isMinimized">Bahan Kajian</span>
             </RouterLink>
             <RouterLink
-              :to="`/kurikulum/${kurikulumId}/cpl-bk`"
+              :to="`/kurikulum/${kurikulumId}/struktur-matkul`"
               class="menu-kurikulum"
-              :title="sidebarStore.isMinimized ? 'Korelasi CPL vs BK' : ''"
+              :title="sidebarStore.isMinimized ? 'Struktur Mata Kuliah' : ''"
             >
-              <i class="ri-node-tree"></i>
-              <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPL-BK</span>
-            </RouterLink>
-            <RouterLink
-              :to="`/kurikulum/${kurikulumId}/cpmk-mk`"
-              class="menu-kurikulum"
-              :title="sidebarStore.isMinimized ? 'Korelasi CPMK MK' : ''"
-            >
-              <i class="ri-links-line"></i>
-              <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPMK MK</span>
+              <i class="ri-organization-chart"></i>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized">Struktur Mata Kuliah</span>
             </RouterLink>
             <RouterLink
               :to="`/kurikulum/${kurikulumId}/bk-mk`"
@@ -156,23 +132,29 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
               <span class="submenu-title" v-show="!sidebarStore.isMinimized">BK MK</span>
             </RouterLink>
             <RouterLink
-              :to="`/kurikulum/${kurikulumId}/struktur-matkul`"
+              :to="`/kurikulum/${kurikulumId}/cpmk`"
               class="menu-kurikulum"
-              :title="sidebarStore.isMinimized ? 'Struktur Mata Kuliah' : ''"
+              :title="sidebarStore.isMinimized ? 'CPMK' : ''"
             >
-              <i class="ri-organization-chart"></i>
-              <span class="submenu-title" v-show="!sidebarStore.isMinimized"
-                >Struktur Mata Kuliah</span
-              >
+              <i class="ri-file-text-line"></i>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPMK</span>
             </RouterLink>
-            <!-- <RouterLink -->
+            <RouterLink
               :to="`/kurikulum/${kurikulumId}/kurikulum-mk`"
               class="menu-kurikulum"
               :title="sidebarStore.isMinimized ? 'Kurikulum Mata Kuliah' : ''"
             >
               <i class="ri-file-list-3-line"></i>
               <span class="submenu-title" v-show="!sidebarStore.isMinimized">Kurikulum MK</span>
-            <!-- </RouterLink> -->
+            </RouterLink>
+            <RouterLink
+              :to="`/kurikulum/${kurikulumId}/cpmk-mk`"
+              class="menu-kurikulum"
+              :title="sidebarStore.isMinimized ? 'Korelasi CPMK MK' : ''"
+            >
+              <i class="ri-links-line"></i>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPMK MK</span>
+            </RouterLink>
             <RouterLink
               :to="`/kurikulum/${kurikulumId}/mk-periode`"
               class="menu-kurikulum"
@@ -181,14 +163,15 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
               <i class="ri-calendar-check-line"></i>
               <span class="submenu-title" v-show="!sidebarStore.isMinimized">MK Periode</span>
             </RouterLink>
-            <!-- <RouterLink
-              :to="`/kurikulum/${kurikulumId}/rps`"
+            <RouterLink
+              :to="`/kurikulum/${kurikulumId}/bobot-cpmk`"
               class="menu-kurikulum"
-              :title="sidebarStore.isMinimized ? 'RPS Mata Kuliah' : ''"
+              :title="sidebarStore.isMinimized ? 'Bobot CPMK' : ''"
             >
-              <i class="ri-book-2-line"></i>
-              <span class="submenu-title" v-show="!sidebarStore.isMinimized">RPS Mata Kuliah</span>
-            </RouterLink> -->
+              <i class="ri-bar-chart-2-line"></i>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized">Bobot CPMK</span>
+            </RouterLink>
+            <!-- Nilai CPMK link intentionally placed after Nilai Matkul (see below) -->
           </template>
 
           <!-- Menu Nilai Mata Kuliah - untuk semua role -->
@@ -202,15 +185,15 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
               {{ isMahasiswa ? 'Nilai Saya' : 'Nilai Mata Kuliah' }}
             </span>
           </RouterLink>
+          <!-- Nilai CPMK (Dosen/Admin only) -->
           <RouterLink
-            :to="`/kurikulum/${kurikulumId}/ukur-cpl`"
+            v-if="isDosen"
+            :to="`/kurikulum/${kurikulumId}/nilai-cpmk`"
             class="menu-kurikulum"
-            :title="sidebarStore.isMinimized ? 'Pengukuran CPL Mahasiswa' : ''"
+            :title="sidebarStore.isMinimized ? 'Nilai CPMK' : ''"
           >
             <i class="ri-line-chart-line"></i>
-            <span class="submenu-title" v-show="!sidebarStore.isMinimized"
-              >Pengukuran CPL Mahasiswa</span
-            >
+            <span class="submenu-title" v-show="!sidebarStore.isMinimized">Nilai CPMK</span>
           </RouterLink>
           <!-- Menu Mahasiswa - berbeda untuk mahasiswa dan dosen -->
           <RouterLink
@@ -221,6 +204,16 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
           >
             <i class="ri-group-line"></i>
             <span class="submenu-title" v-show="!sidebarStore.isMinimized">Mahasiswa</span>
+          </RouterLink>
+          <RouterLink
+            :to="`/kurikulum/${kurikulumId}/ukur-cpl`"
+            class="menu-kurikulum"
+            :title="sidebarStore.isMinimized ? 'Pengukuran CPL Mahasiswa' : ''"
+          >
+            <i class="ri-line-chart-line"></i>
+            <span class="submenu-title" v-show="!sidebarStore.isMinimized"
+              >Pengukuran CPL Mahasiswa</span
+            >
           </RouterLink>
           <!-- <RouterLink
             v-else-if="isMahasiswa"
