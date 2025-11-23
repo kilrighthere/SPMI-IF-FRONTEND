@@ -165,14 +165,14 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
                 >Struktur Mata Kuliah</span
               >
             </RouterLink>
-            <RouterLink
+            <!-- <RouterLink -->
               :to="`/kurikulum/${kurikulumId}/kurikulum-mk`"
               class="menu-kurikulum"
               :title="sidebarStore.isMinimized ? 'Kurikulum Mata Kuliah' : ''"
             >
               <i class="ri-file-list-3-line"></i>
               <span class="submenu-title" v-show="!sidebarStore.isMinimized">Kurikulum MK</span>
-            </RouterLink>
+            <!-- </RouterLink> -->
             <RouterLink
               :to="`/kurikulum/${kurikulumId}/mk-periode`"
               class="menu-kurikulum"
