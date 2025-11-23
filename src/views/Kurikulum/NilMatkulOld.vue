@@ -153,10 +153,11 @@ async function loadData() {
 
 // Get CSS class untuk huruf mutu
 function getHurufMutuClass(huruf) {
-  if (huruf === 'A' || huruf === 'A-') return 'huruf-a'
-  if (huruf === 'B+' || huruf === 'B' || huruf === 'B-') return 'huruf-b'
-  if (huruf === 'C+' || huruf === 'C' || huruf === 'C-') return 'huruf-c'
-  if (huruf === 'D+' || huruf === 'D') return 'huruf-d'
+  // Only expect A/B/C/D/E values from the centralized store mapping
+  if (huruf === 'A') return 'huruf-a'
+  if (huruf === 'B') return 'huruf-b'
+  if (huruf === 'C') return 'huruf-c'
+  if (huruf === 'D') return 'huruf-d'
   if (huruf === 'E') return 'huruf-e'
   return 'huruf-default'
 }

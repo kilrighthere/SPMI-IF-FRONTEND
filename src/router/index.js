@@ -17,9 +17,12 @@ import UkurCPL from '@/views/Kurikulum/UkurCPL.vue'
 import BahanKajian from '@/views/Kurikulum/BahanKajian.vue'
 import KorelasiCPLPL from '@/views/Kurikulum/KorelasiCPLPL.vue'
 import CpmkMk from '@/views/Kurikulum/CpmkMk.vue'
+import MkPeriode from '@/views/Kurikulum/MkPeriode.vue'
 import BkMk from '@/views/Kurikulum/BkMk.vue'
 import Mahasiswa from '@/views/Kurikulum/Mahasiswa.vue'
 import CPLBk from '@/views/Kurikulum/CplBk.vue'
+import NilaiCpmk from '@/views/Kurikulum/NilaiCpmk.vue'
+import BobotCpmk from '@/views/Kurikulum/BobotCpmk.vue'
 
 const routes = [
   { path: '/', redirect: '/login' },
@@ -112,6 +115,16 @@ const routes = [
         meta: { title: 'Nilai Mata Kuliah', requiresAuth: true, roles: ['admin', 'dosen', 'mahasiswa'] },
       },
       {
+        path: 'nilai-cpmk',
+        component: NilaiCpmk,
+        meta: { title: 'Nilai CPMK', requiresAuth: true, roles: ['admin', 'dosen'] },
+      },
+      {
+        path: 'bobot-cpmk',
+        component: BobotCpmk,
+        meta: { title: 'Bobot CPMK', requiresAuth: true, roles: ['admin', 'dosen'] },
+      },
+      {
         path: 'nilai-matkul/:kodeMk',
         component: DetailNilaiMatkul,
         name: 'DetailNilaiMatkul',
@@ -130,6 +143,11 @@ const routes = [
         path: 'mahasiswa',
         component: Mahasiswa,
         meta: { title: 'Mahasiswa', requiresAuth: true, roles: ['admin', 'dosen', 'mahasiswa'] },
+      },
+      {
+        path: 'mk-periode',
+        component: MkPeriode,
+        meta: { title: 'MK Periode', requiresAuth: true, roles: ['admin', 'dosen'] },
       },
     ],
   },

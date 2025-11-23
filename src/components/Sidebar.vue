@@ -53,7 +53,7 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
           <span class="menu-title" v-show="!sidebarStore.isMinimized">Dashboard</span>
         </RouterLink>
         <RouterLink
-          to="/Kurikulum"
+          to="/kurikulum"
           class="menu-sidebar"
           :class="{ 'router-link-active': isKurikulumActive }"
           :title="sidebarStore.isMinimized ? 'Kurikulum' : ''"
@@ -64,7 +64,7 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
         </RouterLink>
 
         <!-- Submenu - Show when kurikulumId exists -->
-        <div class="submenu" v-if="kurikulumId | isMahasiswa" >
+        <div class="submenu" v-if="kurikulumId">
           <RouterLink
             :to="`/kurikulum/${kurikulumId}/profil-lulusan`"
             class="menu-kurikulum"
@@ -106,6 +106,22 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
             >
               <i class="ri-file-text-line"></i>
               <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPMK</span>
+            </RouterLink>
+            <RouterLink
+              :to="`/kurikulum/${kurikulumId}/nilai-cpmk`"
+              class="menu-kurikulum"
+              :title="sidebarStore.isMinimized ? 'Nilai CPMK' : ''"
+            >
+              <i class="ri-line-chart-line"></i>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized">Nilai CPMK</span>
+            </RouterLink>
+            <RouterLink
+              :to="`/kurikulum/${kurikulumId}/bobot-cpmk`"
+              class="menu-kurikulum"
+              :title="sidebarStore.isMinimized ? 'Bobot CPMK' : ''"
+            >
+              <i class="ri-bar-chart-2-line"></i>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized">Bobot CPMK</span>
             </RouterLink>
             <RouterLink
               :to="`/kurikulum/${kurikulumId}/bahan-kajian`"
@@ -156,6 +172,14 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
             >
               <i class="ri-file-list-3-line"></i>
               <span class="submenu-title" v-show="!sidebarStore.isMinimized">Kurikulum MK</span>
+            </RouterLink>
+            <RouterLink
+              :to="`/kurikulum/${kurikulumId}/mk-periode`"
+              class="menu-kurikulum"
+              :title="sidebarStore.isMinimized ? 'MK Periode' : ''"
+            >
+              <i class="ri-calendar-check-line"></i>
+              <span class="submenu-title" v-show="!sidebarStore.isMinimized">MK Periode</span>
             </RouterLink>
             <!-- <RouterLink
               :to="`/kurikulum/${kurikulumId}/rps`"

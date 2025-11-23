@@ -5,7 +5,9 @@ import { useNilaiMkStore } from '@/stores/nilaiMk'
 import { useKurikulumStore } from '@/stores/kurikulum'
 import { useMKStore } from '@/stores/mataKuliah'
 import { usePermissions } from '@/composables/usePermissions'
+import { useMahasiswaStore } from '@/stores/mahasiswa'
 import ExcelJS from 'exceljs'
+import { getMkPeriodeList } from '@/api'
 
 // Ref untuk file input
 const excelUpload = ref(null)
@@ -31,16 +33,23 @@ const selectedKurikulum = ref(route.params.id || '')
 const showModal = ref(false)
 const formData = ref({
   id_periode: '',
+  id_mk_periode: '',
   kode_mk: '',
   nim: '',
   nilai_akhir: '',
 })
 
-// Info mahasiswa untuk validasi NIM
+// Info mahasiswa for validation and autocomplete
 const mahasiswaInfo = ref({
   nim: '',
   nama: '',
 })
+
+// Autocomplete suggestions
+const mahasiswaStore = useMahasiswaStore()
+const mahasiswaSuggestions = ref([])
+const showMahasiswaDropdown = ref(false)
+let mahasiswaSearchTimer = null
 
 // Combobox mata kuliah
 const mkSearchQuery = ref('')
@@ -86,7 +95,7 @@ const filteredNilaiList = computed(() => {
   // Filter berdasarkan kurikulum jika ada - SKIP untuk mahasiswa karena tidak relevan
   // Mahasiswa tidak perlu filter berdasarkan kurikulum, mereka hanya perlu filter berdasarkan NIM
   if (selectedKurikulum.value && !isMahasiswa.value) {
-    filtered = filtered.filter((nilai) => nilai.id_kurikulum === selectedKurikulum.value)
+    filtered = filtered.filter((nilai) => String(nilai.id_kurikulum) === String(selectedKurikulum.value))
     console.log('After kurikulum filter:', filtered)
   } else {
     console.log('Skipping kurikulum filter (mahasiswa or no kurikulum selected)')
@@ -142,12 +151,11 @@ const availableMataKuliah = computed(() => mkStore.mataKuliahList)
 const availableMataKuliahInPeriode = computed(() => {
   if (!selectedPeriode.value) return []
 
-  // Ambil kode MK unik dari nilai yang ada di periode ini
-  const uniqueKodeMK = [
-    ...new Set(nilaiMkStore.filteredNilaiByPeriode.map((nilai) => nilai.kode_mk)),
-  ]
+  // Get MK-periode entries for the selected periode (these are authoritative)
+  const mkPeriodeEntries = nilaiMkStore.getMkPeriodeByPeriode(selectedPeriode.value) || []
+  const uniqueKodeMK = [...new Set(mkPeriodeEntries.map((mp) => mp.kode_mk))]
 
-  // Return mata kuliah yang ada dalam periode ini
+  // Return mata kuliah that are included in mk-periode for this periode
   return availableMataKuliah.value.filter((mk) => uniqueKodeMK.includes(mk.kode_mk))
 })
 
@@ -168,9 +176,13 @@ async function openAddModal() {
   if (Object.keys(nilaiMkStore.mahasiswaMap).length === 0) {
     await nilaiMkStore.fetchMahasiswaData()
   }
+  if (!mahasiswaStore.mahasiswaList || mahasiswaStore.mahasiswaList.length === 0) {
+    await mahasiswaStore.fetchMahasiswa()
+  }
 
   formData.value = {
     id_periode: selectedPeriode.value,
+    id_mk_periode: '',
     kode_mk: '',
     nim: '',
     nilai_akhir: '',
@@ -182,11 +194,14 @@ async function openAddModal() {
     nama: '',
   }
 
-  // Reset combobox mata kuliah
+  // Reset combobox mata kuliah: prefer to use mata kuliah available in selectedPeriode
   selectedMK.value = null
   mkSearchQuery.value = ''
   showMkDropdown.value = false
-  filteredMK.value = availableMataKuliah.value
+  filteredMK.value = selectedPeriode.value ? availableMataKuliahInPeriode.value : availableMataKuliah.value
+  // Ensure mk-periode list is loaded for resolving
+  await nilaiMkStore.fetchMkPeriodeList()
+  await mkStore.fetchAllMK()
 
   showModal.value = true
 }
@@ -195,6 +210,7 @@ function closeModal() {
   showModal.value = false
   formData.value = {
     id_periode: '',
+    id_mk_periode: '',
     kode_mk: '',
     nim: '',
     nilai_akhir: '',
@@ -209,25 +225,53 @@ function closeModal() {
   mkSearchQuery.value = ''
   showMkDropdown.value = false
   filteredMK.value = []
+  // Clear mahasiswa suggestions
+  mahasiswaSuggestions.value = []
+  showMahasiswaDropdown.value = false
 }
 
-// Check nama mahasiswa berdasarkan NIM
-function checkMahasiswaNama() {
-  const nim = formData.value.nim.trim()
-
-  if (nim.length >= 10) {
-    // Minimal 10 karakter untuk mulai check
-    const nama = nilaiMkStore.getMahasiswaNama(nim)
-    mahasiswaInfo.value = {
-      nim: nim,
-      nama: nama !== nim ? nama : '', // Jika sama dengan NIM, berarti tidak ditemukan
-    }
-  } else {
-    mahasiswaInfo.value = {
-      nim: '',
-      nama: '',
-    }
+// Autocomplete: search for mahasiswa as typing NIM or name
+async function onMahasiswaInput() {
+  const q = String(formData.value.nim || '').trim()
+  // Clear existing suggestions if query too short
+  if (!q || q.length < 1) {
+    mahasiswaSuggestions.value = []
+    showMahasiswaDropdown.value = false
+    // also clear info if necessary
+    mahasiswaInfo.value = { nim: '', nama: '' }
+    return
   }
+
+  // Ensure mahasiswa list is loaded
+  if (!mahasiswaStore.mahasiswaList || mahasiswaStore.mahasiswaList.length === 0) {
+    await mahasiswaStore.fetchMahasiswa()
+  }
+
+  // Debounce
+  if (mahasiswaSearchTimer) clearTimeout(mahasiswaSearchTimer)
+  mahasiswaSearchTimer = setTimeout(() => {
+    const qLower = q.toLowerCase()
+    const matches = mahasiswaStore.mahasiswaList.filter((m) => {
+      const nim = String(m.nim || '')
+      const name = String(m.nama || '').toLowerCase()
+      return nim.includes(qLower) || name.includes(qLower)
+    })
+    mahasiswaSuggestions.value = matches.slice(0, 12)
+    showMahasiswaDropdown.value = mahasiswaSuggestions.value.length > 0
+  }, 200)
+}
+
+function selectMahasiswaSuggestion(m) {
+  formData.value.nim = m.nim
+  mahasiswaInfo.value = { nim: m.nim, nama: m.nama }
+  showMahasiswaDropdown.value = false
+}
+
+function hideMahasiswaDropdown() {
+  // Delay to allow click selection
+  setTimeout(() => {
+    showMahasiswaDropdown.value = false
+  }, 150)
 }
 
 // Mata kuliah combobox functions
@@ -235,9 +279,9 @@ function filterMataKuliah() {
   const query = mkSearchQuery.value.toLowerCase().trim()
 
   if (query === '') {
-    filteredMK.value = availableMataKuliah.value
+    filteredMK.value = availableMataKuliahInPeriode.value
   } else {
-    filteredMK.value = availableMataKuliah.value.filter(
+    filteredMK.value = availableMataKuliahInPeriode.value.filter(
       (mk) => mk.kode_mk.toLowerCase().includes(query) || mk.nama_mk.toLowerCase().includes(query),
     )
   }
@@ -248,13 +292,33 @@ function selectMataKuliah(mk) {
   formData.value.kode_mk = mk.kode_mk
   mkSearchQuery.value = `${mk.kode_mk} - ${mk.nama_mk}`
   showMkDropdown.value = false
+  // Auto-resolve id_mk_periode if periode selected
+  if (selectedPeriode.value) {
+    const resolved = nilaiMkStore.resolveIdMkPeriode(mk.kode_mk, selectedPeriode.value)
+    if (resolved) {
+      formData.value.id_mk_periode = resolved
+    }
+  }
 }
 
 function clearMataKuliah() {
   selectedMK.value = null
   formData.value.kode_mk = ''
+  formData.value.id_mk_periode = ''
   mkSearchQuery.value = ''
-  filteredMK.value = availableMataKuliah.value
+  filteredMK.value = availableMataKuliahInPeriode.value
+}
+
+function onSelectMkPeriode(e) {
+  const id = e?.target?.value || formData.value.id_mk_periode
+  if (!id) return
+  const mp = nilaiMkStore.mkPeriodeList.find((mp) => String(mp.id_mk_periode) === String(id))
+  if (mp) {
+    formData.value.kode_mk = mp.kode_mk
+    // set selected MK if exists in mkStore
+    const mk = mkStore.getMKByKode(mp.kode_mk) || mkStore.mataKuliahList.find((x) => x.kode_mk === mp.kode_mk)
+    if (mk) selectedMK.value = mk
+  }
 }
 
 function hideMkDropdown() {
@@ -267,7 +331,8 @@ function hideMkDropdown() {
 // Submit form
 async function submitForm() {
   try {
-    if (!formData.value.kode_mk || !formData.value.nim || !formData.value.nilai_akhir) {
+    // Prefer id_mk_periode in the payload. If not available, require kode_mk and id_periode
+    if (!formData.value.id_mk_periode && (!formData.value.kode_mk || !formData.value.id_periode)) {
       alert('Mohon lengkapi semua field yang diperlukan')
       return
     }
@@ -279,7 +344,14 @@ async function submitForm() {
       return
     }
 
-    // Validasi mahasiswa ditemukan
+    // Validasi mahasiswa ditemukan - prefer mahasiswaInfo, fallback to store
+    if (!mahasiswaInfo.value.nim) {
+      // Try to use mahasiswaStore for lookup
+      if (mahasiswaStore && mahasiswaStore.mahasiswaList && mahasiswaStore.mahasiswaList.length > 0) {
+        const m = mahasiswaStore.mahasiswaList.find((mm) => String(mm.nim) === String(formData.value.nim))
+        if (m) mahasiswaInfo.value = { nim: m.nim, nama: m.nama }
+      }
+    }
     const namaMahasiswa = nilaiMkStore.getMahasiswaNama(formData.value.nim)
     if (namaMahasiswa === formData.value.nim) {
       alert('Mahasiswa dengan NIM tersebut tidak ditemukan. Pastikan NIM sudah benar.')
@@ -289,9 +361,20 @@ async function submitForm() {
     // Format nilai dengan 2 desimal
     formData.value.nilai_akhir = nilai.toFixed(2)
 
-    console.log('Submitting nilai:', formData.value)
+    // Ensure payload includes id_mk_periode if possible
+    const payload = { nim: formData.value.nim, nilai_akhir: parseFloat(formData.value.nilai_akhir) }
+    if (formData.value.id_mk_periode) {
+      payload.id_mk_periode = formData.value.id_mk_periode
+    } else {
+      payload.id_periode = formData.value.id_periode
+      payload.kode_mk = formData.value.kode_mk
+    }
 
-    const result = await nilaiMkStore.createNilai(formData.value)
+    console.log('Submitting nilai:', payload)
+
+    const refreshFilters = { id_periode: formData.value.id_periode }
+    if (selectedKurikulum.value) refreshFilters.id_kurikulum = selectedKurikulum.value
+    const result = await nilaiMkStore.createNilai(payload, refreshFilters)
 
     console.log('Create nilai result:', result)
 
@@ -311,10 +394,10 @@ async function submitForm() {
 
 // Get CSS class untuk huruf mutu
 function getHurufMutuClass(huruf) {
-  if (huruf === 'A' || huruf === 'A-') return 'huruf-a'
-  if (huruf === 'B+' || huruf === 'B' || huruf === 'B-') return 'huruf-b'
-  if (huruf === 'C+' || huruf === 'C' || huruf === 'C-') return 'huruf-c'
-  if (huruf === 'D+' || huruf === 'D') return 'huruf-d'
+  if (huruf === 'A') return 'huruf-a'
+  if (huruf === 'B') return 'huruf-b'
+  if (huruf === 'C') return 'huruf-c'
+  if (huruf === 'D') return 'huruf-d'
   if (huruf === 'E') return 'huruf-e'
   return 'huruf-default'
 }
@@ -336,6 +419,7 @@ async function loadNilaiData() {
     const filters = { nim: currentUserNim.value }
 
     await Promise.all([
+      nilaiMkStore.fetchMkPeriodeList(),
       nilaiMkStore.fetchNilaiByFilter(filters),
       mkStore.fetchAllMK(),
       nilaiMkStore.fetchMahasiswaData(),
@@ -350,6 +434,7 @@ async function loadNilaiData() {
   }
 
   const filters = { id_periode: selectedPeriode.value }
+  if (selectedKurikulum.value) filters.id_kurikulum = selectedKurikulum.value
   if (selectedMataKuliah.value) {
     filters.kode_mk = selectedMataKuliah.value
   }
@@ -358,6 +443,7 @@ async function loadNilaiData() {
 
   // Load data yang diperlukan secara bersamaan hanya ketika dibutuhkan
   await Promise.all([
+    nilaiMkStore.fetchMkPeriodeList(),
     nilaiMkStore.fetchNilaiByFilter(filters),
     mkStore.fetchAllMK(), // untuk dropdown mata kuliah
     nilaiMkStore.fetchMahasiswaData(), // untuk nama mahasiswa di tabel
@@ -545,6 +631,7 @@ async function processExcelFile(file) {
             nim: nim.toString(),
             nilai_akhir: Number(nilaiAkhir.toFixed(2)),
           }
+          // id_mk_periode will be resolved later in batch to avoid many API calls and async issues
           console.log(`Adding data item:`, dataItem)
           nilaiData.push(dataItem)
         }
@@ -552,6 +639,92 @@ async function processExcelFile(file) {
     })
 
     console.log('Debug - Nilai Data:', nilaiData)
+
+    // Resolve id_mk_periode for any entries that don't have it
+    try {
+      const combos = new Map()
+      for (const item of nilaiData) {
+        if (!item.id_mk_periode) {
+          const key = `${item.kode_mk}__${item.id_periode}`
+          if (!combos.has(key)) combos.set(key, { kode_mk: item.kode_mk, id_periode: item.id_periode })
+        }
+      }
+
+      for (const [key, { kode_mk, id_periode }] of combos) {
+        // Prefer local resolution first
+        console.log('Resolving mk-periode combo:', { kode_mk, id_periode })
+        let resolved = nilaiMkStore.resolveIdMkPeriode(kode_mk, id_periode)
+        if (!resolved) {
+          console.log('Local resolve failed for', { kode_mk, id_periode })
+          // Try to use store helper if available, otherwise fallback to direct API call
+          if (typeof nilaiMkStore.fetchMkPeriodeByKodeAndPeriode === 'function') {
+            try {
+              resolved = await nilaiMkStore.fetchMkPeriodeByKodeAndPeriode(kode_mk, id_periode)
+              console.log('Store fetch result for', { kode_mk, id_periode, resolved })
+            } catch (err) {
+              console.warn('Store fetchMkPeriodeByKodeAndPeriode failed', err)
+              resolved = null
+            }
+          }
+
+          if (!resolved) {
+            try {
+              const resp = await getMkPeriodeList({ kode_mk, id_periode })
+              console.log('Direct API /list/mk-periode response for', { kode_mk, id_periode, resp })
+              let data = null
+              if (resp?.data && resp.data.success) data = resp.data.data
+              else if (resp?.data && Array.isArray(resp.data)) data = resp.data
+              const arr = Array.isArray(data) ? data : data ? [data] : []
+              if (arr.length > 0) {
+                resolved = Number(arr[0].id_mk_periode)
+                // Trigger a background refresh of mk-periode list in store so future calls can resolve locally
+                try {
+                  await nilaiMkStore.fetchMkPeriodeList()
+                } catch (refreshErr) {
+                  console.warn('Error refreshing mk-periode list after fallback fetch:', refreshErr)
+                }
+              }
+            } catch (err) {
+              console.warn('Direct API call to getMkPeriodeList failed', err)
+            }
+          }
+          // Extra fallback: try fetching mk-periode by kode only and filter client-side by id_periode
+          if (!resolved) {
+            try {
+              const resp2 = await getMkPeriodeList({ kode_mk })
+              console.log('Direct API /list/mk-periode (kode only) response for', { kode_mk, resp2 })
+              let data2 = null
+              if (resp2?.data && resp2.data.success) data2 = resp2.data.data
+              else if (resp2?.data && Array.isArray(resp2.data)) data2 = resp2.data
+              const arr2 = Array.isArray(data2) ? data2 : data2 ? [data2] : []
+              const item = arr2.find((mp) => String(mp.id_periode) === String(id_periode))
+              if (item) {
+                resolved = Number(item.id_mk_periode)
+                try {
+                  await nilaiMkStore.fetchMkPeriodeList()
+                } catch (refreshErr) {
+                  console.warn('Error refreshing mk-periode list after kode-only fetch:', refreshErr)
+                }
+              }
+            } catch (err) {
+              console.warn('Direct API call to getMkPeriodeList (kode only) failed', err)
+            }
+          }
+        }
+        if (resolved) {
+          // Attach to all matching items
+          nilaiData.forEach((it) => {
+            if (it.kode_mk === kode_mk && String(it.id_periode) === String(id_periode)) {
+              it.id_mk_periode = resolved
+            }
+          })
+        } else {
+          console.warn('Could not resolve id_mk_periode for combo', { kode_mk, id_periode })
+        }
+      }
+    } catch (err) {
+      console.warn('Error resolving mk-periode combos during import:', err)
+    }
 
     // Filter out rows with invalid NIM
     const validData = nilaiData.filter((item) => item.nim && item.nim.length >= 10)
@@ -572,11 +745,24 @@ async function processExcelFile(file) {
       selectedPeriode.value = idPeriode
     }
 
-    // Submit nilai satu per satu
+    // Submit nilai satu per satu, but prefer entries that have id_mk_periode
     let successCount = 0
     let failedCount = 0
 
-    for (const nilai of validData) {
+    const dataWithId = validData.filter((d) => d.id_mk_periode)
+    const dataWithoutId = validData.filter((d) => !d.id_mk_periode)
+
+    if (dataWithoutId.length > 0) {
+      // Warn the user that some items could not be resolved to mk-periode and will be skipped
+      const uniqueMissing = Array.from(
+        new Set(dataWithoutId.map((d) => `${d.kode_mk} (periode ${d.id_periode})`)),
+      )
+      alert(
+        `Beberapa entri tidak dapat dipetakan ke MK-periode dan akan dilewati:\n${uniqueMissing.join('\n')}`,
+      )
+    }
+
+    for (const nilai of dataWithId) {
       try {
         // Format nilai to 2 decimal places
         nilai.nilai_akhir = parseFloat(nilai.nilai_akhir.toFixed(2))
@@ -591,10 +777,13 @@ async function processExcelFile(file) {
         console.error('Error submitting nilai:', err)
         failedCount++
       }
-    }
+      }
 
     // Show summary
-    alert(`Upload selesai!\nBerhasil: ${successCount} nilai\nGagal: ${failedCount} nilai`)
+    const skippedCount = dataWithoutId.length
+    alert(
+      `Upload selesai!\nBerhasil: ${successCount} nilai\nGagal: ${failedCount} nilai\nDilewatkan: ${skippedCount} nilai (tidak ditemukan id_mk_periode)`,
+    )
 
     // Reload data
     await loadNilaiData()
@@ -651,8 +840,9 @@ onMounted(async () => {
   console.log('isAdmin:', isAdmin.value)
   console.log('currentUserNim:', currentUserNim.value)
 
-  // Load periode terlebih dahulu
+  // Load periode dan mk-periode terlebih dahulu
   await loadPeriodeOnly()
+  await nilaiMkStore.fetchMkPeriodeList()
   console.log('periodeList after load:', periodeList.value)
 
   // Jika mahasiswa, load semua data nilai mereka tanpa filter periode
@@ -668,10 +858,13 @@ onMounted(async () => {
 
     // Load mata kuliah untuk filter
     await mkStore.fetchAllMK()
-  } else {
+    } else {
     console.log('Loading data for admin/dosen...')
     // Untuk admin/dosen, load data seperti biasa
-    await mkStore.fetchAllMK() // Load data mata kuliah
+    await Promise.all([
+      mkStore.fetchAllMK(), // Load data mata kuliah
+      nilaiMkStore.fetchMkPeriodeList(),
+    ])
   }
 })
 </script>
@@ -826,7 +1019,6 @@ onMounted(async () => {
                 <th>Mata Kuliah</th>
                 <th v-if="!isMahasiswa">NIM</th>
                 <th v-if="!isMahasiswa">Nama Mahasiswa</th>
-                <th v-if="!isMahasiswa">Periode</th>
                 <th>Nilai Akhir</th>
                 <th>Huruf Mutu</th>
               </tr>
@@ -848,9 +1040,6 @@ onMounted(async () => {
                 </td>
                 <td v-if="!isMahasiswa">
                   <span class="nama-mhs">{{ nilaiMkStore.getMahasiswaNama(nilai.nim) }}</span>
-                </td>
-                <td v-if="!isMahasiswa">
-                  <span class="periode">{{ nilai.id_periode }}</span>
                 </td>
                 <td>
                   <span class="nilai-akhir">{{ nilaiMkStore.formatNilai(nilai.nilai_akhir) }}</span>
@@ -946,18 +1135,43 @@ onMounted(async () => {
               </button>
             </div>
           </div>
+          <div v-if="selectedPeriode && selectedPeriode !== ''" class="form-group">
+            <label for="mk-periode-select" class="form-label">Pilih MK (Periode)</label>
+            <select id="mk-periode-select" v-model="formData.id_mk_periode" @change="onSelectMkPeriode" class="form-input">
+              <option value="">-- Pilih MK untuk periode ini --</option>
+              <option v-for="mp in nilaiMkStore.getMkPeriodeByPeriode(selectedPeriode)" :key="mp.id_mk_periode" :value="mp.id_mk_periode">
+                {{ mp.kode_mk }} - {{ nilaiMkStore.getMataKuliahNama(mp.kode_mk) }} ({{ mp.sks }} sks)
+              </option>
+            </select>
+            <small v-if="formData.id_mk_periode" class="form-help">MK-periode terpilih: {{ formData.id_mk_periode }}</small>
+          </div>
 
           <div class="form-group">
             <label for="nim" class="form-label">NIM Mahasiswa *</label>
-            <input
-              type="text"
-              id="nim"
-              v-model="formData.nim"
-              class="form-input"
-              placeholder="Masukkan NIM mahasiswa"
-              required
-              @input="checkMahasiswaNama"
-            />
+              <div class="autocomplete-wrapper">
+                <input
+                  type="text"
+                  id="nim"
+                  v-model="formData.nim"
+                  class="form-input"
+                  placeholder="Masukkan NIM mahasiswa"
+                  required
+                  @input="onMahasiswaInput"
+                  @focus="onMahasiswaInput"
+                  @blur="hideMahasiswaDropdown"
+                />
+                <div v-if="showMahasiswaDropdown" class="autocomplete-dropdown">
+                  <div
+                    v-for="m in mahasiswaSuggestions"
+                    :key="m.nim"
+                    class="autocomplete-item"
+                    @mousedown.prevent="selectMahasiswaSuggestion(m)"
+                  >
+                    <div class="nim">{{ m.nim }}</div>
+                    <div class="nama">{{ m.nama }}</div>
+                  </div>
+                </div>
+              </div>
             <div v-if="mahasiswaInfo.nim && mahasiswaInfo.nim === formData.nim" class="nim-info">
               <div v-if="mahasiswaInfo.nama" class="nim-found">
                 <i class="ri-user-line"></i>
@@ -1548,6 +1762,25 @@ onMounted(async () => {
 .nim-info {
   margin-top: 8px;
 }
+
+.autocomplete-wrapper { position: relative; }
+.autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+  z-index: 1000;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.autocomplete-item { padding: 8px 12px; display:flex; gap:8px; align-items:center; cursor:pointer; }
+.autocomplete-item:hover { background:#f8fafc }
+.autocomplete-item .nim { font-family: 'Monaco','Menlo', monospace; font-weight:700; width:120px }
+.autocomplete-item .nama { color:#374151; }
 
 .nim-found {
   display: flex;

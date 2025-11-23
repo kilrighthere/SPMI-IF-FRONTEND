@@ -264,7 +264,20 @@ export const getNilaiMkList = (params = {}) => {
   const queryParams = new URLSearchParams()
   if (params.id_periode) queryParams.append('id_periode', params.id_periode)
   if (params.kode_mk) queryParams.append('kode_mk', params.kode_mk)
-  
+  if (params.nim) queryParams.append('nim', params.nim)
+
+  // Accept id_mk_periode as a single value, CSV string, or array
+  if (params.id_mk_periode) {
+    if (Array.isArray(params.id_mk_periode)) {
+      // Append each ID as a separate query param using bracket notation: id_mk_periode[]=1&id_mk_periode[]=3
+      // Many servers expect this for arrays and parsers like qs will convert properly.
+      params.id_mk_periode.forEach((id) => queryParams.append('id_mk_periode[]', String(Number(id))))
+    } else {
+      // Ensure we append a numeric string
+      queryParams.append('id_mk_periode', String(Number(params.id_mk_periode)))
+    }
+  }
+
   const queryString = queryParams.toString()
   return api.get(`/list/nilai-mk${queryString ? `?${queryString}` : ''}`)
 }
@@ -278,6 +291,52 @@ export const deleteNilaiMk = (id_periode, kode_mk, nim) =>
 
 // Periode
 export const getPeriodeList = () => api.get('/list/periode')
+
+// Bobot CPMK
+// Nilai CPMK
+export const getNilaiCpmkList = (params = {}) => {
+  const queryParams = new URLSearchParams()
+  if (params.id_periode) queryParams.append('id_periode', params.id_periode)
+  if (params.kode_mk) queryParams.append('kode_mk', params.kode_mk)
+  if (params.nim) queryParams.append('nim', params.nim)
+
+  // Accept id_mk_periode as a single value, CSV string, or array
+  if (params.id_mk_periode) {
+    if (Array.isArray(params.id_mk_periode)) {
+      params.id_mk_periode.forEach((id) => queryParams.append('id_mk_periode[]', String(Number(id))))
+    } else {
+      queryParams.append('id_mk_periode', String(Number(params.id_mk_periode)))
+    }
+  }
+
+  const queryString = queryParams.toString()
+  return api.get(`/list/nilai-cpmk${queryString ? `?${queryString}` : ''}`)
+}
+
+// Nilai CPMK - create/update endpoints
+export const addNilaiCpmk = (data) => api.post('/add/nilai-cpmk', data)
+export const updateNilaiCpmk = (id_mk_periode, id_cpmk, nim, data) =>
+  api.put(`/update/nilai-cpmk/${id_mk_periode}/${id_cpmk}/${nim}`, data)
+
+// Bobot CPMK
+export const getBobotCpmkList = () => api.get('/list/bobot-cpmk')
+export const addBobotCpmk = (data) => api.post('/add/bobot-cpmk', data)
+export const updateBobotCpmk = (id_mk_periode, id_cpmk, data) => api.put(`/update/bobot-cpmk/${id_mk_periode}/${id_cpmk}`, data)
+export const deleteBobotCpmk = (id_mk_periode, id_cpmk) => api.delete(`/delete/bobot-cpmk/${id_mk_periode}/${id_cpmk}`)
+
+// MK Periode
+export const getMkPeriodeList = (params = {}) => {
+  const queryParams = new URLSearchParams()
+  if (params.kode_mk) queryParams.append('kode_mk', String(params.kode_mk))
+  if (params.id_periode) queryParams.append('id_periode', String(params.id_periode))
+  if (params.id_kurikulum) queryParams.append('id_kurikulum', String(params.id_kurikulum))
+  const query = queryParams.toString()
+  return api.get(`/list/mk-periode${query ? `?${query}` : ''}`)
+}
+export const addMkPeriode = (data) => api.post('/add/mk-periode', data)
+export const updateMkPeriode = (id_mk_periode, data) => api.put(`/update/mk-periode/${id_mk_periode}`, data)
+export const deleteMkPeriode = (id_mk_periode) => api.delete(`/delete/mk-periode/${id_mk_periode}`)
+export const getMkPeriodeById = (id_mk_periode) => api.get(`/view/mk-periode/${id_mk_periode}`)
 
 // Asosiasi
 // BK-MK
@@ -382,6 +441,21 @@ export default {
   deleteNilaiMk,
   // Periode
   getPeriodeList,
+  // Nilai CPMK
+  getNilaiCpmkList,
+  addNilaiCpmk,
+  updateNilaiCpmk,
+  // Bobot CPMK
+  getBobotCpmkList,
+  addBobotCpmk,
+  updateBobotCpmk,
+  deleteBobotCpmk,
+  // MK Periode
+  getMkPeriodeList,
+  addMkPeriode,
+  updateMkPeriode,
+  deleteMkPeriode,
+  getMkPeriodeById,
   // Asosiasi
   addBkMk,
   getBkMkList,

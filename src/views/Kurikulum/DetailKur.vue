@@ -38,6 +38,7 @@ const submenuTitles = {
   'struktur-matkul': 'Struktur Mata Kuliah',
   rps: 'RPS Mata Kuliah',
   'nilai-matkul': 'Nilai Mata Kuliah',
+  'mk-periode': 'MK Periode',
   'ukur-cpl': 'Pengukuran CPL Mahasiswa',
   mahasiswa: 'Mahasiswa',
 }

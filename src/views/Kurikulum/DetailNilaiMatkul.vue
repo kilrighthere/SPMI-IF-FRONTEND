@@ -60,7 +60,12 @@
                 <td>{{ nilaiMkStore.getMahasiswaNama(nilai.nim) }}</td>
                 <td>{{ nilai.id_periode }}</td>
                 <td class="nilai-cell">{{ formatNilai(nilai.nilai_akhir) }}</td>
-                <td class="nilai-huruf">{{ getNilaiHuruf(nilai.nilai_akhir) }}</td>
+                <td
+                  class="nilai-huruf"
+                  :class="`huruf-${String(nilaiMkStore.getHurufMutu(nilai.nilai_akhir)).toLowerCase()}`"
+                >
+                  {{ nilaiMkStore.getHurufMutu(nilai.nilai_akhir) }}
+                </td>
               </tr>
             </tbody>
           </table>
@@ -163,21 +168,10 @@ const formatNilai = (nilai) => {
   return num.toFixed(2)
 }
 
-// Helper untuk mendapatkan huruf mutu
-const getNilaiHuruf = (nilai) => {
-  const num = parseFloat(nilai)
-  if (isNaN(num)) return '-'
-
-  if (num >= 85) return 'A'
-  if (num >= 80) return 'A-'
-  if (num >= 75) return 'B+'
-  if (num >= 70) return 'B'
-  if (num >= 65) return 'B-'
-  if (num >= 60) return 'C+'
-  if (num >= 55) return 'C'
-  if (num >= 45) return 'D'
-  return 'E'
-}
+// Use centralized mapping from store so grading thresholds are consistent
+// across the application. This ensures we only display A/B/C/D/E.
+// The store's getHurufMutu handles parsing and numeric thresholds.
+// We'll call nilaiMkStore.getHurufMutu(nilai) directly from the template.
 
 // Kembali ke halaman daftar mata kuliah
 const goBack = () => {
