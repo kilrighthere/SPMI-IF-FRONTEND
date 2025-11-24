@@ -380,6 +380,7 @@ onMounted(async () => {
   font-weight: 600;
   font-family: 'Montserrat', sans-serif;
   transition: all 0.25s ease;
+  color: white;
 }
 
 .btn-add:hover {
