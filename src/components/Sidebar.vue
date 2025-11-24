@@ -139,22 +139,22 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
               <i class="ri-file-text-line"></i>
               <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPMK</span>
             </RouterLink>
-            <RouterLink
+            <!-- <RouterLink
               :to="`/kurikulum/${kurikulumId}/kurikulum-mk`"
               class="menu-kurikulum"
               :title="sidebarStore.isMinimized ? 'Kurikulum Mata Kuliah' : ''"
             >
               <i class="ri-file-list-3-line"></i>
               <span class="submenu-title" v-show="!sidebarStore.isMinimized">Kurikulum MK</span>
-            </RouterLink>
-            <RouterLink
+            </RouterLink> -->
+            <!-- <RouterLink
               :to="`/kurikulum/${kurikulumId}/cpmk-mk`"
               class="menu-kurikulum"
               :title="sidebarStore.isMinimized ? 'Korelasi CPMK MK' : ''"
             >
               <i class="ri-links-line"></i>
               <span class="submenu-title" v-show="!sidebarStore.isMinimized">CPMK MK</span>
-            </RouterLink>
+            </RouterLink> -->
             <RouterLink
               :to="`/kurikulum/${kurikulumId}/mk-periode`"
               class="menu-kurikulum"
