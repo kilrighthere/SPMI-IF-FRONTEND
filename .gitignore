@@ -31,3 +31,5 @@ coverage
 
 # Temporary or local dataset/collections
 tambahan.json
+
+.env
