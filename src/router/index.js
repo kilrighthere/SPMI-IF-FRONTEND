@@ -217,6 +217,22 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   document.title = to.meta.title ? `${to.meta.title} - OBELIKS` : 'OBELIKS'
 
+  const { useAuthStore } = await import('@/stores/auth')
+  const auth = useAuthStore()
+
+  if (to.path === '/login') {
+    const hasActiveSession = localStorage.getItem('token') || localStorage.getItem('user')
+
+    if (hasActiveSession) {
+      const ok = await auth.checkAuth()
+
+      if (ok && auth.isAuthenticated) {
+        return next({ path: '/dashboard' })
+      }
+    }
+    return next()
+  }
+
   // Jika route membutuhkan autentikasi, cek auth store saat runtime
   if (to.meta.requiresAuth) {
     // import store lazily to avoid circular deps during router creation
