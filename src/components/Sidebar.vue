@@ -57,7 +57,6 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
           class="menu-sidebar"
           :class="{ 'router-link-active': isKurikulumActive }"
           :title="sidebarStore.isMinimized ? 'Kurikulum' : ''"
-          v-if="!isMahasiswa"
         >
           <i class="ri-folder-2-fill"></i>
           <span class="menu-title" v-show="!sidebarStore.isMinimized">Kurikulum</span>

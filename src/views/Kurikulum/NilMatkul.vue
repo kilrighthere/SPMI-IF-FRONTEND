@@ -923,7 +923,7 @@ onMounted(async () => {
       </div>
 
       <!-- Action Button -->
-      <div class="action-section" v-if="canManageKurikulumMk">
+      <div class="action-section" v-if="canManageKurikulumMk||isDosen">
         <input
           type="file"
           id="excelUpload"
