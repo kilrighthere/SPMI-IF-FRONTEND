@@ -53,6 +53,15 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
           <span class="menu-title" v-show="!sidebarStore.isMinimized">Dashboard</span>
         </RouterLink>
         <RouterLink
+          v-if="isDosen"
+          to="/admin/dosen-wali"
+          class="menu-sidebar"
+          :title="sidebarStore.isMinimized ? 'Dosen Wali' : ''"
+        >
+          <i class="ri-team-fill"></i>
+          <span class="menu-title" v-show="!sidebarStore.isMinimized">Dosen Wali</span>
+        </RouterLink>
+        <RouterLink
           to="/kurikulum"
           class="menu-sidebar"
           :class="{ 'router-link-active': isKurikulumActive }"

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Radar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -18,6 +19,9 @@ ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, 
 
 // Use centralized permissions
 const { isAdmin, isDosen, isMahasiswa, userId, userRole } = usePermissions()
+const route = useRoute()
+const router = useRouter()
+const targetNim = computed(() => route.query?.nim || null)
 const currentUserNim = userId
 
 // State
@@ -134,6 +138,14 @@ async function fetchMahasiswaList() {
       // Untuk dosen/admin, tampilkan semua mahasiswa
       mahasiswaList.value = allMahasiswa
       filteredMahasiswaList.value = allMahasiswa
+
+      // Auto-select jika ada nim di query
+      if (targetNim.value) {
+        const target = allMahasiswa.find((mhs) => mhs.nim === targetNim.value)
+        if (target) {
+          selectMahasiswa(target)
+        }
+      }
     }
   } catch (err) {
     console.error('Error fetching mahasiswa:', err)
@@ -204,6 +216,25 @@ function selectMahasiswa(mhs) {
     document.getElementById('chart-section')?.scrollIntoView({ behavior: 'smooth' })
   }, 100)
 }
+
+// Listen to query change (e.g., from DosenWali link)
+watch(
+  () => route.query.nim,
+  (nim) => {
+    if (!nim) return
+    const target = mahasiswaList.value.find((mhs) => mhs.nim === nim)
+    if (target) {
+      selectMahasiswa(target)
+    } else {
+      // If data belum ada, fetch list then select
+      fetchMahasiswaList().then(() => {
+        const refreshed = mahasiswaList.value.find((mhs) => mhs.nim === nim)
+        if (refreshed) selectMahasiswa(refreshed)
+      })
+    }
+  },
+  { immediate: false },
+)
 
 function clearSelection() {
   selectedMahasiswa.value = null

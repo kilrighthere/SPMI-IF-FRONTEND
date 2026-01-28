@@ -23,6 +23,7 @@ import Mahasiswa from '@/views/Kurikulum/Mahasiswa.vue'
 import CPLBk from '@/views/Kurikulum/CplBk.vue'
 import NilaiCpmk from '@/views/Kurikulum/NilaiCpmk.vue'
 import BobotCpmk from '@/views/Kurikulum/BobotCpmk.vue'
+import DosenWali from '@/views/DosenWali.vue'
 
 const routes = [
   { path: '/', redirect: '/login' },
@@ -204,6 +205,15 @@ const routes = [
       title: 'Nilai CPL per Periode',
       requiresAuth: true,
       roles: ['admin', 'dosen', 'mahasiswa'],
+    },
+  },
+  {
+    path: '/admin/dosen-wali',
+    component: DosenWali,
+    meta: {
+      title: 'Dosen Wali',
+      requiresAuth: true,
+      roles: ['admin', 'dosen'],
     },
   },
 ]

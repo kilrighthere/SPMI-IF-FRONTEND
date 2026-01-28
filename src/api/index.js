@@ -231,6 +231,15 @@ export const addMahasiswa = (data) => api.post('/add/mahasiswa', data)
 export const updateMahasiswa = (nim, data) => api.put(`/update/mahasiswa/${nim}`, data)
 export const deleteMahasiswa = (nim) => api.delete(`/delete/mahasiswa/${nim}`)
 
+// Dosen
+export const getDosenList = () => api.get('/list/dosen')
+
+// Dosen Wali
+export const getDosenWaliList = () => api.get('/list/dosen-wali')
+export const getDosenWaliByNip = (nip) => api.get(`/view/dosen-wali/${nip}`)
+export const addDosenWali = (data) => api.post('/add/dosen-wali', data)
+export const deleteDosenWali = (nip, nim) => api.delete(`/delete/dosen-wali/${nip}/${nim}`)
+
 // Kurikulum
 export const getKurikulumList = () => api.get('/list/kurikulum')
 export const getKurikulumById = (id) => api.get(`/view/kurikulum/${id}`)

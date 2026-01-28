@@ -77,8 +77,8 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- User Navigation (only show if authenticated and not on login page) -->
-        <div v-if="auth.isAuthenticated && variant !== 'login'" class="header-right">
+        <!-- User Navigation (show when user data exists or authenticated, hide on login page) -->
+        <div v-if="(auth.user || auth.isAuthenticated) && variant !== 'login'" class="header-right">
           <div class="user-nav" ref="dropdownRef">
             <button @click="toggleDropdown" class="user-button" :class="{ active: isDropdownOpen }">
               <div class="user-avatar">
