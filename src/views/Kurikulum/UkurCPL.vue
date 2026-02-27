@@ -244,6 +244,17 @@ function clearSelection() {
   filteredMahasiswaList.value = mahasiswaList.value
 }
 
+// Handle back button - dosen goes to DosenWali, admin goes to mahasiswa list
+function handleBack() {
+  if (isDosen.value && !isAdmin.value) {
+    // Dosen (non-admin) kembali ke halaman Dosen Wali
+    router.push('/admin/dosen-wali')
+  } else {
+    // Admin kembali ke daftar mahasiswa di halaman ini
+    clearSelection()
+  }
+}
+
 // Get nilai CPL from petaNilaiData
 function getNilaiCPL(idCpl) {
   if (!petaNilaiData.value) return '0.00'
@@ -288,6 +299,11 @@ watch(searchQuery, (newQuery) => {
 })
 
 onMounted(() => {
+  // Dosen (non-admin) tanpa nim query harus kembali ke DosenWali
+  if (isDosen.value && !isAdmin.value && !targetNim.value) {
+    router.replace('/admin/dosen-wali')
+    return
+  }
   fetchMahasiswaList()
 })
 </script>
@@ -298,18 +314,6 @@ onMounted(() => {
       {{ isMahasiswa ? 'Pengukuran CPL Saya' : 'Pengukuran CPL Mahasiswa' }}
     </h1>
 
-    <!-- Search Bar - Hanya untuk Dosen/Admin -->
-    <div v-if="isDosen || isAdmin" class="search-section">
-      <div class="search-box">
-        <i class="ri-search-line search-icon"></i>
-        <input
-          type="text"
-          v-model="searchQuery"
-          placeholder="Cari mahasiswa berdasarkan NIM atau nama..."
-          class="search-input"
-        />
-      </div>
-    </div>
     <!-- Loading State -->
     <div v-if="isLoading" class="text-center my-5">
       <div class="spinner-border text-primary" role="status">
@@ -318,8 +322,8 @@ onMounted(() => {
       <p class="mt-2">Memuat daftar mahasiswa...</p>
     </div>
 
-    <!-- Mahasiswa Catalog - Table (Hanya untuk Dosen/Admin) -->
-    <div v-else-if="(isDosen || isAdmin) && !selectedMahasiswa" class="table-container">
+    <!-- Mahasiswa Catalog - Table (Hanya untuk Admin) -->
+    <div v-else-if="isAdmin && !selectedMahasiswa" class="table-container">
       <div class="table-header">
         <h5 class="table-title">
           <i class="ri-user-line"></i>
@@ -365,124 +369,138 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Chart Section -->
+    <!-- Chart Section - Two Column Grid Layout -->
     <div v-else-if="selectedMahasiswa || isMahasiswa" id="chart-section">
-      <!-- Selected Mahasiswa Info (Hanya untuk Dosen/Admin) -->
-      <div v-if="isDosen || isAdmin" class="selected-mahasiswa-banner">
-        <div class="selected-info-content">
-          <div class="selected-details">
-            <h4>{{ selectedMahasiswa.nama }}</h4>
-            <p class="nim-display">NIM: {{ selectedMahasiswa.nim }}</p>
-          </div>
-        </div>
-        <button class="btn btn-back" @click="clearSelection">
-          <i class="ri-arrow-left-line"></i> Kembali ke Daftar
-        </button>
-      </div>
-
-      <!-- Mahasiswa Profile (Untuk Mahasiswa) -->
-      <div v-else-if="isMahasiswa && selectedMahasiswa" class="mahasiswa-profile-banner">
-        <div class="profile-content">
-          <div class="profile-details">
-            <h4>{{ selectedMahasiswa.nama }}</h4>
-            <p class="nim-display">NIM: {{ selectedMahasiswa.nim }}</p>
-          </div>
-        </div>
-      </div>
-
       <!-- Error Message -->
       <div v-if="error" class="alert alert-warning" role="alert">
         <i class="ri-alert-line"></i> {{ error }}
       </div>
 
-      <!-- Loading Chart -->
-      <div v-if="isLoadingChart" class="text-center my-5">
+      <!-- Loading State -->
+      <div v-if="isLoadingChart && isLoadingTable" class="text-center my-5">
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
-        <p class="mt-2">Memuat peta nilai CPL...</p>
+        <p class="mt-2">Memuat data CPL...</p>
       </div>
 
-      <!-- Chart -->
-      <div v-else-if="chartData" class="chart-card">
-        <div class="chart-header">
-          <h5 class="chart-title">
-            <i class="ri-radar-line"></i>
-            Capaian Pembelajaran Lulusan Program Studi
-          </h5>
-        </div>
-        <div class="chart-body">
-          <div class="chart-container">
-            <Radar :data="chartData" :options="chartOptions" />
-          </div>
-        </div>
-      </div>
-
-      <!-- No Chart Data -->
-      <div v-else class="alert alert-info">
-        <i class="ri-information-line"></i> Data grafik tidak tersedia
-      </div>
-
-      <!-- Detail Table Section -->
-      <!-- <div v-if="!isLoadingChart && !isLoadingTable" class="detail-section"> -->
-        <h5 class="section-title">
-          <i class="ri-table-line"></i>
-          Detail Nilai CPL Per Mata Kuliah
-        </h5>
-
-        <!-- Loading Table -->
-        <div v-if="isLoadingTable" class="text-center my-4">
-          <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-          <p class="mt-2">Memuat detail nilai...</p>
-        </div>
-
-        <!-- CPL Cards -->
-        <div v-else-if="groupedByCPL && groupedByCPL.length > 0" class="cpl-cards-container">
-          <div v-for="cplGroup in groupedByCPL" :key="cplGroup.id_cpl" class="cpl-card">
-            <div class="cpl-card-header">
-              <div class="cpl-info">
-                <span class="cpl-code-badge">{{ cplGroup.id_cpl }}</span>
-                <span class="cpl-nilai-badge">Nilai CPL: {{ cplGroup.nilai_cpl }}</span>
+      <!-- Two Column Grid -->
+      <div v-else class="chart-section-grid">
+        <!-- LEFT COLUMN -->
+        <div class="left-column">
+          <!-- Info Mahasiswa Card -->
+          <div class="info-card">
+            <div class="info-card-body">
+              <div class="info-card-top">
+                <div class="info-details">
+                  <div class="info-avatar">
+                    <i class="ri-user-3-fill"></i>
+                  </div>
+                  <div>
+                    <h5 class="info-name">{{ selectedMahasiswa?.nama || '-' }}</h5>
+                    <span class="info-nim">NIM: {{ selectedMahasiswa?.nim || '-' }}</span>
+                  </div>
+                </div>
+                <button v-if="isDosen || isAdmin" class="btn btn-back-compact" @click="handleBack">
+                  <i class="ri-arrow-left-line"></i> Kembali
+                </button>
               </div>
             </div>
-            <div class="cpl-card-body">
-              <table class="table cpl-table">
-                <thead>
-                  <tr>
-                    <th width="60">NO</th>
-                    <th>NAMA MATA KULIAH</th>
-                    <th width="150">NILAI AKHIR MK</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(course, index) in cplGroup.courses"
-                    :key="`${cplGroup.id_cpl}-${course.nama_mk}-${index}`"
-                  >
-                    <td class="text-center">{{ index + 1 }}</td>
-                    <td>
-                      <span class="mk-name">{{ course.nama_mk }}</span>
-                    </td>
-                    <td class="text-center">
-                      <span class="badge-nilai">{{
-                        parseFloat(course.nilai_akhir).toFixed(2)
-                      }}</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+          </div>
+
+          <!-- Radar Chart Card -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <h5 class="chart-title">
+                <i class="ri-radar-line"></i>
+                Capaian Pembelajaran Lulusan Program Studi
+              </h5>
+            </div>
+            <div class="chart-body">
+              <div v-if="isLoadingChart" class="text-center my-4">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Memuat radar chart...</p>
+              </div>
+              <div v-else-if="chartData" class="chart-container">
+                <Radar :data="chartData" :options="chartOptions" />
+              </div>
+              <div v-else class="no-data-message-inline">
+                <i class="ri-information-line"></i>
+                <span>Data grafik tidak tersedia</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- No Data -->
-        <div v-else class="no-data-message">
-          <i class="ri-file-list-3-line"></i>
-          <p>Tidak ada data nilai mata kuliah yang tersedia</p>
+        <!-- RIGHT COLUMN -->
+        <div class="right-column">
+          <!-- Detail Nilai CPL Card -->
+          <div class="cpl-detail-card">
+            <div class="cpl-detail-header">
+              <h5 class="cpl-detail-title">
+                <i class="ri-table-line"></i>
+                Detail Nilai CPL Per Mata Kuliah
+              </h5>
+            </div>
+            <div class="cpl-detail-body">
+              <!-- Loading Table -->
+              <div v-if="isLoadingTable" class="text-center my-4">
+                <div class="spinner-border" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Memuat detail nilai...</p>
+              </div>
+
+              <!-- CPL Groups -->
+              <div v-else-if="groupedByCPL && groupedByCPL.length > 0" class="cpl-groups-list">
+                <div v-for="cplGroup in groupedByCPL" :key="cplGroup.id_cpl" class="cpl-card">
+                  <div class="cpl-card-header">
+                    <div class="cpl-info">
+                      <span class="cpl-code-badge">{{ cplGroup.id_cpl }}</span>
+                      <span class="cpl-nilai-badge">Nilai CPL: {{ cplGroup.nilai_cpl }}</span>
+                    </div>
+                  </div>
+                  <div class="cpl-card-body">
+                    <table class="table cpl-table">
+                      <thead>
+                        <tr>
+                          <th width="50">NO</th>
+                          <th>NAMA MATA KULIAH</th>
+                          <th width="120">NILAI AKHIR MK</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          v-for="(course, index) in cplGroup.courses"
+                          :key="`${cplGroup.id_cpl}-${course.nama_mk}-${index}`"
+                        >
+                          <td class="text-center">{{ index + 1 }}</td>
+                          <td>
+                            <span class="mk-name">{{ course.nama_mk }}</span>
+                          </td>
+                          <td class="text-center">
+                            <span class="badge-nilai">{{
+                              parseFloat(course.nilai_akhir).toFixed(2)
+                            }}</span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- No Data -->
+              <div v-else class="no-data-message">
+                <i class="ri-file-list-3-line"></i>
+                <p>Tidak ada data nilai mata kuliah yang tersedia</p>
+              </div>
+            </div>
+          </div>
         </div>
-      <!-- </div> -->
+      </div>
     </div>
   </div>
 </template>
@@ -537,12 +555,6 @@ onMounted(() => {
   transform: translateY(-50%);
   font-size: 1.2rem;
   color: #999;
-}
-
-.search-info {
-  font-size: 0.9rem;
-  color: #666;
-  padding-left: 0.5rem;
 }
 
 /* Table Container */
@@ -672,126 +684,363 @@ onMounted(() => {
   color: #666;
 }
 
-/* Selected Mahasiswa Banner */
-.selected-mahasiswa-banner {
-  background: linear-gradient(90deg, #a6d600 0%, #d5ff5f 100%);
-  border-radius: 8px;
-  padding: 1.25rem 1.5rem;
-  color: #2c3e50;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 8px rgba(166, 214, 0, 0.2);
-  margin-bottom: 1.25rem;
+/* ============================================
+   TWO-COLUMN GRID LAYOUT
+   ============================================ */
+.chart-section-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  align-items: start;
 }
 
-.selected-info-content {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.selected-details h4 {
-  margin: 0 0 0.4rem 0;
-  font-weight: 600;
-  font-size: 1.4rem;
-}
-
-.nim-display {
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.25);
-  padding: 0.35rem 1rem;
-  border-radius: 18px;
-  font-family: 'Courier New', monospace;
-  font-weight: 500;
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-.btn-back {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(44, 62, 80, 0.1);
-  border: 2px solid rgba(44, 62, 80, 0.3);
-  color: #2c3e50;
-  font-weight: 600;
-  padding: 0.6rem 1.4rem;
-  border-radius: 24px;
-  transition: all 0.2s;
-}
-
-.btn-back:hover {
-  background: rgba(44, 62, 80, 0.2);
-  border-color: #2c3e50;
-  color: #2c3e50;
-}
-
-/* Mahasiswa Profile Banner */
-.mahasiswa-profile-banner {
-  background: linear-gradient(90deg, #a6d600 0%, #d5ff5f 100%);
-  border-radius: 8px;
-  padding: 1.25rem 1.5rem;
-  color: #2c3e50;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(166, 214, 0, 0.2);
-  margin-bottom: 1.25rem;
-}
-
-.profile-content {
+.left-column {
   display: flex;
   flex-direction: column;
+  gap: 1.25rem;
+}
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================
+   INFO MAHASISWA CARD (compact, top-left)
+   ============================================ */
+.info-card {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.info-card-body {
+  padding: 1rem 1.25rem;
+}
+
+.info-card-top {
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
-.profile-details h4 {
-  margin: 0 0 0.4rem 0;
+.info-details {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.info-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a6d600 0%, #d5ff5f 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.info-avatar i {
+  font-size: 1.25rem;
+  color: #2c3e50;
+}
+
+.info-name {
+  margin: 0 0 0.15rem 0;
   font-weight: 600;
-  font-size: 1.4rem;
+  font-size: 0.95rem;
+  color: #2c3e50;
+  line-height: 1.3;
 }
 
-/* Chart Card */
+.info-nim {
+  display: inline-block;
+  background: #f0f0f0;
+  padding: 0.2rem 0.65rem;
+  border-radius: 12px;
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+  font-size: 0.78rem;
+  color: #666;
+}
+
+.btn-back-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(44, 62, 80, 0.08);
+  border: 1.5px solid rgba(44, 62, 80, 0.2);
+  color: #2c3e50;
+  font-weight: 500;
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.btn-back-compact:hover {
+  background: rgba(44, 62, 80, 0.15);
+  border-color: rgba(44, 62, 80, 0.4);
+}
+
+/* ============================================
+   CHART CARD (Radar)
+   ============================================ */
 .chart-card {
   background: white;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   overflow: hidden;
 }
 
 .chart-header {
   background: linear-gradient(90deg, #a6d600 0%, #d5ff5f 100%);
-  padding: 1.25rem 1.75rem;
+  padding: 0.9rem 1.25rem;
 }
 
 .chart-title {
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   color: #2c3e50;
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .chart-title i {
-  font-size: 1.3rem;
+  font-size: 1.15rem;
 }
 
 .chart-body {
-  padding: 1.5rem 1.25rem;
+  padding: 1rem 0.75rem;
   background: white;
 }
 
 .chart-container {
   position: relative;
   width: 100%;
-  max-width: 650px;
+  max-width: 500px;
   margin: 0 auto;
-  padding: 1rem 0;
+  padding: 0.5rem 0;
 }
 
-/* Alert */
+.no-data-message-inline {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.no-data-message-inline i {
+  font-size: 1.2rem;
+}
+
+/* ============================================
+   CPL DETAIL CARD (right column, scrollable)
+   ============================================ */
+.cpl-detail-card {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 180px);
+}
+
+.cpl-detail-header {
+  background: linear-gradient(90deg, #a6d600 0%, #d5ff5f 100%);
+  padding: 0.9rem 1.25rem;
+  flex-shrink: 0;
+}
+
+.cpl-detail-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #2c3e50;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cpl-detail-title i {
+  font-size: 1.15rem;
+  color: #2c3e50;
+}
+
+.cpl-detail-body {
+  overflow-y: auto;
+  flex: 1;
+  padding: 0.75rem;
+}
+
+/* Custom scrollbar for CPL detail body */
+.cpl-detail-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cpl-detail-body::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 3px;
+}
+
+.cpl-detail-body::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border-radius: 3px;
+}
+
+.cpl-detail-body::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+
+/* CPL Groups list inside detail body */
+.cpl-groups-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Individual CPL Card */
+.cpl-card {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  overflow: hidden;
+}
+
+.cpl-card-header {
+  background: linear-gradient(90deg, #eef6d0 0%, #f7ffe6 100%);
+  padding: 0.65rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cpl-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cpl-code-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.95);
+  color: #2c3e50;
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+  border: 1px solid #d0d0d0;
+}
+
+.cpl-nilai-badge {
+  display: inline-block;
+  background: rgba(44, 62, 80, 0.1);
+  color: #2c3e50;
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.78rem;
+  font-family: 'Courier New', monospace;
+}
+
+.cpl-card-body {
+  padding: 0;
+}
+
+.cpl-table {
+  margin: 0;
+  width: 100%;
+}
+
+.cpl-table thead {
+  background-color: #f8f8f8;
+}
+
+.cpl-table thead th {
+  padding: 0.6rem 0.85rem;
+  font-weight: 600;
+  color: #5a5a5a;
+  font-size: 0.72rem;
+  letter-spacing: 0.3px;
+  border-bottom: 1.5px solid #e0e0e0;
+  text-align: left;
+}
+
+.cpl-table tbody td {
+  padding: 0.55rem 0.85rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+  font-size: 0.82rem;
+}
+
+.cpl-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.cpl-table tbody tr:hover {
+  background-color: #f9fff4;
+}
+
+.cpl-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.mk-name {
+  font-weight: 500;
+  color: #2c3e50;
+  font-size: 0.82rem;
+}
+
+.badge-nilai {
+  display: inline-block;
+  background: linear-gradient(90deg, #a6d600 0%, #d5ff5f 100%);
+  color: #2c3e50;
+  padding: 0.25rem 0.6rem;
+  border-radius: 5px;
+  font-weight: 600;
+  font-size: 0.78rem;
+  font-family: 'Courier New', monospace;
+}
+
+.no-data-message {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #999;
+  background: white;
+}
+
+.no-data-message i {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+  opacity: 0.4;
+}
+
+.no-data-message p {
+  font-size: 1rem;
+  margin: 0;
+  color: #666;
+}
+
+/* ============================================
+   ALERTS & UTILITIES
+   ============================================ */
 .alert {
   border-radius: 8px;
   border: none;
@@ -808,7 +1057,6 @@ onMounted(() => {
   border-left: 4px solid #ffc107;
 }
 
-/* Loading */
 .spinner-border {
   width: 2.5rem;
   height: 2.5rem;
@@ -823,10 +1071,38 @@ onMounted(() => {
   margin: 3rem 0;
 }
 
-/* Responsive */
+.my-4 {
+  margin: 1.5rem 0;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 1200px) {
+  .chart-container {
+    max-width: 400px;
+  }
+}
+
 @media (max-width: 992px) {
   .ukur-cpl-container {
     padding: 15px;
+  }
+
+  .chart-section-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cpl-detail-card {
+    max-height: none;
+  }
+
+  .chart-container {
+    max-width: 450px;
   }
 }
 
@@ -843,28 +1119,19 @@ onMounted(() => {
     max-width: 100%;
   }
 
-  .selected-mahasiswa-banner {
+  .info-card-top {
     flex-direction: column;
-    gap: 0.875rem;
-    text-align: center;
-    padding: 1rem 1.25rem;
-  }
-
-  .selected-info-content {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .selected-details h4 {
-    font-size: 1.125rem;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 
   .chart-body {
-    padding: 1.25rem 0.875rem;
+    padding: 1rem 0.5rem;
   }
 
   .chart-container {
-    padding: 0.75rem 0;
+    padding: 0.5rem 0;
+    max-width: 100%;
   }
 
   .mahasiswa-table thead th {
@@ -922,183 +1189,51 @@ onMounted(() => {
 
   .cpl-table thead th,
   .cpl-table tbody td {
-    padding: 0.7rem 0.5rem;
-    font-size: 0.8rem;
+    padding: 0.5rem 0.4rem;
+    font-size: 0.75rem;
   }
 
   .cpl-card-header {
-    padding: 0.85rem 1rem;
+    padding: 0.6rem 0.75rem;
   }
 
   .cpl-info {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: 0.4rem;
   }
 
   .cpl-code-badge,
   .cpl-nilai-badge {
-    font-size: 0.8rem;
-    padding: 0.35rem 0.75rem;
+    font-size: 0.72rem;
+    padding: 0.25rem 0.6rem;
   }
 
   .badge-nilai {
-    font-size: 0.75rem;
-    padding: 0.3rem 0.5rem;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
+
+  .info-details {
+    gap: 0.5rem;
+  }
+
+  .info-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .info-avatar i {
+    font-size: 1rem;
+  }
+
+  .info-name {
+    font-size: 0.85rem;
+  }
+
+  .info-nim {
+    font-size: 0.72rem;
   }
 }
-
-/* Detail Section */
-.detail-section {
-  margin-top: 1.25rem;
-}
-
-.section-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 0.875rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.section-title i {
-  font-size: 1.3rem;
-  color: #a6d600;
-}
-
-/* CPL Cards Container */
-.cpl-cards-container {
-  display: grid;
-  gap: 1rem;
-  margin-top: 0.75rem;
-}
-
-/* Individual CPL Card */
-.cpl-card {
-  background: white;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  overflow: hidden;
-}
-
-.cpl-card-header {
-  background: linear-gradient(90deg, #a6d600 0%, #d5ff5f 100%);
-  padding: 0.875rem 1.25rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.cpl-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.cpl-code-badge {
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.95);
-  color: #2c3e50;
-  padding: 0.45rem 1rem;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.95rem;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 0.5px;
-}
-
-.cpl-nilai-badge {
-  display: inline-block;
-  background: rgba(44, 62, 80, 0.15);
-  color: #2c3e50;
-  padding: 0.45rem 1rem;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  font-family: 'Courier New', monospace;
-}
-
-.cpl-card-body {
-  padding: 0;
-}
-
-.cpl-table {
-  margin: 0;
-  width: 100%;
-}
-
-.cpl-table thead {
-  background-color: #f5f5f5;
-}
-
-.cpl-table thead th {
-  padding: 0.95rem 1.5rem;
-  font-weight: 600;
-  color: #5a5a5a;
-  font-size: 0.8rem;
-  letter-spacing: 0.5px;
-  border-bottom: 2px solid #e0e0e0;
-  text-align: left;
-}
-
-.cpl-table tbody td {
-  padding: 1rem 1.5rem;
-  vertical-align: middle;
-  border-bottom: 1px solid #f0f0f0;
-  color: #333;
-}
-
-.cpl-table tbody tr {
-  transition: background-color 0.2s ease;
-}
-
-.cpl-table tbody tr:hover {
-  background-color: #f9fff4;
-}
-
-.cpl-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.mk-name {
-  font-weight: 500;
-  color: #2c3e50;
-  font-size: 0.95rem;
-}
-
-.badge-nilai {
-  display: inline-block;
-  background: linear-gradient(90deg, #a6d600 0%, #d5ff5f 100%);
-  color: #2c3e50;
-  padding: 0.4rem 0.9rem;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  font-family: 'Courier New', monospace;
-}
-
-.no-data-message {
-  text-align: center;
-  padding: 3rem 2rem;
-  color: #999;
-  background: white;
-}
-
-.no-data-message i {
-  font-size: 3.5rem;
-  margin-bottom: 1rem;
-  opacity: 0.4;
-}
-
-.no-data-message p {
-  font-size: 1rem;
-  margin: 0;
-  color: #666;
-}
-
-.my-4 {
-  margin: 1.5rem 0;
-}
 </style>
+

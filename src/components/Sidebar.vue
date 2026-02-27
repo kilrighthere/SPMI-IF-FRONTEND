@@ -18,7 +18,9 @@ const kurikulumId = computed(() => route.params.id)
 // cek role user
 const userRole = computed(() => auth.user?.role?.toLowerCase())
 const isMahasiswa = computed(() => userRole.value === 'mahasiswa')
+const isAdmin = computed(() => userRole.value === 'admin')
 const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 'admin')
+const isDosenOnly = computed(() => userRole.value === 'dosen')
 </script>
 
 <template>
@@ -203,9 +205,9 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
             <i class="ri-line-chart-line"></i>
             <span class="submenu-title" v-show="!sidebarStore.isMinimized">Nilai CPMK</span>
           </RouterLink>
-          <!-- Menu Mahasiswa - berbeda untuk mahasiswa dan dosen -->
+          <!-- Menu Mahasiswa - hanya untuk admin -->
           <RouterLink
-            v-if="isDosen"
+            v-if="isAdmin"
             :to="`/kurikulum/${kurikulumId}/mahasiswa`"
             class="menu-kurikulum"
             :title="sidebarStore.isMinimized ? 'Mahasiswa' : ''"
@@ -213,14 +215,16 @@ const isDosen = computed(() => userRole.value === 'dosen' || userRole.value === 
             <i class="ri-group-line"></i>
             <span class="submenu-title" v-show="!sidebarStore.isMinimized">Mahasiswa</span>
           </RouterLink>
+          <!-- Pengukuran CPL - hanya untuk admin dan mahasiswa, dosen akses via DosenWali -->
           <RouterLink
+            v-if="!isDosenOnly"
             :to="`/kurikulum/${kurikulumId}/ukur-cpl`"
             class="menu-kurikulum"
-            :title="sidebarStore.isMinimized ? 'Pengukuran CPL Mahasiswa' : ''"
+            :title="sidebarStore.isMinimized ? (isMahasiswa ? 'Pengukuran CPL Saya' : 'Pengukuran CPL Mahasiswa') : ''"
           >
             <i class="ri-line-chart-line"></i>
             <span class="submenu-title" v-show="!sidebarStore.isMinimized"
-              >Pengukuran CPL Mahasiswa</span
+              >{{ isMahasiswa ? 'Pengukuran CPL Saya' : 'Pengukuran CPL Mahasiswa' }}</span
             >
           </RouterLink>
           <!-- <RouterLink
