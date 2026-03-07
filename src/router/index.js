@@ -24,6 +24,7 @@ import CPLBk from '@/views/Kurikulum/CplBk.vue'
 import NilaiCpmk from '@/views/Kurikulum/NilaiCpmk.vue'
 import BobotCpmk from '@/views/Kurikulum/BobotCpmk.vue'
 import DosenWali from '@/views/DosenWali.vue'
+import SubMenu from '@/views/Kurikulum/SubMenu.vue'
 
 const routes = [
   { path: '/', redirect: '/login' },
@@ -49,7 +50,16 @@ const routes = [
     component: DetailKur,
     meta: { title: 'Detail Kurikulum', requiresAuth: true, roles: ['admin', 'dosen', 'mahasiswa'] },
     children: [
-      { path: '', redirect: 'profil-lulusan' },
+      { path: '', redirect: 'sub-menu' },
+      {
+        path: 'sub-menu',
+        component: SubMenu,
+        meta: {
+          title: 'Sub Menu Detail Kurikulum',
+          requiresAuth: true,
+          roles: ['admin', 'dosen', 'mahasiswa'],
+        },
+      },
       {
         path: 'profil-lulusan',
         component: ProfilLulusan,
@@ -193,7 +203,7 @@ const routes = [
     path: '/kurikulum-detail',
     redirect: (to) => {
       const kurikulumId = import.meta.env.VITE_DEFAULT_KURIKULUM_ID || '2020'
-      return `/kurikulum/${kurikulumId}/profil-lulusan`
+      return `/kurikulum/${kurikulumId}/sub-menu`
     },
   },
   // Route untuk view nilai mahasiswa per periode
@@ -229,14 +239,16 @@ router.beforeEach(async (to, from, next) => {
 
   const { useAuthStore } = await import('@/stores/auth')
   const auth = useAuthStore()
+  const isAuthenticated = Boolean(auth.isAuthenticated?.value ?? auth.isAuthenticated)
 
   if (to.path === '/login') {
     const hasActiveSession = localStorage.getItem('token') || localStorage.getItem('user')
 
     if (hasActiveSession) {
       const ok = await auth.checkAuth()
+      const isAuthedAfterCheck = Boolean(auth.isAuthenticated?.value ?? auth.isAuthenticated)
 
-      if (ok && auth.isAuthenticated) {
+      if (ok && isAuthedAfterCheck) {
         return next({ path: '/dashboard' })
       }
     }
@@ -249,7 +261,7 @@ router.beforeEach(async (to, from, next) => {
     const { useAuthStore } = await import('@/stores/auth')
     const auth = useAuthStore()
     // Ensure we have attempted silent refresh if no token yet
-    if (!auth.isAuthenticated || !auth.isAuthenticated.value) {
+    if (!isAuthenticated) {
       // try to refresh once (checkAuth will return boolean)
       const ok = await auth.checkAuth()
       if (!ok) return next({ path: '/login' })

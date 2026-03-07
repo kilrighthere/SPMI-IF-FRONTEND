@@ -67,7 +67,7 @@ onUnmounted(() => {
   <header :class="['header', variantClass]">
     <div class="header-container">
       <div class="header-content">
-        <div class="header-left">
+        <!-- <div class="header-left">
           <div class="logo-section">
             <img src="../assets/Undip.png" alt="Logo Undip" class="header-logo" />
             <div class="brand-info">
@@ -75,7 +75,7 @@ onUnmounted(() => {
               <p class="brand-subtitle">Departemen Informatika</p>
             </div>
           </div>
-        </div>
+        </div> -->
 
         <!-- User Navigation (show when user data exists or authenticated, hide on login page) -->
         <div v-if="(auth.user || auth.isAuthenticated) && variant !== 'login'" class="header-right">
@@ -84,10 +84,10 @@ onUnmounted(() => {
               <div class="user-avatar">
                 {{ userInitials }}
               </div>
-              <div class="user-info">
+              <!-- <div class="user-info">
                 <span class="user-name">{{ auth.user?.name || 'User' }}</span>
                 <span class="user-role">{{ auth.user?.role || 'User' }}</span>
-              </div>
+              </div> -->
               <svg
                 class="chevron-icon"
                 :class="{ rotate: isDropdownOpen }"
@@ -152,48 +152,48 @@ onUnmounted(() => {
 <style scoped>
 /* Header Base Styles */
 .header {
-  background-color: white;
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
+  /* background-color: white; */
+  /* position: fixed; */
+  /* left: 0; */
+  /* right: 0;
+  top: 0; */
   z-index: 100;
-  border-bottom: 1px solid #e5e7eb;
+  /* border-bottom: 1px solid #e5e7eb;
   backdrop-filter: blur(8px);
-  background-color: rgba(255, 255, 255, 0.95);
+  background-color: rgba(255, 255, 255, 0.95); */
   transition: all 0.3s ease;
 }
 
-.header-default {
+/* .header-default {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .header-login {
   position: relative;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-}
+} */
 
-.header-container {
+/* .header-container {
   width: 100%;
   margin: 0;
   padding: 0 20px;
   box-sizing: border-box;
-}
+} */
 
-.header-content {
+/* .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
   height: 72px;
   gap: 24px;
-}
+} */
 
 /* Left Section */
-.header-left {
+/* .header-left {
   display: flex;
   align-items: center;
   min-width: 0;
-}
+} */
 
 .logo-section {
   display: flex;
@@ -253,7 +253,7 @@ onUnmounted(() => {
   padding: 7px 12px 7px 7px;
   background-color: white;
   border: 1.5px solid #e5e7eb;
-  border-radius: 11px;
+  border-radius: 50px;
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: 'Montserrat', sans-serif;

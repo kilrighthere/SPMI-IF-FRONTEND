@@ -20,7 +20,7 @@ const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
 // Get data from store
 const profilLulusan = computed(() => plStore.profilLulusanList)
 const isLoading = computed(() => plStore.isLoading)
-const error = computed(() => plStore.error)
+const popupError = ref('')
 
 // Form untuk tambah/edit profil lulusan - sesuai format API baru
 const form = ref({
@@ -61,8 +61,8 @@ const validateForm = () => {
 // Tambah profil lulusan baru
 const savePL = async () => {
   try {
-    // Reset error message first
-    error.value = ''
+    // Reset popup message first
+    popupError.value = ''
 
     // Validate form before submission
     if (!validateForm()) {
@@ -70,14 +70,22 @@ const savePL = async () => {
     }
 
     if (isEditing.value) {
-      await plStore.editPL(form.value.id_pl, form.value)
+      const result = await plStore.editPL(form.value.id_pl, form.value)
+      if (!result) {
+        popupError.value = plStore.error || 'Gagal memperbarui profil lulusan'
+        return
+      }
     } else {
-      await plStore.createPL(form.value)
+      const result = await plStore.createPL(form.value)
+      if (!result) {
+        popupError.value = plStore.error || 'Gagal menambahkan profil lulusan'
+        return
+      }
     }
     resetForm()
   } catch (err) {
     console.error('Error saving profil lulusan:', err)
-    error.value = isEditing.value ? 'Gagal mengupdate data' : 'Gagal menambah data'
+    popupError.value = isEditing.value ? 'Gagal mengupdate data' : 'Gagal menambah data'
   }
 }
 
@@ -97,7 +105,10 @@ const editPL = (profil) => {
 // Hapus profil lulusan
 const removePL = async (id) => {
   if (confirm('Apakah anda yakin ingin menghapus profil lulusan ini?')) {
-    await plStore.removePL(id)
+    const result = await plStore.removePL(id)
+    if (!result?.success) {
+      popupError.value = result?.error || 'Gagal menghapus profil lulusan'
+    }
   }
 }
 
@@ -105,14 +116,14 @@ const removePL = async (id) => {
 const resetForm = () => {
   form.value = { id_pl: '', deskripsi: '' }
   formErrors.value = { id_pl: '', deskripsi: '' }
-  error.value = ''
+  popupError.value = ''
   isEditing.value = false
   showForm.value = false
 }
 
 // Clear error message only (keep form data)
 const clearError = () => {
-  error.value = ''
+  popupError.value = ''
 }
 
 // Load data saat komponen dimuat
@@ -133,6 +144,7 @@ onMounted(async () => {
         <h3>Profil Lulusan Program Studi</h3>
         <button
           class="btn-add"
+          :class="{ 'is-cancel': showForm }"
           @click="showForm ? resetForm() : (showForm = true)"
           v-if="can('profilLulusan', 'create')"
         >
@@ -147,7 +159,7 @@ onMounted(async () => {
           <input
             type="text"
             v-model="form.id_pl"
-            placeholder="Kode Profil Lulusan (contoh: PL001)"
+            placeholder="Kode Profil Lulusan (contoh: PL-01)"
             :class="{ 'input-error': formErrors.id_pl }"
           />
           <div v-if="formErrors.id_pl" class="error-text">{{ formErrors.id_pl }}</div>
@@ -163,7 +175,7 @@ onMounted(async () => {
         </div>
         <div class="form-actions">
           <button class="btn-save" @click="savePL">
-            {{ isEditing ? 'Update' : 'Simpan' }}
+            {{ isEditing ? 'Perbarui' : 'Simpan' }}
           </button>
           <!-- <button v-if="isEditing" class="btn-cancel" @click="resetForm">Batal</button> -->
         </div>
@@ -172,14 +184,8 @@ onMounted(async () => {
       <!-- Loading indicator -->
       <div v-if="isLoading" class="loading">Loading...</div>
 
-      <!-- Error message -->
-      <div v-if="error" class="error-message">
-        {{ error }}
-        <button class="btn-close" @click="clearError">×</button>
-      </div>
-
       <!-- Profil Lulusan List -->
-      <div v-else class="pl-content">
+      <div v-if="!isLoading" class="pl-content">
         <p>
           Profil lulusan untuk {{ currentKurikulum?.nama_kurikulum || 'Kurikulum' }} mencakup
           beberapa bidang keahlian yang diharapkan setelah menyelesaikan program studi.
@@ -192,7 +198,7 @@ onMounted(async () => {
         <table v-else class="pl-table">
           <thead>
             <tr>
-              <th width="15%">ID PL</th>
+              <th width="15%" class="head-IDPL">ID PL</th>
               <th width="65%">Deskripsi</th>
               <th width="20%" class="aksi-title" v-if="can('profilLulusan', 'edit')">Aksi</th>
             </tr>
@@ -208,6 +214,18 @@ onMounted(async () => {
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Error popup (non-blocking for table content) -->
+    <div v-if="popupError" class="error-popup-overlay" @click.self="clearError">
+      <div class="error-popup" role="alert" aria-live="assertive">
+        <button class="error-popup-close" @click="clearError" aria-label="Tutup popup error">
+          ×
+        </button>
+        <div class="error-popup-icon" aria-hidden="true">✕</div>
+        <p class="error-popup-title">Terjadi Kesalahan</p>
+        <p class="error-popup-message">{{ popupError }}</p>
       </div>
     </div>
   </div>
@@ -270,6 +288,10 @@ onMounted(async () => {
   letter-spacing: 0.5px;
   border-bottom: none;
   text-align: center;
+}
+
+.pl-table th.head-IDPL {
+  text-align: left;
 }
 
 .pl-table td {
@@ -409,10 +431,18 @@ textarea {
 }
 
 .btn-add:hover {
-  background: var(--color-button-hover);
-  border-color: var(--color-button-hover);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
+}
+
+.btn-add.is-cancel:hover {
+  background: var(--color-button-hover);
+  border-color: var(--color-button-hover);
+  color: white;
+  box-shadow: 0 4px 12px rgba(218, 42, 45, 0.3);
 }
 
 .btn-save {
@@ -422,39 +452,40 @@ textarea {
 }
 
 .btn-save:hover {
-  background: var(--color-button-hover);
-  border-color: var(--color-button-hover);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 .btn-edit {
-  background: var(--color-buttonsec);
+  background: white;
   color: var(--color-text);
-  border-color: var(--color-buttonsec);
+  border-color: var(--color-button);
   padding: 6px 12px;
   font-size: 13px;
   margin-right: 6px;
 }
 
 .btn-edit:hover {
-  background: var(--color-button);
-  color: white;
-  border-color: var(--color-button);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
 }
 
 .btn-delete {
   background: white;
-  color: #ef4444;
+  color: var(--color-button-hover);
   border-color: #fca5a5;
   padding: 6px 12px;
   font-size: 13px;
 }
 
 .btn-delete:hover {
-  background: var(--color-buttonsec);
-  color: var(--color-text);
-  border-color: var(--color-buttonsec);
+  background: var(--color-button-hover);
+  color: white;
+  border-color: var(--color-button);
 }
 
 .loading {
@@ -473,6 +504,72 @@ textarea {
   border-radius: 8px;
   margin-bottom: 20px;
   font-family: 'Montserrat', sans-serif;
+}
+
+.error-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 16px;
+}
+
+.error-popup {
+  width: 100%;
+  max-width: 420px;
+  background: white;
+  border-radius: 16px;
+  padding: 24px 20px 20px;
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.2);
+  position: relative;
+  text-align: center;
+  border: 1px solid #fecaca;
+}
+
+.error-popup-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 30px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.error-popup-close:hover {
+  color: var(--color-button);
+}
+
+.error-popup-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 12px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight:900;
+  color: var(--color-button-hover);
+  border: 2px solid var(--color-button-hover);
+  background: #fff5f5;
+}
+
+.error-popup-title {
+  margin: 0;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.error-popup-message {
+  margin: 8px 0 0;
+  color: #4b5563;
+  line-height: 1.5;
 }
 
 .empty-state {

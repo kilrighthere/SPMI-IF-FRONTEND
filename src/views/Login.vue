@@ -71,11 +71,14 @@ function togglePasswordVisibility() {
         <div class="card-login">
           <form @submit="loginHandler" class="form-login" method="post">
             <div class="header-form">
+              <h1 class="obeliks">
+                  OBELIKS
+              </h1>
               <h1 class="welcome-title">
                 Welcome back
                 <span class="wave-emoji">👋</span>
               </h1>
-              <p class="welcome-subtitle">Please enter your details.</p>
+              <!-- <p class="welcome-subtitle">Please enter your details.</p> -->
             </div>
 
             <!-- Role Selection Toggle -->
@@ -266,6 +269,7 @@ function togglePasswordVisibility() {
   justify-content: space-between;
   min-height: 100vh;
   background-color: var(--color-background);
+  /* background-color: white; */
 }
 
 .container-login {
@@ -338,13 +342,25 @@ function togglePasswordVisibility() {
   text-align: center;
 }
 
+.obeliks {
+  font-size: 30px;
+  font-weight: 800;
+  font-family: sans-serif;
+  color: var(--spmi-c-green2);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  /* text-shadow: -1px 1px  #545454; */
+}
+
 .welcome-title {
   font-size: 36px;
   font-weight: 700;
   font-family: 'Montserrat', sans-serif;
   color: var(--color-text);
   line-height: 1.2;
-  letter-spacing: 2px;
+  /* letter-spacing: 2px; */
 }
 
 

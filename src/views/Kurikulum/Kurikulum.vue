@@ -23,7 +23,7 @@ const fetchKurikulum = async () => {
 
 // Handler tombol
 const handleDetail = (id) => {
-  router.push(`/kurikulum/${id}/profil-lulusan`)
+  router.push(`/kurikulum/${id}/sub-menu`)
 }
 
 // Load data saat komponen dimuat
@@ -35,21 +35,23 @@ onMounted(() => {
 <template>
   <div class="dash-container">
     <Sidebar />
-    <Header />
     <div class="main-content" :class="{ 'minimized-sidebar': sidebarStore.isMinimized }">
-      <div class="kur-content">
-        <div class="page-header">
-          <div class="page-title">
-            <h2>Data Kurikulum Program Studi</h2>
-            <p class="breadcrumb">
-              <RouterLink to="/Dashboard">Dashboard</RouterLink>
-              <span class="separator">/</span>
-              <span class="current">Data Kurikulum Program Studi</span>
-            </p>
-          </div>
+      <div class="page-header">
+        <div class="page-title">
+          <h2>Kurikulum Program Studi</h2>
+          <p class="breadcrumb">
+            <RouterLink to="/kurikulum">Kurikulum</RouterLink>
+            <span class="separator">/</span>
+            <!-- <span class="current">Data Kurikulum Program Studi</span> -->
+          </p>
         </div>
-
+        <Header />
+      </div>
+      <div class="kur-content">
         <!-- Loading indicator -->
+
+
+        
         <div v-if="isLoading" class="loading">Loading...</div>
 
         <!-- Error message -->
@@ -129,7 +131,6 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    <Footer />
   </div>
 </template>
 
@@ -155,12 +156,12 @@ onMounted(() => {
 
 .kur-content {
   flex: 1;
-  margin-top: 92px;
-  padding: 32px;
+  margin: 20px 0px;
+  padding: 16px 32px;
   border-radius: 20px;
   background: white;
   transition: all 0.3s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Page Header */
@@ -168,8 +169,10 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 28px;
-  padding-bottom: 20px;
+  margin-top: 36px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 8px;
   border-bottom: 1px solid #f0f0f0;
 }
 
@@ -227,6 +230,7 @@ onMounted(() => {
   background: white;
   border-radius: 12px;
   overflow: hidden;
+  padding: 10px 0;
 }
 
 .table-wrapper {

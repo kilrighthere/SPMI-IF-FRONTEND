@@ -45,22 +45,36 @@ const identifierLabel = computed(() => {
 <template>
   <div class="dash-container">
     <Sidebar />
-    <Header />
+    <!-- <Header /> -->
     <div class="main-content" :class="{ 'minimized-sidebar': sidebarStore.isMinimized }">
+      <div class="greeting-header">
+        <div class="page-title">
+          <h2 class="page-title-main">
+            Dashboard
+          </h2>
+          <p class="breadcrumb">
+            <RouterLink to="/Dashboard">Dashboard</RouterLink>
+            <span class="separator">/</span>
+
+          </p>
+
+        </div>
+        <div class="right-greeting-header">
+          <div class="session-status-inline">
+            <span class="status-indicator" :class="{ active: isAuthenticated }"></span>
+            <span class="status-text">{{ isAuthenticated ? 'Aktif' : 'Tidak Aktif' }}</span>
+          </div>
+          <Header/>
+        </div>
+      </div>
       <div class="dash">
         <!-- Welcome Section -->
         <div class="welcome-section">
           <div class="greeting-wrapper">
-            <div class="greeting-header">
-              <h1 class="greeting-title">
-                {{ greeting }}, <span class="user-name">{{ user?.name || 'User' }}</span>
-                <span class="wave-emoji">👋</span>
-              </h1>
-              <div class="session-status-inline">
-                <span class="status-indicator" :class="{ active: isAuthenticated }"></span>
-                <span class="status-text">{{ isAuthenticated ? 'Aktif' : 'Tidak Aktif' }}</span>
-              </div>
-            </div>
+            <h1 class="greeting-title">
+              {{ greeting }}, <span class="user-name">{{ user?.name || 'User' }}</span>
+              <span class="wave-emoji">👋</span>
+            </h1>
             <p class="greeting-subtitle">
               Selamat datang di OBELISK (Outcome-Based Education Learning Integration and Knowledge
               System)
@@ -123,7 +137,7 @@ const identifierLabel = computed(() => {
         </div>
       </div>
     </div>
-    <Footer />
+    <!-- <Footer /> -->
   </div>
 </template>
 
@@ -150,12 +164,12 @@ const identifierLabel = computed(() => {
 
 .dash {
   flex: 1;
-  margin-top: 92px;
-  padding: 32px;
+  margin: 20px 0px;
+  padding: 16px 32px;
   border-radius: 20px;
   background: white;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -163,7 +177,7 @@ const identifierLabel = computed(() => {
 
 /* Welcome Section */
 .welcome-section {
-  padding: 24px 0;
+  padding: 10px 0;
   border-bottom: 2px solid var(--color-border2);
 }
 
@@ -173,16 +187,63 @@ const identifierLabel = computed(() => {
   gap: 12px;
 }
 
-.greeting-header {
+.right-greeting-header{
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
+  gap:5px;
 }
 
+.greeting-header {
+  /* display: flex;
+  align-items: center;
+  justify-content: space-between; */
+  /* gap: 20px; */
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 36px;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.page-title h2{
+  font-weight: 700;
+  font-size: 28px;
+  margin-bottom: 8px;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+  letter-spacing: -0.5px;
+}
+
+.breadcrumb {
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumb a {
+  color: var(--color-button);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+.breadcrumb a:hover {
+  color: var(--color-button-hover);
+}
+
+.breadcrumb .separator {
+  color: #d1d5db;
+  font-weight: 400;
+}
+
+
 .greeting-title {
-  font-size: 36px;
+  font-size: 25px;
   font-weight: 700;
   font-family: 'Montserrat', sans-serif;
   color: var(--color-text);

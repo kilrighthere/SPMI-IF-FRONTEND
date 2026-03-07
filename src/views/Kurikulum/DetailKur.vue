@@ -1,7 +1,6 @@
 <script setup>
 import { useRoute } from 'vue-router'
 import { computed, onMounted } from 'vue'
-import Footer from '@/components/Footer.vue'
 import Header from '@/components/Header.vue'
 import Sidebar from '@/components/Sidebar.vue'
 import { useKurikulumStore } from '@/stores/kurikulum'
@@ -29,6 +28,7 @@ const activeSubmenu = computed(() => {
 })
 
 const submenuTitles = {
+  'sub-menu': 'Sub Menu Detail Kurikulum',
   'profil-lulusan': 'Profil Lulusan',
   'cpl-prodi': 'CPL Prodi',
   'cpl-sndikti': 'CPL SNDIKTI',
@@ -42,28 +42,48 @@ const submenuTitles = {
   'ukur-cpl': 'Pengukuran CPL Mahasiswa',
   mahasiswa: 'Mahasiswa',
 }
+
+const subMenuPath = computed(() => `/kurikulum/${route.params.id}/sub-menu`)
+const activeTitle = computed(() => submenuTitles[activeSubmenu.value] || 'Detail')
+const isSubMenuLanding = computed(() => activeSubmenu.value === 'sub-menu')
 </script>
 
 <template>
   <div class="dash-container">
     <Sidebar />
-    <Header />
     <div class="main-content" :class="{ 'minimized-sidebar': sidebarStore.isMinimized }">
-      <div class="kur-content">
+      <div class="page-header">
         <div class="page-title">
-          <h2>{{ submenuTitles[activeSubmenu] || 'Detail Kurikulum' }}</h2>
-          <p>
-            <RouterLink to="/Dashboard">Dashboard</RouterLink> /
-            <RouterLink to="/Kurikulum">Kurikulum</RouterLink> /
-            {{ submenuTitles[activeSubmenu] || 'Detail' }}
+          <h2>{{ activeTitle }}</h2>
+          <p class="breadcrumb">
+            <RouterLink to="/kurikulum">Kurikulum</RouterLink>
+            <span class="separator">/</span>
+            <RouterLink :to="subMenuPath">Sub Menu Detail Kurikulum</RouterLink>
+            <template v-if="!isSubMenuLanding">
+              <span class="separator">/</span>
+              <span>{{ activeTitle }}</span>
+            </template>
           </p>
         </div>
-        <div class="submenu-container">
-          <RouterView />
-        </div>
+        <Header />
       </div>
+
+      <template v-if="isSubMenuLanding">
+        <div class="kur-content-submenu">
+          <div class="submenu-container">
+            <RouterView />
+          </div>
+        </div>
+      </template>
+      <template v-if="!isSubMenuLanding">
+        <div class="kur-content">
+          <div class="submenu-container">
+            <RouterView />
+          </div>
+        </div>
+
+      </template>  
     </div>
-    <Footer />
   </div>
 </template>
 
@@ -87,24 +107,39 @@ const submenuTitles = {
   margin-left: 126px;
 }
 
-.kur-content {
+.kur-content-submenu{
   flex: 1;
-  margin-top: 92px;
-  padding: 32px;
+  margin: 20px 0px;
+  padding: 16px 32px;
   border-radius: 20px;
   background: white;
   transition: all 0.3s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.kur-content {
+  flex: 1;
+  margin: 20px 0px;
+  padding: 16px 32px;
+  border-radius: 20px;
+  background: white;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: 36px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .page-title {
-  margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #f0f0f0;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
+  flex: 1;
 }
 
 .page-title h2 {
@@ -116,21 +151,29 @@ const submenuTitles = {
   letter-spacing: -0.5px;
 }
 
-.page-title p {
+.breadcrumb {
   color: #6b7280;
   font-size: 14px;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.page-title p a {
+.breadcrumb a {
   color: var(--color-button);
   text-decoration: none;
   transition: all 0.2s ease;
   font-weight: 600;
 }
 
-.page-title p a:hover {
+.breadcrumb a:hover {
   color: var(--color-button-hover);
+}
+
+.breadcrumb .separator {
+  color: #d1d5db;
+  font-weight: 400;
 }
 
 .submenu-container {
@@ -164,9 +207,12 @@ const submenuTitles = {
   }
 
   .page-title {
+    width: 100%;
+  }
+
+  .page-header {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+    gap: 16px;
   }
 
   .page-title h2 {
