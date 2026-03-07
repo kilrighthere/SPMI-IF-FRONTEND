@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 // Import stores
@@ -7,6 +7,7 @@ import { useCPMKStore } from '@/stores/cpmk'
 import { useCPLStore } from '@/stores/cpl'
 import { useKurikulumStore } from '@/stores/kurikulum'
 import { usePermissions } from '@/composables/usePermissions'
+import TablePagination from '@/components/TablePagination.vue'
 
 // Initialize stores
 const cpmkStore = useCPMKStore()
@@ -25,6 +26,19 @@ const cpmkList = computed(() => cpmkStore.cpmkList)
 const cplList = computed(() => cplStore.cplList)
 const isLoading = computed(() => cpmkStore.isLoading || cplStore.isLoading)
 const error = ref('') // Mengubah dari computed ke ref untuk kontrol lebih baik
+const currentPage = ref(1)
+const itemsPerPage = 10
+const showAll = ref(false)
+const totalItems = computed(() => cpmkList.value.length)
+const totalPages = computed(() =>
+  showAll.value ? 1 : Math.max(1, Math.ceil(totalItems.value / itemsPerPage)),
+)
+
+const paginatedCpmkList = computed(() => {
+  if (showAll.value) return cpmkList.value
+  const start = (currentPage.value - 1) * itemsPerPage
+  return cpmkList.value.slice(start, start + itemsPerPage)
+})
 
 // Form untuk tambah/edit CPMK - sesuai format baru
 const form = ref({
@@ -133,6 +147,18 @@ const clearError = () => {
   error.value = ''
 }
 
+const setCurrentPage = (page) => {
+  currentPage.value = page
+}
+
+const setShowAll = (value) => {
+  showAll.value = value
+}
+
+watch(totalPages, (newTotal) => {
+  if (currentPage.value > newTotal) currentPage.value = newTotal
+})
+
 // Mendapatkan nama CPL berdasarkan ID
 const getCPLName = (cplId) => {
   const cpl = cplList.value.find((item) => item.id === cplId || item.id_cpl === cplId)
@@ -156,7 +182,12 @@ onMounted(async () => {
     <div class="section-box">
       <div class="section-header">
         <h3>Capaian Pembelajaran Mata Kuliah (CPMK)</h3>
-        <button class="btn-add" @click="showForm = !showForm" v-if="can('cpmk', 'create')">
+        <button
+          class="btn-add"
+          :class="{ 'is-cancel': showForm }"
+          @click="showForm ? resetForm() : (showForm = true)"
+          v-if="can('cpmk', 'create')"
+        >
           {{ showForm ? 'Batal' : 'Tambah CPMK' }}
         </button>
       </div>
@@ -165,26 +196,37 @@ onMounted(async () => {
       <div v-if="showForm" class="form-container">
         <div class="form-group">
           <label>ID CPMK</label>
-          <input type="text" v-model="form.id_cpmk" placeholder="ID CPMK" />
+          <input
+            type="text"
+            v-model="form.id_cpmk"
+            placeholder="Kode CPMK (contoh: CPMK-01)"
+            :class="{ 'input-error': formErrors.id_cpmk }"
+          />
+          <div v-if="formErrors.id_cpmk" class="error-text">{{ formErrors.id_cpmk }}</div>
         </div>
         <div class="form-group">
           <label>Deskripsi</label>
-          <textarea v-model="form.deskripsi" placeholder="Deskripsi CPMK"></textarea>
+          <textarea
+            v-model="form.deskripsi"
+            placeholder="Deskripsi CPMK"
+            :class="{ 'input-error': formErrors.deskripsi }"
+          ></textarea>
+          <div v-if="formErrors.deskripsi" class="error-text">{{ formErrors.deskripsi }}</div>
         </div>
         <div class="form-group">
           <label>CPL</label>
-          <select v-model="form.id_cpl">
+          <select v-model="form.id_cpl" :class="{ 'input-error': formErrors.id_cpl }">
             <option value="">Pilih CPL</option>
             <option v-for="cpl in cplList" :key="cpl.id_cpl" :value="cpl.id_cpl">
               {{ cpl.id_cpl }} - {{ cpl.deskripsi }}
             </option>
           </select>
+          <div v-if="formErrors.id_cpl" class="error-text">{{ formErrors.id_cpl }}</div>
         </div>
         <div class="form-actions">
           <button class="btn-save" @click="saveCPMK">
-            {{ isEditing ? 'Update' : 'Simpan' }}
+            {{ isEditing ? 'Perbarui' : 'Simpan' }}
           </button>
-          <button v-if="isEditing" class="btn-cancel" @click="resetForm">Batal</button>
         </div>
       </div>
 
@@ -201,22 +243,47 @@ onMounted(async () => {
           mahasiswa setelah menyelesaikan suatu mata kuliah.
         </p>
 
-        <div v-if="cpmkList.length === 0" class="empty-state">Belum ada data CPMK.</div>
+        <div v-if="totalItems === 0" class="empty-state">Belum ada data CPMK.</div>
 
-        <ul v-else class="cpmk-list">
-          <li v-for="cpmk in cpmkList" :key="cpmk.id_cpmk" class="cpmk-item">
-            <div class="cpmk-content">
-              <strong>{{ cpmk.id_cpmk }}:</strong> {{ cpmk.deskripsi }}
-              <div class="cpmk-cpl">
-                <span class="cpl-tag">CPL: {{ getCPLName(cpmk.id_cpl) }}</span>
-              </div>
-            </div>
-            <div class="cpmk-actions" v-if="can('cpmk', 'edit')">
-              <button class="btn-edit" @click="editCPMK(cpmk)">Edit</button>
-              <button class="btn-delete" @click="removeCPMK(cpmk.id_cpmk)">Hapus</button>
-            </div>
-          </li>
-        </ul>
+        <div v-else class="table-wrapper">
+          <table class="cpmk-table">
+            <thead>
+              <tr>
+                <th class="head-id">ID CPMK</th>
+                <th class="head-desc">Deskripsi</th>
+                <th class="head-cpl">CPL</th>
+                <th v-if="can('cpmk', 'edit')" class="aksi-title">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="cpmk in paginatedCpmkList" :key="cpmk.id_cpmk" class="cpmk-item">
+                <td class="cpmk-id">{{ cpmk.id_cpmk }}</td>
+                <td class="desk-item">{{ cpmk.deskripsi }}</td>
+                <td class="cpl-item">{{ getCPLName(cpmk.id_cpl) }}</td>
+                <td class="action-button" v-if="can('cpmk', 'edit')">
+                  <button class="btn-edit" @click="editCPMK(cpmk)">
+                    <i class="ri-edit-line"></i>
+                    Edit
+                  </button>
+                  <button class="btn-delete" @click="removeCPMK(cpmk.id_cpmk)">
+                    <i class="ri-delete-bin-line"></i>
+                    Hapus
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <TablePagination
+            :total-items="totalItems"
+            :current-page="currentPage"
+            :items-per-page="itemsPerPage"
+            :show-all="showAll"
+            item-label="CPMK"
+            @update:current-page="setCurrentPage"
+            @update:show-all="setShowAll"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -255,52 +322,86 @@ onMounted(async () => {
   font-family: 'Montserrat', sans-serif;
 }
 
-.cpmk-list {
-  list-style-type: none;
-  padding-left: 0;
-  margin-bottom: 16px;
+.table-wrapper {
+  overflow-x: auto;
 }
 
-.cpmk-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 16px;
-  margin-bottom: 12px;
+.cpmk-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 16px;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
+  overflow: hidden;
+  font-family: 'Montserrat', sans-serif;
   background: white;
-  transition: all 0.2s ease;
 }
 
-.cpmk-item:hover {
-  background: #faffec;
-  border-color: var(--color-buttonsec);
-  transform: scale(1.001);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+.cpmk-table thead {
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
 }
 
-.cpmk-cpl {
-  margin-top: 8px;
-  font-size: 0.9em;
-  color: #6b7280;
-  font-family: 'Montserrat', sans-serif;
+.cpmk-table th {
+  padding: 16px 14px;
+  color: var(--color-text);
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: none;
+  text-align: center;
 }
 
-.cpl-tag {
-  display: inline-block;
-  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
-  color: #0c4a6e;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.85em;
+.cpmk-table th.head-id,
+.cpmk-table th.head-desc,
+.cpmk-table th.head-cpl {
+  text-align: left;
+}
+
+.cpmk-table td {
+  padding: 16px 14px;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: top;
+  color: #4b5563;
+  font-size: 14px;
+  text-align: left;
+}
+
+.cpmk-table .cpmk-id {
+  font-weight: 700;
+  color: var(--color-button);
+  width: 120px;
+}
+
+.cpmk-table .desk-item {
+  line-height: 1.6;
+}
+
+.cpmk-table .cpl-item {
   font-weight: 600;
-  font-family: 'Montserrat', sans-serif;
+  color: #475569;
+  width: 140px;
 }
 
-.cpmk-actions {
-  display: flex;
-  gap: 8px;
+.cpmk-table .action-button {
+  text-align: center;
+  width: 180px;
+  white-space: nowrap;
+}
+
+.cpmk-table tbody tr {
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.cpmk-table tbody tr:hover {
+  background: #faffec;
+  transform: scale(1.001);
+}
+
+.cpmk-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .form-container {
@@ -338,6 +439,12 @@ onMounted(async () => {
     box-shadow 0.2s;
 }
 
+.form-group input.input-error,
+.form-group textarea.input-error,
+.form-group select.input-error {
+  border-color: #ef4444;
+}
+
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {
@@ -349,6 +456,13 @@ onMounted(async () => {
 .form-group textarea {
   min-height: 100px;
   resize: vertical;
+}
+
+.error-text {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 6px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .form-actions {
@@ -382,11 +496,18 @@ onMounted(async () => {
 }
 
 .btn-add:hover {
-  background: var(--color-buttonsec);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
   color: var(--color-text);
   border-color: var(--color-buttonsec);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(166, 214, 0, 0.3);
+}
+
+.btn-add.is-cancel:hover {
+  background: var(--color-button-hover);
+  border-color: var(--color-button-hover);
+  color: white;
+  box-shadow: 0 4px 12px rgba(218, 42, 45, 0.3);
 }
 
 .btn-save {
@@ -416,31 +537,31 @@ onMounted(async () => {
 }
 
 .btn-edit {
-  background: var(--color-buttonsec);
+  background: white;
   color: var(--color-text);
-  border-color: var(--color-buttonsec);
+  border-color: var(--color-button);
   padding: 6px 12px;
   font-size: 13px;
 }
 
 .btn-edit:hover {
-  background: var(--color-button);
-  color: white;
-  border-color: var(--color-button);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
 }
 
 .btn-delete {
   background: white;
-  color: #ef4444;
+  color: var(--color-button-hover);
   border-color: #fca5a5;
   padding: 6px 12px;
   font-size: 13px;
 }
 
 .btn-delete:hover {
-  background: var(--color-buttonsec);
-  color: var(--color-text);
-  border-color: var(--color-buttonsec);
+  background: var(--color-button-hover);
+  color: white;
+  border-color: var(--color-button-hover);
 }
 
 .loading {
@@ -475,16 +596,6 @@ onMounted(async () => {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
-  }
-
-  .cpmk-item {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .cpmk-actions {
-    width: 100%;
-    justify-content: flex-start;
   }
 }
 </style>

@@ -44,36 +44,53 @@
           dalam kurikulum program studi.
         </p>
 
-        <div v-if="bkList.length === 0" class="empty-state">Belum ada data Bahan Kajian.</div>
+        <div v-if="totalItems === 0" class="empty-state">Belum ada data Bahan Kajian.</div>
 
         <table v-else class="bk-table">
           <thead>
             <tr>
-              <th>Kode BK</th>
-              <th>Deskripsi</th>
-              <th v-if="can('bahanKajian', 'edit')">Aksi</th>
+              <th class="head-id">Kode BK</th>
+              <th class="head-desc">Deskripsi</th>
+              <th v-if="can('bahanKajian', 'edit')" class="aksi-title">Aksi</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="bk in bkList" :key="bk.id_bk">
-              <td>{{ bk.id_bk }}</td>
-              <td>{{ bk.deskripsi }}</td>
+            <tr v-for="bk in paginatedBkList" :key="bk.id_bk">
+              <td class="bk-id">{{ bk.id_bk }}</td>
+              <td class="desk-item">{{ bk.deskripsi }}</td>
               <td class="action-buttons" v-if="can('bahanKajian', 'edit')">
-                <button class="btn-edit" @click="editBK(bk)">Edit</button>
-                <button class="btn-delete" @click="removeBK(bk.id_bk)">Hapus</button>
+                <button class="btn-edit" @click="editBK(bk)">
+                  <i class="ri-edit-line"></i>
+                  Edit
+                </button>
+                <button class="btn-delete" @click="removeBK(bk.id_bk)">
+                  <i class="ri-delete-bin-line"></i>
+                  Hapus
+                </button>
               </td>
             </tr>
           </tbody>
         </table>
+
+        <TablePagination
+          :total-items="totalItems"
+          :current-page="currentPage"
+          :items-per-page="itemsPerPage"
+          :show-all="showAll"
+          item-label="bahan kajian"
+          @update:current-page="setCurrentPage"
+          @update:show-all="setShowAll"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useBKStore } from '@/stores/bk'
 import { usePermissions } from '@/composables/usePermissions'
+import TablePagination from '@/components/TablePagination.vue'
 
 // Use centralized permissions
 const { isAdmin, isDosen, isMahasiswa, can } = usePermissions()
@@ -85,6 +102,19 @@ const bkStore = useBKStore()
 const bkList = computed(() => bkStore.bkList)
 const isLoading = computed(() => bkStore.isLoading)
 const error = computed(() => bkStore.error)
+const currentPage = ref(1)
+const itemsPerPage = 10
+const showAll = ref(false)
+const totalItems = computed(() => bkList.value.length)
+const totalPages = computed(() =>
+  showAll.value ? 1 : Math.max(1, Math.ceil(totalItems.value / itemsPerPage)),
+)
+
+const paginatedBkList = computed(() => {
+  if (showAll.value) return bkList.value
+  const start = (currentPage.value - 1) * itemsPerPage
+  return bkList.value.slice(start, start + itemsPerPage)
+})
 
 // Form untuk tambah/edit BK
 const form = ref({
@@ -134,6 +164,18 @@ const resetForm = () => {
   isEditing.value = false
   showForm.value = false
 }
+
+const setCurrentPage = (page) => {
+  currentPage.value = page
+}
+
+const setShowAll = (value) => {
+  showAll.value = value
+}
+
+watch(totalPages, (newTotal) => {
+  if (currentPage.value > newTotal) currentPage.value = newTotal
+})
 
 // Load data saat komponen dimuat
 onMounted(() => {
@@ -238,7 +280,7 @@ onMounted(() => {
 
 .bk-table th {
   padding: 16px 18px;
-  text-align: left;
+  text-align: center;
   color: var(--color-text);
   font-weight: 700;
   font-size: 13px;
@@ -247,12 +289,32 @@ onMounted(() => {
   border-bottom: none;
 }
 
+.bk-table th.head-id,
+.bk-table th.head-desc {
+  text-align: left;
+}
+
+.bk-table th.aksi-title {
+  text-align: center;
+}
+
 .bk-table td {
   padding: 16px 18px;
   border-bottom: 1px solid #f3f4f6;
   color: #4b5563;
   font-size: 14px;
   vertical-align: top;
+}
+
+.bk-table .bk-id {
+  text-align: left;
+  font-weight: 700;
+  color: var(--color-button);
+}
+
+.bk-table .desk-item {
+  text-align: left;
+  line-height: 1.6;
 }
 
 .bk-table tbody tr {
@@ -334,31 +396,31 @@ onMounted(() => {
 }
 
 .btn-edit {
-  background: var(--color-buttonsec);
+  background: white;
   color: var(--color-text);
-  border-color: var(--color-buttonsec);
+  border-color: var(--color-button);
   padding: 6px 12px;
   font-size: 13px;
 }
 
 .btn-edit:hover {
-  background: var(--color-button);
-  color: white;
-  border-color: var(--color-button);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
 }
 
 .btn-delete {
   background: white;
-  color: #ef4444;
+  color: var(--color-button-hover);
   border-color: #fca5a5;
   padding: 6px 12px;
   font-size: 13px;
 }
 
 .btn-delete:hover {
-  background: var(--color-buttonsec);
-  color: var(--color-text);
-  border-color: var(--color-buttonsec);
+  background: var(--color-button-hover);
+  color: white;
+  border-color: var(--color-button-hover);
 }
 
 .loading {

@@ -3,8 +3,9 @@
 import { useKurikulumStore } from '@/stores/kurikulum'
 import { usePLStore } from '@/stores/profilLulusan'
 import { usePermissions } from '@/composables/usePermissions'
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import TablePagination from '@/components/TablePagination.vue'
 
 // Initialize stores
 const plStore = usePLStore()
@@ -21,6 +22,9 @@ const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
 const profilLulusan = computed(() => plStore.profilLulusanList)
 const isLoading = computed(() => plStore.isLoading)
 const popupError = ref('')
+const currentPage = ref(1)
+const itemsPerPage = 10
+const showAll = ref(false)
 
 // Form untuk tambah/edit profil lulusan - sesuai format API baru
 const form = ref({
@@ -29,6 +33,17 @@ const form = ref({
 })
 const isEditing = ref(false)
 const showForm = ref(false)
+
+const totalItems = computed(() => profilLulusan.value.length)
+const totalPages = computed(() =>
+  showAll.value ? 1 : Math.max(1, Math.ceil(totalItems.value / itemsPerPage)),
+)
+
+const paginatedProfilLulusan = computed(() => {
+  if (showAll.value) return profilLulusan.value
+  const start = (currentPage.value - 1) * itemsPerPage
+  return profilLulusan.value.slice(start, start + itemsPerPage)
+})
 
 // Form validation state
 const formErrors = ref({
@@ -126,6 +141,18 @@ const clearError = () => {
   popupError.value = ''
 }
 
+const setCurrentPage = (page) => {
+  currentPage.value = page
+}
+
+const setShowAll = (value) => {
+  showAll.value = value
+}
+
+watch(totalPages, (newTotal) => {
+  if (currentPage.value > newTotal) currentPage.value = newTotal
+})
+
 // Load data saat komponen dimuat
 onMounted(async () => {
   // Fetch kurikulum data by ID from route params
@@ -204,16 +231,32 @@ onMounted(async () => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="profil in profilLulusan" :key="profil.id_pl" class="pl-item">
+            <tr v-for="profil in paginatedProfilLulusan" :key="profil.id_pl" class="pl-item">
               <td class="pl-id">{{ profil.id_pl }}</td>
               <td class="desk-item">{{ profil.deskripsi }}</td>
               <td class="action-button" v-if="can('profilLulusan', 'edit')">
-                <button class="btn-edit" @click="editPL(profil)">Edit</button>
-                <button class="btn-delete" @click="removePL(profil.id_pl)">Hapus</button>
+                <button class="btn-edit" @click="editPL(profil)">
+                  <i class="ri-edit-line"></i>
+                  Edit
+                </button>
+                <button class="btn-delete" @click="removePL(profil.id_pl)">
+                  <i class="ri-delete-bin-line"></i>
+                  Hapus
+                </button>
               </td>
             </tr>
           </tbody>
         </table>
+
+        <TablePagination
+          :total-items="totalItems"
+          :current-page="currentPage"
+          :items-per-page="itemsPerPage"
+          :show-all="showAll"
+          item-label="profil lulusan"
+          @update:current-page="setCurrentPage"
+          @update:show-all="setShowAll"
+        />
       </div>
     </div>
 
@@ -554,7 +597,7 @@ textarea {
   align-items: center;
   justify-content: center;
   font-size: 28px;
-  font-weight:900;
+  font-weight: 900;
   color: var(--color-button-hover);
   border: 2px solid var(--color-button-hover);
   background: #fff5f5;

@@ -4,8 +4,9 @@ import { useKurikulumStore } from '@/stores/kurikulum'
 import { useCplSndiktiStore } from '@/stores/cplSndikti'
 import { useCPLStore } from '@/stores/cpl'
 import { usePermissions } from '@/composables/usePermissions'
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import TablePagination from '@/components/TablePagination.vue'
 
 // Initialize stores
 const cplSndiktiStore = useCplSndiktiStore()
@@ -24,6 +25,19 @@ const cplSndiktiList = computed(() => cplSndiktiStore.cplSndiktiList)
 const cplList = computed(() => cplStore.cplList)
 const isLoading = computed(() => cplSndiktiStore.isLoading || cplStore.isLoading)
 const error = ref('')
+const currentPage = ref(1)
+const itemsPerPage = 10
+const showAll = ref(false)
+const totalItems = computed(() => cplSndiktiList.value.length)
+const totalPages = computed(() =>
+  showAll.value ? 1 : Math.max(1, Math.ceil(totalItems.value / itemsPerPage)),
+)
+
+const paginatedCplSndiktiList = computed(() => {
+  if (showAll.value) return cplSndiktiList.value
+  const start = (currentPage.value - 1) * itemsPerPage
+  return cplSndiktiList.value.slice(start, start + itemsPerPage)
+})
 
 // Form untuk tambah/edit CPL SNDIKTI
 const form = ref({
@@ -140,6 +154,18 @@ const clearError = () => {
   error.value = ''
 }
 
+const setCurrentPage = (page) => {
+  currentPage.value = page
+}
+
+const setShowAll = (value) => {
+  showAll.value = value
+}
+
+watch(totalPages, (newTotal) => {
+  if (currentPage.value > newTotal) currentPage.value = newTotal
+})
+
 // Load data saat komponen dimuat
 onMounted(async () => {
   // Fetch kurikulum data by ID from route params
@@ -233,9 +259,7 @@ onMounted(async () => {
           Sikap, Pengetahuan, Keterampilan Umum, dan Keterampilan Khusus.
         </p>
 
-        <div v-if="cplSndiktiList.length === 0" class="empty-state">
-          Belum ada data CPL SNDIKTI.
-        </div>
+        <div v-if="totalItems === 0" class="empty-state">Belum ada data CPL SNDIKTI.</div>
 
         <table v-else class="cpl-sndikti-table">
           <thead>
@@ -248,7 +272,7 @@ onMounted(async () => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in cplSndiktiList" :key="item.id_sn" class="cpl-sndikti-item">
+            <tr v-for="item in paginatedCplSndiktiList" :key="item.id_sn" class="cpl-sndikti-item">
               <td class="sn-id">{{ item.id_sn }}</td>
               <td class="aspek-item">
                 <span
@@ -273,6 +297,16 @@ onMounted(async () => {
             </tr>
           </tbody>
         </table>
+
+        <TablePagination
+          :total-items="totalItems"
+          :current-page="currentPage"
+          :items-per-page="itemsPerPage"
+          :show-all="showAll"
+          item-label="CPL SNDIKTI"
+          @update:current-page="setCurrentPage"
+          @update:show-all="setShowAll"
+        />
       </div>
     </div>
   </div>
@@ -331,11 +365,16 @@ onMounted(async () => {
   color: var(--color-text);
   font-weight: 700;
   padding: 16px 14px;
-  text-align: left;
+  text-align: center;
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border-bottom: none;
+}
+
+.cpl-sndikti-table th:nth-child(1),
+.cpl-sndikti-table th:nth-child(3) {
+  text-align: left;
 }
 
 .cpl-sndikti-table th.aksi-title {
@@ -403,6 +442,7 @@ onMounted(async () => {
 }
 
 .desk-item {
+  text-align: left;
   line-height: 1.6;
 }
 
@@ -433,28 +473,28 @@ onMounted(async () => {
 }
 
 .btn-edit {
-  background: var(--color-buttonsec);
+  background: white;
   color: var(--color-text);
-  border-color: var(--color-buttonsec);
+  border-color: var(--color-button);
 }
 
 .btn-edit:hover {
-  background: var(--color-button);
-  color: white;
-  border-color: var(--color-button);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
   transform: translateY(-1px);
 }
 
 .btn-delete {
   background: white;
-  color: #ef4444;
+  color: var(--color-button-hover);
   border-color: #fca5a5;
 }
 
 .btn-delete:hover {
-  background: var(--color-buttonsec);
-  color: var(--color-text);
-  border-color: var(--color-buttonsec);
+  background: var(--color-button-hover);
+  color: white;
+  border-color: var(--color-button-hover);
   transform: translateY(-1px);
 }
 

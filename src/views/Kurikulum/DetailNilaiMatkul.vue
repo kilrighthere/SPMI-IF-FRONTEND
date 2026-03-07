@@ -55,7 +55,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="nilai in filteredNilai" :key="nilai.nim">
+              <tr v-for="nilai in paginatedNilai" :key="nilai.nim">
                 <td>{{ nilai.nim }}</td>
                 <td>{{ nilaiMkStore.getMahasiswaNama(nilai.nim) }}</td>
                 <td>{{ nilai.id_periode }}</td>
@@ -71,20 +71,27 @@
           </table>
         </div>
 
-        <!-- Info table results -->
-        <div v-if="filteredNilai.length > 0" class="table-info">
-          Menampilkan {{ filteredNilai.length }} dari {{ nilaiMahasiswa.length }} data nilai
-        </div>
+        <TablePagination
+          v-if="filteredNilai.length > 0"
+          :total-items="filteredNilai.length"
+          :current-page="currentPage"
+          :items-per-page="itemsPerPage"
+          :show-all="showAll"
+          item-label="data nilai"
+          @update:current-page="setCurrentPage"
+          @update:show-all="setShowAll"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNilaiMkStore } from '@/stores/nilaiMk'
 import { usePermissions } from '@/composables/usePermissions'
+import TablePagination from '@/components/TablePagination.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -107,6 +114,9 @@ const mataKuliah = computed(() => {
 
 // Filter
 const searchQuery = ref('')
+const currentPage = ref(1)
+const itemsPerPage = 10
+const showAll = ref(false)
 const filteredNilai = computed(() => {
   if (!searchQuery.value) return nilaiMahasiswa.value
 
@@ -121,6 +131,24 @@ const filteredNilai = computed(() => {
       nilai.id_periode.toLowerCase().includes(query)
     )
   })
+})
+
+const paginatedNilai = computed(() => {
+  if (showAll.value) return filteredNilai.value
+  const start = (currentPage.value - 1) * itemsPerPage
+  return filteredNilai.value.slice(start, start + itemsPerPage)
+})
+
+const setCurrentPage = (page) => {
+  currentPage.value = page
+}
+
+const setShowAll = (value) => {
+  showAll.value = value
+}
+
+watch(filteredNilai, () => {
+  currentPage.value = 1
 })
 
 // Ambil data nilai untuk mata kuliah ini

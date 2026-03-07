@@ -1,11 +1,12 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Footer from '@/components/Footer.vue'
 import Header from '@/components/Header.vue'
 import Sidebar from '@/components/Sidebar.vue'
 import { useKurikulumStore } from '@/stores/kurikulum'
 import { useSidebarStore } from '@/stores/sidebar'
+import TablePagination from '@/components/TablePagination.vue'
 
 const router = useRouter()
 const sidebarStore = useSidebarStore()
@@ -15,6 +16,19 @@ const kurikulumStore = useKurikulumStore()
 const kurikulumList = computed(() => kurikulumStore.kurikulumList)
 const isLoading = computed(() => kurikulumStore.isLoading)
 const error = computed(() => kurikulumStore.error)
+const currentPage = ref(1)
+const itemsPerPage = 10
+const showAll = ref(false)
+const totalItems = computed(() => kurikulumList.value.length)
+const totalPages = computed(() =>
+  showAll.value ? 1 : Math.max(1, Math.ceil(totalItems.value / itemsPerPage)),
+)
+
+const paginatedKurikulumList = computed(() => {
+  if (showAll.value) return kurikulumList.value
+  const start = (currentPage.value - 1) * itemsPerPage
+  return kurikulumList.value.slice(start, start + itemsPerPage)
+})
 
 // Fetch data kurikulum dari store
 const fetchKurikulum = async () => {
@@ -25,6 +39,18 @@ const fetchKurikulum = async () => {
 const handleDetail = (id) => {
   router.push(`/kurikulum/${id}/sub-menu`)
 }
+
+const setCurrentPage = (page) => {
+  currentPage.value = page
+}
+
+const setShowAll = (value) => {
+  showAll.value = value
+}
+
+watch(totalPages, (newTotal) => {
+  if (currentPage.value > newTotal) currentPage.value = newTotal
+})
 
 // Load data saat komponen dimuat
 onMounted(() => {
@@ -50,8 +76,6 @@ onMounted(() => {
       <div class="kur-content">
         <!-- Loading indicator -->
 
-
-        
         <div v-if="isLoading" class="loading">Loading...</div>
 
         <!-- Error message -->
@@ -61,7 +85,7 @@ onMounted(() => {
 
         <!-- Table Container -->
         <div v-else class="table-container">
-          <div v-if="kurikulumList.length === 0" class="empty-state">Belum ada data kurikulum.</div>
+          <div v-if="totalItems === 0" class="empty-state">Belum ada data kurikulum.</div>
 
           <div v-else class="table-wrapper">
             <table class="modern-table">
@@ -86,13 +110,15 @@ onMounted(() => {
               </thead>
               <tbody>
                 <tr
-                  v-for="(kurikulum, index) in kurikulumList"
+                  v-for="(kurikulum, index) in paginatedKurikulumList"
                   :key="kurikulum.id_kurikulum"
                   class="table-row"
                 >
                   <td class="col-no">
                     <div class="td-content">
-                      <span class="number-badge">{{ index + 1 }}</span>
+                      <span class="number-badge">{{
+                        (currentPage - 1) * itemsPerPage + index + 1
+                      }}</span>
                     </div>
                   </td>
                   <td class="col-nama">
@@ -127,7 +153,17 @@ onMounted(() => {
                 </tr>
               </tbody>
             </table>
+
           </div>
+          <TablePagination
+            :total-items="totalItems"
+            :current-page="currentPage"
+            :items-per-page="itemsPerPage"
+            :show-all="showAll"
+            item-label="kurikulum"
+            @update:current-page="setCurrentPage"
+            @update:show-all="setShowAll"
+          />
         </div>
       </div>
     </div>

@@ -43,7 +43,7 @@
       <!-- Data Table -->
       <div v-if="!isLoading">
         <p>Halaman ini menampilkan korelasi antara Bahan Kajian (BK) dan Mata Kuliah (MK).</p>
-        <div v-if="itemsList.length === 0" class="empty-state">Belum ada data korelasi.</div>
+        <div v-if="totalItems === 0" class="empty-state">Belum ada data korelasi.</div>
         <table v-else class="data-table">
           <thead>
             <tr>
@@ -55,28 +55,40 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in itemsList" :key="item.id_bk + '-' + item.id_mk">
+            <tr v-for="item in paginatedItemsList" :key="item.id_bk + '-' + item.id_mk">
               <td>{{ item.bk.id_bk }}</td>
               <td>{{ item.bk.nama }}</td>
               <td>{{ item.mk.kode_mk }}</td>
               <td>{{ item.mk.nama_mk }}</td>
               <td class="action-buttons" v-if="can('bkMk', 'edit')">
                 <button class="btn-delete" @click="removeData(item.id_bk, item.id_mk)">
+                  <i class="ri-delete-bin-line"></i>
                   Hapus
                 </button>
               </td>
             </tr>
           </tbody>
         </table>
+
+        <TablePagination
+          :total-items="totalItems"
+          :current-page="currentPage"
+          :items-per-page="itemsPerPage"
+          :show-all="showAll"
+          item-label="korelasi"
+          @update:current-page="setCurrentPage"
+          @update:show-all="setShowAll"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useBkMkStore } from '@/stores/bkMk'
 import { usePermissions } from '@/composables/usePermissions'
+import TablePagination from '@/components/TablePagination.vue'
 
 const store = useBkMkStore()
 const { can } = usePermissions()
@@ -87,6 +99,19 @@ const bkList = computed(() => store.bkList)
 const mkList = computed(() => store.mkList)
 const isLoading = computed(() => store.isLoading)
 const error = computed(() => store.error)
+const currentPage = ref(1)
+const itemsPerPage = 10
+const showAll = ref(false)
+const totalItems = computed(() => itemsList.value.length)
+const totalPages = computed(() =>
+  showAll.value ? 1 : Math.max(1, Math.ceil(totalItems.value / itemsPerPage)),
+)
+
+const paginatedItemsList = computed(() => {
+  if (showAll.value) return itemsList.value
+  const start = (currentPage.value - 1) * itemsPerPage
+  return itemsList.value.slice(start, start + itemsPerPage)
+})
 
 const form = ref({ id_bk: '', id_mk: '' })
 const successMessage = ref('')
@@ -125,6 +150,18 @@ const removeData = async (id_bk, id_mk) => {
     }
   }
 }
+
+const setCurrentPage = (page) => {
+  currentPage.value = page
+}
+
+const setShowAll = (value) => {
+  showAll.value = value
+}
+
+watch(totalPages, (newTotal) => {
+  if (currentPage.value > newTotal) currentPage.value = newTotal
+})
 
 onMounted(fetchData)
 </script>
@@ -228,37 +265,47 @@ onMounted(fetchData)
 .btn-add,
 .btn-save,
 .btn-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 8px 16px;
-  border: none;
+  border: 1.5px solid;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 14px;
   font-family: 'Montserrat', sans-serif;
   transition: all 0.25s ease;
 }
 .btn-add {
   background: var(--color-button);
   color: white;
+  border-color: var(--color-button);
 }
 .btn-add:hover {
   background: var(--color-buttonsec);
   color: var(--color-text);
+  border-color: var(--color-buttonsec);
 }
 .btn-save {
   background: var(--color-button);
   color: white;
+  border-color: var(--color-button);
 }
 .btn-save:hover {
   background: var(--color-buttonsec);
   color: var(--color-text);
+  border-color: var(--color-buttonsec);
 }
 .btn-delete {
-  background: #fee2e2;
-  color: #ef4444;
+  background: white;
+  color: var(--color-button-hover);
+  border-color: #fca5a5;
 }
 .btn-delete:hover {
-  background: #ef4444;
+  background: var(--color-button-hover);
   color: white;
+  border-color: var(--color-button-hover);
 }
 .loading,
 .empty-state {

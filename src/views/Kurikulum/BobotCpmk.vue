@@ -273,35 +273,15 @@
         <p>Belum ada data bobot CPMK untuk periode ini.</p>
       </div>
 
-      <!-- Pagination Controls -->
-      <div v-if="mergedList.length > itemsPerPage" class="pagination-container">
-        <div class="pagination-info">
-          Menampilkan {{ (currentPage - 1) * itemsPerPage + 1 }} -
-          {{ Math.min(currentPage * itemsPerPage, mergedList.length) }} dari
-          {{ mergedList.length }} mata kuliah
-        </div>
-        <div class="pagination-controls">
-          <button class="pagination-btn" @click="previousPage" :disabled="currentPage === 1">
-            <i class="ri-arrow-left-s-line"></i>
-            Sebelumnya
-          </button>
-          <div class="pagination-pages">
-            <button
-              v-for="page in totalPages"
-              :key="page"
-              class="pagination-page"
-              :class="{ active: currentPage === page }"
-              @click="goToPage(page)"
-            >
-              {{ page }}
-            </button>
-          </div>
-          <button class="pagination-btn" @click="nextPage" :disabled="currentPage === totalPages">
-            Selanjutnya
-            <i class="ri-arrow-right-s-line"></i>
-          </button>
-        </div>
-      </div>
+      <TablePagination
+        :total-items="totalItems"
+        :current-page="currentPage"
+        :items-per-page="itemsPerPage"
+        :show-all="showAll"
+        item-label="mata kuliah"
+        @update:current-page="setCurrentPage"
+        @update:show-all="setShowAll"
+      />
     </div>
   </div>
 </template>
@@ -315,6 +295,7 @@ import { useMKStore } from '@/stores/mataKuliah'
 import { useCpmkMkStore } from '@/stores/cpmkMk'
 import { useCPMKStore } from '@/stores/cpmk'
 import { useRoute } from 'vue-router'
+import TablePagination from '@/components/TablePagination.vue'
 
 const store = useBobotCpmkStore()
 const { isAdmin, isDosen } = usePermissions()
@@ -338,14 +319,27 @@ const error = computed(() => store.error)
 // Pagination
 const currentPage = ref(1)
 const itemsPerPage = 10
+const showAll = ref(false)
+const totalItems = computed(() => mergedList.value.length)
 
-const totalPages = computed(() => Math.ceil(mergedList.value.length / itemsPerPage))
+const totalPages = computed(() =>
+  showAll.value ? 1 : Math.max(1, Math.ceil(totalItems.value / itemsPerPage)),
+)
 
 const paginatedList = computed(() => {
+  if (showAll.value) return mergedList.value
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
   return mergedList.value.slice(start, end)
 })
+
+const setCurrentPage = (page) => {
+  currentPage.value = page
+}
+
+const setShowAll = (value) => {
+  showAll.value = value
+}
 
 const mkPeriodeOptions = computed(() =>
   selectedPeriode.value ? nilaiMkStore.getMkPeriodeByPeriode(selectedPeriode.value) : [],

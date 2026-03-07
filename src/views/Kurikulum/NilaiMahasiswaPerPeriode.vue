@@ -45,7 +45,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="cpl in nilaiCplList" :key="cpl.kode_cpl">
+              <tr v-for="cpl in paginatedNilaiCplList" :key="cpl.kode_cpl">
                 <td>{{ cpl.kode_cpl }}</td>
                 <td>{{ cpl.nama_cpl }}</td>
                 <td>
@@ -68,6 +68,16 @@
             </tbody>
           </table>
         </div>
+
+        <TablePagination
+          :total-items="nilaiCplList.length"
+          :current-page="currentPage"
+          :items-per-page="itemsPerPage"
+          :show-all="showAll"
+          item-label="CPL"
+          @update:current-page="setCurrentPage"
+          @update:show-all="setShowAll"
+        />
       </div>
 
       <!-- Summary Card -->
@@ -101,6 +111,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getMahasiswaNilaiPerPeriode, getMahasiswaByNim } from '@/api'
 import { usePermissions } from '@/composables/usePermissions'
+import TablePagination from '@/components/TablePagination.vue'
 
 const route = useRoute()
 const { canAccessMahasiswaData, isMahasiswa } = usePermissions()
@@ -110,10 +121,27 @@ const periode = ref(route.params.periode)
 const loading = ref(true)
 const error = ref(null)
 const nilaiCplList = ref([])
+const currentPage = ref(1)
+const itemsPerPage = 10
+const showAll = ref(false)
 const mahasiswaInfo = ref({
   name: '',
   nim: '',
 })
+
+const paginatedNilaiCplList = computed(() => {
+  if (showAll.value) return nilaiCplList.value
+  const start = (currentPage.value - 1) * itemsPerPage
+  return nilaiCplList.value.slice(start, start + itemsPerPage)
+})
+
+const setCurrentPage = (page) => {
+  currentPage.value = page
+}
+
+const setShowAll = (value) => {
+  showAll.value = value
+}
 
 // Check access permission
 if (!canAccessMahasiswaData(nim.value)) {

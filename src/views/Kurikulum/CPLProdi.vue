@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 // Removed Header, Sidebar, Footer imports as they're already in the parent component
 import { usePermissions } from '@/composables/usePermissions'
+import TablePagination from '@/components/TablePagination.vue'
 
 // Import stores
 import { useCPLStore } from '@/stores/cpl'
@@ -23,6 +24,19 @@ const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
 const cplList = computed(() => cplStore.cplList)
 const isLoading = computed(() => cplStore.isLoading)
 const error = computed(() => cplStore.error)
+const currentPage = ref(1)
+const itemsPerPage = 10
+const showAll = ref(false)
+const totalItems = computed(() => cplList.value.length)
+const totalPages = computed(() =>
+  showAll.value ? 1 : Math.max(1, Math.ceil(totalItems.value / itemsPerPage)),
+)
+
+const paginatedCplList = computed(() => {
+  if (showAll.value) return cplList.value
+  const start = (currentPage.value - 1) * itemsPerPage
+  return cplList.value.slice(start, start + itemsPerPage)
+})
 
 // Form untuk tambah/edit CPL
 const form = ref({
@@ -73,6 +87,18 @@ const resetForm = () => {
   isEditing.value = false
   showForm.value = false
 }
+
+const setCurrentPage = (page) => {
+  currentPage.value = page
+}
+
+const setShowAll = (value) => {
+  showAll.value = value
+}
+
+watch(totalPages, (newTotal) => {
+  if (currentPage.value > newTotal) currentPage.value = newTotal
+})
 
 // Load data saat komponen dimuat
 onMounted(async () => {
@@ -127,27 +153,43 @@ onMounted(async () => {
           harus dikuasai oleh lulusan program studi.
         </p>
 
-        <div v-if="cplList.length === 0" class="empty-state">Belum ada data CPL.</div>
+        <div v-if="totalItems === 0" class="empty-state">Belum ada data CPL.</div>
 
         <table v-else class="cpl-table">
           <thead>
             <tr>
-              <th>ID CPL</th>
-              <th>Deskripsi</th>
-              <th v-if="can('cplProdi', 'edit')">Aksi</th>
+              <th class="head-id">ID CPL</th>
+              <th class="head-desc">Deskripsi</th>
+              <th v-if="can('cplProdi', 'edit')" class="aksi-title">Aksi</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="cpl in cplList" :key="cpl.id_cpl">
-              <td>{{ cpl.id_cpl }}</td>
-              <td>{{ cpl.deskripsi }}</td>
+            <tr v-for="cpl in paginatedCplList" :key="cpl.id_cpl">
+              <td class="cpl-id">{{ cpl.id_cpl }}</td>
+              <td class="desk-item">{{ cpl.deskripsi }}</td>
               <td class="action-buttons" v-if="can('cplProdi', 'edit')">
-                <button class="btn-edit" @click="editCPL(cpl)">Edit</button>
-                <button class="btn-delete" @click="removeCPL(cpl.id_cpl)">Hapus</button>
+                <button class="btn-edit" @click="editCPL(cpl)">
+                  <i class="ri-edit-line"></i>
+                  Edit
+                </button>
+                <button class="btn-delete" @click="removeCPL(cpl.id_cpl)">
+                  <i class="ri-delete-bin-line"></i>
+                  Hapus
+                </button>
               </td>
             </tr>
           </tbody>
         </table>
+
+        <TablePagination
+          :total-items="totalItems"
+          :current-page="currentPage"
+          :items-per-page="itemsPerPage"
+          :show-all="showAll"
+          item-label="CPL"
+          @update:current-page="setCurrentPage"
+          @update:show-all="setShowAll"
+        />
       </div>
     </div>
   </div>
@@ -250,7 +292,7 @@ onMounted(async () => {
 
 .cpl-table th {
   padding: 16px 18px;
-  text-align: left;
+  text-align: center;
   color: var(--color-text);
   font-weight: 700;
   font-size: 13px;
@@ -259,12 +301,32 @@ onMounted(async () => {
   border-bottom: none;
 }
 
+.cpl-table th.head-id,
+.cpl-table th.head-desc {
+  text-align: left;
+}
+
+.cpl-table th.aksi-title {
+  text-align: center;
+}
+
 .cpl-table td {
   padding: 16px 18px;
   border-bottom: 1px solid #f3f4f6;
   color: #4b5563;
   font-size: 14px;
   vertical-align: top;
+}
+
+.cpl-table .cpl-id {
+  text-align: left;
+  font-weight: 700;
+  color: var(--color-button);
+}
+
+.cpl-table .desk-item {
+  text-align: left;
+  line-height: 1.6;
 }
 
 .cpl-table tbody tr {
@@ -346,31 +408,31 @@ onMounted(async () => {
 }
 
 .btn-edit {
-  background: var(--color-buttonsec);
+  background: white;
   color: var(--color-text);
-  border-color: var(--color-buttonsec);
+  border-color: var(--color-button);
   padding: 6px 12px;
   font-size: 13px;
 }
 
 .btn-edit:hover {
-  background: var(--color-button);
-  color: white;
-  border-color: var(--color-button);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
 }
 
 .btn-delete {
   background: white;
-  color: #ef4444;
+  color: var(--color-button-hover);
   border-color: #fca5a5;
   padding: 6px 12px;
   font-size: 13px;
 }
 
 .btn-delete:hover {
-  background: var(--color-buttonsec);
-  color: var(--color-text);
-  border-color: var(--color-buttonsec);
+  background: var(--color-button-hover);
+  color: white;
+  border-color: var(--color-button-hover);
 }
 
 .loading {

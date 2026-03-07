@@ -1,9 +1,10 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMKStore } from '@/stores/mataKuliah'
 import { useKurikulumStore } from '@/stores/kurikulum'
 import { usePermissions } from '@/composables/usePermissions'
+import TablePagination from '@/components/TablePagination.vue'
 
 // Initialize stores
 const mkStore = useMKStore()
@@ -24,6 +25,9 @@ const showSuccess = ref(false)
 const successMessage = ref('')
 const showModal = ref(false)
 const formMode = ref('add') // 'add' or 'edit'
+const currentPage = ref(1)
+const itemsPerPage = 10
+const showAll = ref(false)
 
 // Form data
 const newMK = ref({
@@ -48,6 +52,17 @@ const filteredMataKuliah = computed(() => {
   }
 
   return filtered
+})
+
+const totalItems = computed(() => filteredMataKuliah.value.length)
+const totalPages = computed(() =>
+  showAll.value ? 1 : Math.max(1, Math.ceil(totalItems.value / itemsPerPage)),
+)
+
+const paginatedMataKuliah = computed(() => {
+  if (showAll.value) return filteredMataKuliah.value
+  const start = (currentPage.value - 1) * itemsPerPage
+  return filteredMataKuliah.value.slice(start, start + itemsPerPage)
 })
 
 // Fetch mata kuliah data
@@ -145,6 +160,22 @@ const deleteMK = async (mk) => {
   }
 }
 
+const setCurrentPage = (page) => {
+  currentPage.value = page
+}
+
+const setShowAll = (value) => {
+  showAll.value = value
+}
+
+watch(searchQuery, () => {
+  currentPage.value = 1
+})
+
+watch(totalPages, (newTotal) => {
+  if (currentPage.value > newTotal) currentPage.value = newTotal
+})
+
 // Load data when component is mounted
 onMounted(async () => {
   console.log('StrukMatkul component mounted, fetching data...')
@@ -205,7 +236,7 @@ onMounted(async () => {
 
         <!-- Mata Kuliah Table -->
         <div>
-          <table v-if="filteredMataKuliah.length > 0" class="mk-table">
+          <table v-if="totalItems > 0" class="mk-table">
             <thead>
               <tr>
                 <th>Kode</th>
@@ -214,20 +245,32 @@ onMounted(async () => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="mk in filteredMataKuliah" :key="mk.id">
-                <td>{{ mk.kode_mk }}</td>
-                <td>{{ mk.nama_mk }}</td>
-                <td v-if="can('strukturMatkul', 'edit')">
+              <tr v-for="mk in paginatedMataKuliah" :key="mk.id">
+                <td class="mk-code-col">{{ mk.kode_mk }}</td>
+                <td class="mk-name-col">{{ mk.nama_mk }}</td>
+                <td v-if="can('strukturMatkul', 'edit')" class="action-cell">
                   <button class="btn-edit" @click="openEditModal(mk)">
                     <i class="ri-edit-line"></i>
+                    Edit
                   </button>
                   <button class="btn-delete" @click="deleteMK(mk)">
                     <i class="ri-delete-bin-line"></i>
+                    Hapus
                   </button>
                 </td>
               </tr>
             </tbody>
           </table>
+          <TablePagination
+            v-if="totalItems > 0"
+            :total-items="totalItems"
+            :current-page="currentPage"
+            :items-per-page="itemsPerPage"
+            :show-all="showAll"
+            item-label="mata kuliah"
+            @update:current-page="setCurrentPage"
+            @update:show-all="setShowAll"
+          />
           <div v-else class="empty-state">Tidak ada mata kuliah yang sesuai dengan filter.</div>
         </div>
       </div>
@@ -407,7 +450,6 @@ onMounted(async () => {
 .mk-table th,
 .mk-table td {
   padding: 16px 14px;
-  text-align: left;
   border-bottom: 1px solid #f3f4f6;
 }
 
@@ -421,6 +463,28 @@ onMounted(async () => {
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.mk-table td {
+  text-align: left;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.mk-table .mk-code-col {
+  text-align: left;
+  font-weight: 700;
+  color: var(--color-button);
+}
+
+.mk-table .mk-name-col {
+  text-align: left;
+  line-height: 1.6;
+}
+
+.mk-table .action-cell {
+  text-align: center;
 }
 
 .mk-table tbody tr {
@@ -439,42 +503,44 @@ onMounted(async () => {
 
 .btn-edit,
 .btn-delete {
-  background: none;
-  border: none;
   cursor: pointer;
-  margin: 0 5px;
-  font-size: 16px;
+  margin: 0 4px;
+  font-size: 13px;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
+  gap: 6px;
+  padding: 6px 12px;
   border-radius: 8px;
   transition: all 0.25s ease;
 }
 
 .btn-edit {
   color: var(--color-text);
-  background-color: var(--color-buttonsec);
+  background-color: white;
+  border: 1.5px solid var(--color-button);
 }
 
 .btn-edit:hover {
-  background-color: var(--color-button);
-  color: white;
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
+  box-shadow: 0 4px 12px rgba(166, 214, 0, 0.25);
 }
 
 .btn-delete {
-  color: #dc2626;
-  background-color: #fee2e2;
+  color: var(--color-button-hover);
+  background-color: white;
+  border: 1.5px solid #fca5a5;
 }
 
 .btn-delete:hover {
-  background-color: var(--color-buttonsec);
-  color: var(--color-text);
+  background-color: var(--color-button-hover);
+  color: white;
+  border-color: var(--color-button-hover);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(166, 214, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(218, 42, 45, 0.25);
 }
 
 .loading {

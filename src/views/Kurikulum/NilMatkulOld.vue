@@ -1,10 +1,11 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useNilaiMkStore } from '@/stores/nilaiMk'
 import { useKurikulumStore } from '@/stores/kurikulum'
 import { useMKStore } from '@/stores/mataKuliah'
 import { usePermissions } from '@/composables/usePermissions'
+import TablePagination from '@/components/TablePagination.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -34,6 +35,9 @@ const formData = ref({
 
 // Filter dan pencarian
 const searchQuery = ref('')
+const currentPage = ref(1)
+const itemsPerPage = 10
+const showAll = ref(false)
 
 // Computed
 const periodeList = computed(() => nilaiMkStore.periodeList)
@@ -69,6 +73,24 @@ const filteredNilaiList = computed(() => {
   }
 
   return filtered
+})
+
+const paginatedNilaiList = computed(() => {
+  if (showAll.value) return filteredNilaiList.value
+  const start = (currentPage.value - 1) * itemsPerPage
+  return filteredNilaiList.value.slice(start, start + itemsPerPage)
+})
+
+const setCurrentPage = (page) => {
+  currentPage.value = page
+}
+
+const setShowAll = (value) => {
+  showAll.value = value
+}
+
+watch(filteredNilaiList, () => {
+  currentPage.value = 1
 })
 
 // Available mata kuliah untuk dropdown
@@ -263,10 +285,10 @@ onMounted(() => {
             </thead>
             <tbody>
               <tr
-                v-for="(nilai, index) in filteredNilaiList"
+                v-for="(nilai, index) in paginatedNilaiList"
                 :key="`${nilai.id_periode}-${nilai.kode_mk}-${nilai.nim}`"
               >
-                <td>{{ index + 1 }}</td>
+                <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
                 <td>
                   <span class="kode-mk">{{ nilai.kode_mk }}</span>
                 </td>
@@ -294,6 +316,16 @@ onMounted(() => {
             </tbody>
           </table>
         </div>
+
+        <TablePagination
+          :total-items="filteredNilaiList.length"
+          :current-page="currentPage"
+          :items-per-page="itemsPerPage"
+          :show-all="showAll"
+          item-label="data nilai"
+          @update:current-page="setCurrentPage"
+          @update:show-all="setShowAll"
+        />
       </div>
     </div>
 

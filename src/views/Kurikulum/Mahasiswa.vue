@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useMahasiswaStore } from '@/stores/mahasiswa'
 import { usePermissions } from '@/composables/usePermissions'
 import ExcelJS from 'exceljs'
+import TablePagination from '@/components/TablePagination.vue'
 
 const mahasiswaStore = useMahasiswaStore()
 
@@ -16,15 +17,28 @@ const error = computed(() => mahasiswaStore.error)
 // Pagination state
 const currentPage = ref(1)
 const itemsPerPage = ref(10) // Jumlah data per halaman
+const showAll = ref(false)
+const totalItems = computed(() => mahasiswaList.value.length)
 
 // Computed untuk pagination
-const totalPages = computed(() => Math.ceil(mahasiswaList.value.length / itemsPerPage.value))
+const totalPages = computed(() =>
+  showAll.value ? 1 : Math.max(1, Math.ceil(mahasiswaList.value.length / itemsPerPage.value)),
+)
 
 const paginatedMahasiswaList = computed(() => {
+  if (showAll.value) return mahasiswaList.value
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
   return mahasiswaList.value.slice(start, end)
 })
+
+const setCurrentPage = (page) => {
+  currentPage.value = page
+}
+
+const setShowAll = (value) => {
+  showAll.value = value
+}
 
 // Fungsi pagination
 const goToPage = (page) => {
@@ -685,74 +699,31 @@ onMounted(() => {
             <tbody>
               <tr v-for="(mahasiswa, index) in paginatedMahasiswaList" :key="mahasiswa.nim">
                 <td class="text-center">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
-                <td>{{ mahasiswa.nim }}</td>
-                <td>{{ mahasiswa.nama }}</td>
+                <td class="nim-col">{{ mahasiswa.nim }}</td>
+                <td class="nama-col">{{ mahasiswa.nama }}</td>
                 <td class="action-button" v-if="can('mahasiswa', 'edit')">
-                  <button class="btn-edit" @click="editMahasiswa(mahasiswa)">Edit</button>
-                  <button class="btn-delete" @click="removeMahasiswa(mahasiswa.nim)">Hapus</button>
+                  <button class="btn-edit" @click="editMahasiswa(mahasiswa)">
+                    <i class="ri-edit-line"></i>
+                    Edit
+                  </button>
+                  <button class="btn-delete" @click="removeMahasiswa(mahasiswa.nim)">
+                    <i class="ri-delete-bin-line"></i>
+                    Hapus
+                  </button>
                 </td>
               </tr>
             </tbody>
           </table>
 
-          <!-- Pagination Controls -->
-          <div class="pagination-container">
-            <div class="pagination-info">
-              Menampilkan {{ (currentPage - 1) * itemsPerPage + 1 }} -
-              {{ Math.min(currentPage * itemsPerPage, mahasiswaList.length) }}
-              dari {{ mahasiswaList.length }} data
-            </div>
-
-            <div class="pagination-controls">
-              <button
-                class="pagination-btn"
-                @click="prevPage"
-                :disabled="currentPage === 1"
-                title="Halaman sebelumnya"
-              >
-                <i class="ri-arrow-left-s-line"></i>
-              </button>
-
-              <button v-if="visiblePages[0] > 1" class="pagination-btn" @click="goToPage(1)">
-                1
-              </button>
-
-              <span v-if="visiblePages[0] > 2" class="pagination-dots">...</span>
-
-              <button
-                v-for="page in visiblePages"
-                :key="page"
-                class="pagination-btn"
-                :class="{ active: page === currentPage }"
-                @click="goToPage(page)"
-              >
-                {{ page }}
-              </button>
-
-              <span
-                v-if="visiblePages[visiblePages.length - 1] < totalPages - 1"
-                class="pagination-dots"
-                >...</span
-              >
-
-              <button
-                v-if="visiblePages[visiblePages.length - 1] < totalPages"
-                class="pagination-btn"
-                @click="goToPage(totalPages)"
-              >
-                {{ totalPages }}
-              </button>
-
-              <button
-                class="pagination-btn"
-                @click="nextPage"
-                :disabled="currentPage === totalPages"
-                title="Halaman berikutnya"
-              >
-                <i class="ri-arrow-right-s-line"></i>
-              </button>
-            </div>
-          </div>
+          <TablePagination
+            :total-items="totalItems"
+            :current-page="currentPage"
+            :items-per-page="itemsPerPage"
+            :show-all="showAll"
+            item-label="mahasiswa"
+            @update:current-page="setCurrentPage"
+            @update:show-all="setShowAll"
+          />
         </div>
       </div>
     </div>
@@ -954,12 +925,22 @@ onMounted(() => {
   vertical-align: middle;
   color: #4b5563;
   font-size: 14px;
+  text-align: left;
 }
 
 .mahasiswa-table .text-center {
   text-align: center;
   font-weight: 600;
   color: #6b7280;
+}
+
+.mahasiswa-table .nim-col {
+  font-weight: 700;
+  color: var(--color-button);
+}
+
+.mahasiswa-table .nama-col {
+  line-height: 1.6;
 }
 
 .mahasiswa-table .action-button {
@@ -1057,35 +1038,38 @@ onMounted(() => {
 }
 
 .btn-edit {
-  background-color: var(--color-buttonsec);
+  background: white;
   color: var(--color-text);
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
+  border: 1.5px solid var(--color-button);
+  padding: 6px 12px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 13px;
   margin-right: 5px;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
 }
 
 .btn-edit:hover {
-  background-color: var(--color-buttonter);
-  color: white;
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
 }
 
 .btn-delete {
-  background-color: var(--color-button);
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
+  background: white;
+  color: var(--color-button-hover);
+  border: 1.5px solid #fca5a5;
+  padding: 6px 12px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s ease;
+  font-size: 13px;
+  transition: all 0.25s ease;
 }
 
 .btn-delete:hover {
-  opacity: 0.9;
+  background: var(--color-button-hover);
+  color: white;
+  border-color: var(--color-button-hover);
 }
 
 /* Profile Styles for Mahasiswa */

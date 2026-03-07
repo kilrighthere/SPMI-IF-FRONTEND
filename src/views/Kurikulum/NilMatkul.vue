@@ -8,6 +8,7 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useMahasiswaStore } from '@/stores/mahasiswa'
 import ExcelJS from 'exceljs'
 import { getMkPeriodeList } from '@/api'
+import TablePagination from '@/components/TablePagination.vue'
 
 // Ref untuk file input
 const excelUpload = ref(null)
@@ -60,6 +61,9 @@ const filteredMK = ref([])
 // Filter dan pencarian
 const searchQuery = ref('')
 const selectedMataKuliah = ref('')
+const currentPage = ref(1)
+const itemsPerPage = 10
+const showAll = ref(false)
 
 // Computed
 const periodeList = computed(() => nilaiMkStore.periodeList)
@@ -95,7 +99,9 @@ const filteredNilaiList = computed(() => {
   // Filter berdasarkan kurikulum jika ada - SKIP untuk mahasiswa karena tidak relevan
   // Mahasiswa tidak perlu filter berdasarkan kurikulum, mereka hanya perlu filter berdasarkan NIM
   if (selectedKurikulum.value && !isMahasiswa.value) {
-    filtered = filtered.filter((nilai) => String(nilai.id_kurikulum) === String(selectedKurikulum.value))
+    filtered = filtered.filter(
+      (nilai) => String(nilai.id_kurikulum) === String(selectedKurikulum.value),
+    )
     console.log('After kurikulum filter:', filtered)
   } else {
     console.log('Skipping kurikulum filter (mahasiswa or no kurikulum selected)')
@@ -142,6 +148,24 @@ const filteredNilaiList = computed(() => {
 
   console.log('Final filtered result:', filtered)
   return filtered
+})
+
+const paginatedNilaiList = computed(() => {
+  if (showAll.value) return filteredNilaiList.value
+  const start = (currentPage.value - 1) * itemsPerPage
+  return filteredNilaiList.value.slice(start, start + itemsPerPage)
+})
+
+const setCurrentPage = (page) => {
+  currentPage.value = page
+}
+
+const setShowAll = (value) => {
+  showAll.value = value
+}
+
+watch(filteredNilaiList, () => {
+  currentPage.value = 1
 })
 
 // Available mata kuliah untuk dropdown
@@ -198,7 +222,9 @@ async function openAddModal() {
   selectedMK.value = null
   mkSearchQuery.value = ''
   showMkDropdown.value = false
-  filteredMK.value = selectedPeriode.value ? availableMataKuliahInPeriode.value : availableMataKuliah.value
+  filteredMK.value = selectedPeriode.value
+    ? availableMataKuliahInPeriode.value
+    : availableMataKuliah.value
   // Ensure mk-periode list is loaded for resolving
   await nilaiMkStore.fetchMkPeriodeList()
   await mkStore.fetchAllMK()
@@ -316,7 +342,9 @@ function onSelectMkPeriode(e) {
   if (mp) {
     formData.value.kode_mk = mp.kode_mk
     // set selected MK if exists in mkStore
-    const mk = mkStore.getMKByKode(mp.kode_mk) || mkStore.mataKuliahList.find((x) => x.kode_mk === mp.kode_mk)
+    const mk =
+      mkStore.getMKByKode(mp.kode_mk) ||
+      mkStore.mataKuliahList.find((x) => x.kode_mk === mp.kode_mk)
     if (mk) selectedMK.value = mk
   }
 }
@@ -347,8 +375,14 @@ async function submitForm() {
     // Validasi mahasiswa ditemukan - prefer mahasiswaInfo, fallback to store
     if (!mahasiswaInfo.value.nim) {
       // Try to use mahasiswaStore for lookup
-      if (mahasiswaStore && mahasiswaStore.mahasiswaList && mahasiswaStore.mahasiswaList.length > 0) {
-        const m = mahasiswaStore.mahasiswaList.find((mm) => String(mm.nim) === String(formData.value.nim))
+      if (
+        mahasiswaStore &&
+        mahasiswaStore.mahasiswaList &&
+        mahasiswaStore.mahasiswaList.length > 0
+      ) {
+        const m = mahasiswaStore.mahasiswaList.find(
+          (mm) => String(mm.nim) === String(formData.value.nim),
+        )
         if (m) mahasiswaInfo.value = { nim: m.nim, nama: m.nama }
       }
     }
@@ -646,7 +680,8 @@ async function processExcelFile(file) {
       for (const item of nilaiData) {
         if (!item.id_mk_periode) {
           const key = `${item.kode_mk}__${item.id_periode}`
-          if (!combos.has(key)) combos.set(key, { kode_mk: item.kode_mk, id_periode: item.id_periode })
+          if (!combos.has(key))
+            combos.set(key, { kode_mk: item.kode_mk, id_periode: item.id_periode })
         }
       }
 
@@ -692,7 +727,10 @@ async function processExcelFile(file) {
           if (!resolved) {
             try {
               const resp2 = await getMkPeriodeList({ kode_mk })
-              console.log('Direct API /list/mk-periode (kode only) response for', { kode_mk, resp2 })
+              console.log('Direct API /list/mk-periode (kode only) response for', {
+                kode_mk,
+                resp2,
+              })
               let data2 = null
               if (resp2?.data && resp2.data.success) data2 = resp2.data.data
               else if (resp2?.data && Array.isArray(resp2.data)) data2 = resp2.data
@@ -703,7 +741,10 @@ async function processExcelFile(file) {
                 try {
                   await nilaiMkStore.fetchMkPeriodeList()
                 } catch (refreshErr) {
-                  console.warn('Error refreshing mk-periode list after kode-only fetch:', refreshErr)
+                  console.warn(
+                    'Error refreshing mk-periode list after kode-only fetch:',
+                    refreshErr,
+                  )
                 }
               }
             } catch (err) {
@@ -777,7 +818,7 @@ async function processExcelFile(file) {
         console.error('Error submitting nilai:', err)
         failedCount++
       }
-      }
+    }
 
     // Show summary
     const skippedCount = dataWithoutId.length
@@ -858,7 +899,7 @@ onMounted(async () => {
 
     // Load mata kuliah untuk filter
     await mkStore.fetchAllMK()
-    } else {
+  } else {
     console.log('Loading data for admin/dosen...')
     // Untuk admin/dosen, load data seperti biasa
     await Promise.all([
@@ -923,7 +964,7 @@ onMounted(async () => {
       </div>
 
       <!-- Action Button -->
-      <div class="action-section" v-if="canManageKurikulumMk||isDosen">
+      <div class="action-section" v-if="canManageKurikulumMk || isDosen">
         <input
           type="file"
           id="excelUpload"
@@ -1025,10 +1066,10 @@ onMounted(async () => {
             </thead>
             <tbody>
               <tr
-                v-for="(nilai, index) in filteredNilaiList"
+                v-for="(nilai, index) in paginatedNilaiList"
                 :key="`${nilai.id_periode}-${nilai.kode_mk}-${nilai.nim}`"
               >
-                <td>{{ index + 1 }}</td>
+                <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
                 <td>
                   <span class="kode-mk">{{ nilai.kode_mk }}</span>
                 </td>
@@ -1056,6 +1097,16 @@ onMounted(async () => {
             </tbody>
           </table>
         </div>
+
+        <TablePagination
+          :total-items="filteredNilaiList.length"
+          :current-page="currentPage"
+          :items-per-page="itemsPerPage"
+          :show-all="showAll"
+          item-label="data nilai"
+          @update:current-page="setCurrentPage"
+          @update:show-all="setShowAll"
+        />
       </div>
     </div>
 
@@ -1137,41 +1188,53 @@ onMounted(async () => {
           </div>
           <div v-if="selectedPeriode && selectedPeriode !== ''" class="form-group">
             <label for="mk-periode-select" class="form-label">Pilih MK (Periode)</label>
-            <select id="mk-periode-select" v-model="formData.id_mk_periode" @change="onSelectMkPeriode" class="form-input">
+            <select
+              id="mk-periode-select"
+              v-model="formData.id_mk_periode"
+              @change="onSelectMkPeriode"
+              class="form-input"
+            >
               <option value="">-- Pilih MK untuk periode ini --</option>
-              <option v-for="mp in nilaiMkStore.getMkPeriodeByPeriode(selectedPeriode)" :key="mp.id_mk_periode" :value="mp.id_mk_periode">
-                {{ mp.kode_mk }} - {{ nilaiMkStore.getMataKuliahNama(mp.kode_mk) }} ({{ mp.sks }} sks)
+              <option
+                v-for="mp in nilaiMkStore.getMkPeriodeByPeriode(selectedPeriode)"
+                :key="mp.id_mk_periode"
+                :value="mp.id_mk_periode"
+              >
+                {{ mp.kode_mk }} - {{ nilaiMkStore.getMataKuliahNama(mp.kode_mk) }} ({{ mp.sks }}
+                sks)
               </option>
             </select>
-            <small v-if="formData.id_mk_periode" class="form-help">MK-periode terpilih: {{ formData.id_mk_periode }}</small>
+            <small v-if="formData.id_mk_periode" class="form-help"
+              >MK-periode terpilih: {{ formData.id_mk_periode }}</small
+            >
           </div>
 
           <div class="form-group">
             <label for="nim" class="form-label">NIM Mahasiswa *</label>
-              <div class="autocomplete-wrapper">
-                <input
-                  type="text"
-                  id="nim"
-                  v-model="formData.nim"
-                  class="form-input"
-                  placeholder="Masukkan NIM mahasiswa"
-                  required
-                  @input="onMahasiswaInput"
-                  @focus="onMahasiswaInput"
-                  @blur="hideMahasiswaDropdown"
-                />
-                <div v-if="showMahasiswaDropdown" class="autocomplete-dropdown">
-                  <div
-                    v-for="m in mahasiswaSuggestions"
-                    :key="m.nim"
-                    class="autocomplete-item"
-                    @mousedown.prevent="selectMahasiswaSuggestion(m)"
-                  >
-                    <div class="nim">{{ m.nim }}</div>
-                    <div class="nama">{{ m.nama }}</div>
-                  </div>
+            <div class="autocomplete-wrapper">
+              <input
+                type="text"
+                id="nim"
+                v-model="formData.nim"
+                class="form-input"
+                placeholder="Masukkan NIM mahasiswa"
+                required
+                @input="onMahasiswaInput"
+                @focus="onMahasiswaInput"
+                @blur="hideMahasiswaDropdown"
+              />
+              <div v-if="showMahasiswaDropdown" class="autocomplete-dropdown">
+                <div
+                  v-for="m in mahasiswaSuggestions"
+                  :key="m.nim"
+                  class="autocomplete-item"
+                  @mousedown.prevent="selectMahasiswaSuggestion(m)"
+                >
+                  <div class="nim">{{ m.nim }}</div>
+                  <div class="nama">{{ m.nama }}</div>
                 </div>
               </div>
+            </div>
             <div v-if="mahasiswaInfo.nim && mahasiswaInfo.nim === formData.nim" class="nim-info">
               <div v-if="mahasiswaInfo.nama" class="nim-found">
                 <i class="ri-user-line"></i>
@@ -1763,7 +1826,9 @@ onMounted(async () => {
   margin-top: 8px;
 }
 
-.autocomplete-wrapper { position: relative; }
+.autocomplete-wrapper {
+  position: relative;
+}
 .autocomplete-dropdown {
   position: absolute;
   top: 100%;
@@ -1772,15 +1837,29 @@ onMounted(async () => {
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
   z-index: 1000;
   max-height: 220px;
   overflow-y: auto;
 }
-.autocomplete-item { padding: 8px 12px; display:flex; gap:8px; align-items:center; cursor:pointer; }
-.autocomplete-item:hover { background:#f8fafc }
-.autocomplete-item .nim { font-family: 'Monaco','Menlo', monospace; font-weight:700; width:120px }
-.autocomplete-item .nama { color:#374151; }
+.autocomplete-item {
+  padding: 8px 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  cursor: pointer;
+}
+.autocomplete-item:hover {
+  background: #f8fafc;
+}
+.autocomplete-item .nim {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-weight: 700;
+  width: 120px;
+}
+.autocomplete-item .nama {
+  color: #374151;
+}
 
 .nim-found {
   display: flex;

@@ -117,37 +117,15 @@
         </table>
       </div>
 
-      <!-- Pagination -->
-      <div v-if="totalPages > 1" class="pagination-container">
-        <div class="pagination-info">
-          Menampilkan {{ (currentPage - 1) * itemsPerPage + 1 }} -
-          {{ Math.min(currentPage * itemsPerPage, filteredKurikulumMk.length) }}
-          dari {{ filteredKurikulumMk.length }} data
-        </div>
-        <div class="pagination">
-          <button @click="currentPage = 1" :disabled="currentPage === 1" class="pagination-btn">
-            <i class="ri-skip-back-line"></i>
-          </button>
-          <button @click="currentPage--" :disabled="currentPage === 1" class="pagination-btn">
-            <i class="ri-arrow-left-line"></i>
-          </button>
-          <span class="pagination-current">{{ currentPage }} / {{ totalPages }}</span>
-          <button
-            @click="currentPage++"
-            :disabled="currentPage === totalPages"
-            class="pagination-btn"
-          >
-            <i class="ri-arrow-right-line"></i>
-          </button>
-          <button
-            @click="currentPage = totalPages"
-            :disabled="currentPage === totalPages"
-            class="pagination-btn"
-          >
-            <i class="ri-skip-forward-line"></i>
-          </button>
-        </div>
-      </div>
+      <TablePagination
+        :total-items="filteredKurikulumMk.length"
+        :current-page="currentPage"
+        :items-per-page="itemsPerPage"
+        :show-all="showAll"
+        item-label="mata kuliah"
+        @update:current-page="setCurrentPage"
+        @update:show-all="setShowAll"
+      />
     </div>
 
     <!-- Add/Edit Modal -->
@@ -272,6 +250,7 @@ import { useKurikulumStore } from '@/stores/kurikulum'
 import { useMKStore } from '@/stores/mataKuliah'
 import { usePermissions } from '@/composables/usePermissions'
 import { useAuthStore } from '@/stores/auth'
+import TablePagination from '@/components/TablePagination.vue'
 
 // Route
 const route = useRoute()
@@ -287,6 +266,7 @@ const { canManageKurikulumMk, isAdmin, can } = usePermissions()
 const selectedKurikulum = ref(route.params.id || '')
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
+const showAll = ref(false)
 const showModal = ref(false)
 const showDeleteModal = ref(false)
 const isEditing = ref(false)
@@ -311,14 +291,24 @@ const filteredKurikulumMk = computed(() => {
 })
 
 const totalPages = computed(() => {
-  return Math.ceil(filteredKurikulumMk.value.length / itemsPerPage.value)
+  if (showAll.value) return 1
+  return Math.max(1, Math.ceil(filteredKurikulumMk.value.length / itemsPerPage.value))
 })
 
 const paginatedKurikulumMk = computed(() => {
+  if (showAll.value) return filteredKurikulumMk.value
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
   return filteredKurikulumMk.value.slice(start, end)
 })
+
+const setCurrentPage = (page) => {
+  currentPage.value = page
+}
+
+const setShowAll = (value) => {
+  showAll.value = value
+}
 
 // Available mata kuliah (belum ditambahkan ke kurikulum)
 const availableMataKuliah = computed(() => {

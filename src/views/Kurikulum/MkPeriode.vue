@@ -122,35 +122,15 @@
         </table>
       </div>
 
-      <!-- Pagination Controls -->
-      <div v-if="filteredList.length > itemsPerPage" class="pagination-container">
-        <div class="pagination-info">
-          Menampilkan {{ (currentPage - 1) * itemsPerPage + 1 }} -
-          {{ Math.min(currentPage * itemsPerPage, filteredList.length) }} dari
-          {{ filteredList.length }} mata kuliah
-        </div>
-        <div class="pagination-controls">
-          <button class="pagination-btn" @click="previousPage" :disabled="currentPage === 1">
-            <i class="ri-arrow-left-s-line"></i>
-            Sebelumnya
-          </button>
-          <div class="pagination-pages">
-            <button
-              v-for="page in totalPages"
-              :key="page"
-              class="pagination-page"
-              :class="{ active: currentPage === page }"
-              @click="goToPage(page)"
-            >
-              {{ page }}
-            </button>
-          </div>
-          <button class="pagination-btn" @click="nextPage" :disabled="currentPage === totalPages">
-            Selanjutnya
-            <i class="ri-arrow-right-s-line"></i>
-          </button>
-        </div>
-      </div>
+      <TablePagination
+        :total-items="totalItems"
+        :current-page="currentPage"
+        :items-per-page="itemsPerPage"
+        :show-all="showAll"
+        item-label="mata kuliah"
+        @update:current-page="setCurrentPage"
+        @update:show-all="setShowAll"
+      />
     </div>
 
     <!-- Empty State -->
@@ -250,6 +230,7 @@ import { useRoute } from 'vue-router'
 import { useNilaiMkStore } from '@/stores/nilaiMk'
 import { usePermissions } from '@/composables/usePermissions'
 import { useMKStore } from '@/stores/mataKuliah'
+import TablePagination from '@/components/TablePagination.vue'
 import {
   getMkPeriodeList,
   addMkPeriode as apiAddMkPeriode,
@@ -308,14 +289,27 @@ const filteredList = computed(() =>
 // Pagination
 const currentPage = ref(1)
 const itemsPerPage = 10
+const showAll = ref(false)
+const totalItems = computed(() => filteredList.value.length)
 
-const totalPages = computed(() => Math.ceil(filteredList.value.length / itemsPerPage))
+const totalPages = computed(() =>
+  showAll.value ? 1 : Math.max(1, Math.ceil(totalItems.value / itemsPerPage)),
+)
 
 const paginatedList = computed(() => {
+  if (showAll.value) return filteredList.value
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
   return filteredList.value.slice(start, end)
 })
+
+const setCurrentPage = (page) => {
+  currentPage.value = page
+}
+
+const setShowAll = (value) => {
+  showAll.value = value
+}
 
 // Pagination functions
 function goToPage(page) {
@@ -640,8 +634,8 @@ const { canManageKurikulumMk, isAdmin, isDosen } = usePermissions()
 /* Table Section */
 .table-section {
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
   overflow: hidden;
 }
 
@@ -651,7 +645,8 @@ const { canManageKurikulumMk, isAdmin, isDosen } = usePermissions()
 
 .data-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-family: 'Montserrat', sans-serif;
 }
 
@@ -664,27 +659,32 @@ const { canManageKurikulumMk, isAdmin, isDosen } = usePermissions()
 
 .data-table th {
   padding: 0;
-  text-align: left;
-  font-weight: 600;
-  color: var(--spmi-c-dgray);
+  text-align: center;
+  font-weight: 700;
+  color: var(--color-text);
   border: none;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .th-content {
-  padding: 16px 20px;
+  padding: 16px 14px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .data-table tbody tr {
   border-bottom: 1px solid #f3f4f6;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .data-table tbody tr:hover {
-  background-color: #f9fafb;
+  background-color: #faffec;
+  transform: scale(1.001);
 }
 
 .data-table td {
@@ -693,9 +693,9 @@ const { canManageKurikulumMk, isAdmin, isDosen } = usePermissions()
 }
 
 .td-content {
-  padding: 16px 20px;
+  padding: 16px 14px;
   font-size: 14px;
-  color: var(--color-text);
+  color: #4b5563;
 }
 
 .row-number {

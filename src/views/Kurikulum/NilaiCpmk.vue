@@ -126,7 +126,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="nim in studentNims" :key="nim" class="table-row">
+            <tr v-for="nim in paginatedStudentNims" :key="nim" class="table-row">
               <td class="sticky-col">
                 <div class="td-content">
                   <span class="nim-badge">{{ nim }}</span>
@@ -149,6 +149,16 @@
           </tbody>
         </table>
       </div>
+
+      <TablePagination
+        :total-items="studentNims.length"
+        :current-page="currentPage"
+        :items-per-page="itemsPerPage"
+        :show-all="showAll"
+        item-label="mahasiswa"
+        @update:current-page="setCurrentPage"
+        @update:show-all="setShowAll"
+      />
     </div>
 
     <!-- Add Nilai CPMK Modal -->
@@ -346,6 +356,7 @@ import { useMKStore } from '@/stores/mataKuliah'
 import { useMahasiswaStore } from '@/stores/mahasiswa'
 import { usePermissions } from '@/composables/usePermissions'
 import { useBobotCpmkStore } from '@/stores/bobotCpmk'
+import TablePagination from '@/components/TablePagination.vue'
 
 const store = useNilaiCpmkStore()
 
@@ -361,6 +372,9 @@ const selectedMataKuliah = ref('')
 const selectedMkPeriode = ref('')
 const showModal = ref(false)
 const formData = ref({ id_periode: '', kode_mk: '', id_mk_periode: '', nilaiMap: {}, nim: '' })
+const currentPage = ref(1)
+const itemsPerPage = 10
+const showAll = ref(false)
 
 const cpmkMkStore = useCpmkMkStore()
 const mkStore = useMKStore()
@@ -426,6 +440,7 @@ onMounted(async () => {
 watch(selectedPeriode, async (newVal) => {
   selectedMataKuliah.value = ''
   selectedMkPeriode.value = ''
+  currentPage.value = 1
   if (newVal) {
     // clear store list and optionally fetch default when periode selected
     if (bobotCpmkStore && typeof bobotCpmkStore.fetchAllBobotCpmk === 'function') {
@@ -435,6 +450,7 @@ watch(selectedPeriode, async (newVal) => {
 })
 
 watch(selectedMataKuliah, async (newVal) => {
+  currentPage.value = 1
   if (newVal) {
     // Ensure mk-periode list is available for resolution
     if (!nilaiMkStore.mkPeriodeList || nilaiMkStore.mkPeriodeList.length === 0) {
@@ -470,6 +486,7 @@ watch(selectedMataKuliah, (val) => {
 
 // watch for when user explicitly selects a mk-periode variant
 watch(selectedMkPeriode, async (newVal) => {
+  currentPage.value = 1
   if (newVal) {
     await store.fetchNilaiByFilter({ id_mk_periode: newVal })
     formData.value.id_mk_periode = newVal
@@ -705,6 +722,20 @@ const studentNims = computed(() => {
   const set = new Set(nilaiCpmkList.value.map((i) => i.nim))
   return Array.from(set)
 })
+
+const paginatedStudentNims = computed(() => {
+  if (showAll.value) return studentNims.value
+  const start = (currentPage.value - 1) * itemsPerPage
+  return studentNims.value.slice(start, start + itemsPerPage)
+})
+
+const setCurrentPage = (page) => {
+  currentPage.value = page
+}
+
+const setShowAll = (value) => {
+  showAll.value = value
+}
 
 const grid = computed(() => {
   const g = {}

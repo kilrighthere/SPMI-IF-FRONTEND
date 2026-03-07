@@ -13,6 +13,7 @@ import {
 } from 'chart.js'
 import { getMahasiswaList, getMahasiswaPetaNilai, getMahasiswaCplPerGrades } from '@/api'
 import { usePermissions } from '@/composables/usePermissions'
+import TablePagination from '@/components/TablePagination.vue'
 
 // Register Chart.js components
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
@@ -28,6 +29,9 @@ const currentUserNim = userId
 const mahasiswaList = ref([])
 const filteredMahasiswaList = ref([])
 const searchQuery = ref('')
+const currentPage = ref(1)
+const itemsPerPage = 10
+const showAll = ref(false)
 const selectedMahasiswa = ref(null)
 const petaNilaiData = ref(null)
 const cplPerGradesData = ref(null)
@@ -286,8 +290,23 @@ const groupedByCPL = computed(() => {
   return Object.values(grouped).sort((a, b) => a.id_cpl.localeCompare(b.id_cpl))
 })
 
+const paginatedMahasiswaList = computed(() => {
+  if (showAll.value) return filteredMahasiswaList.value
+  const start = (currentPage.value - 1) * itemsPerPage
+  return filteredMahasiswaList.value.slice(start, start + itemsPerPage)
+})
+
+const setCurrentPage = (page) => {
+  currentPage.value = page
+}
+
+const setShowAll = (value) => {
+  showAll.value = value
+}
+
 // Watch untuk search query (AJAX-like filtering)
 watch(searchQuery, (newQuery) => {
+  currentPage.value = 1
   if (newQuery.trim() === '') {
     filteredMahasiswaList.value = mahasiswaList.value
   } else {
@@ -296,6 +315,16 @@ watch(searchQuery, (newQuery) => {
       (mhs) => mhs.nim.toLowerCase().includes(query) || mhs.nama.toLowerCase().includes(query),
     )
   }
+})
+
+watch(filteredMahasiswaList, (newList) => {
+  if (newList.length === 0) {
+    currentPage.value = 1
+    return
+  }
+
+  const totalPages = Math.max(1, Math.ceil(newList.length / itemsPerPage))
+  if (currentPage.value > totalPages) currentPage.value = totalPages
 })
 
 onMounted(() => {
@@ -341,8 +370,8 @@ onMounted(() => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(mhs, index) in filteredMahasiswaList" :key="mhs.nim" class="mahasiswa-row">
-              <td class="text-center">{{ index + 1 }}</td>
+            <tr v-for="(mhs, index) in paginatedMahasiswaList" :key="mhs.nim" class="mahasiswa-row">
+              <td class="text-center">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
               <td>
                 <span class="nim-text">{{ mhs.nim }}</span>
               </td>
@@ -357,6 +386,17 @@ onMounted(() => {
             </tr>
           </tbody>
         </table>
+
+        <TablePagination
+          v-if="filteredMahasiswaList.length > 0"
+          :total-items="filteredMahasiswaList.length"
+          :current-page="currentPage"
+          :items-per-page="itemsPerPage"
+          :show-all="showAll"
+          item-label="mahasiswa"
+          @update:current-page="setCurrentPage"
+          @update:show-all="setShowAll"
+        />
 
         <!-- No Results -->
         <div v-if="filteredMahasiswaList.length === 0" class="no-results">
@@ -1236,4 +1276,3 @@ onMounted(() => {
   }
 }
 </style>
-
