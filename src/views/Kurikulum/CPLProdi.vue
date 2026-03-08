@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 // Removed Header, Sidebar, Footer imports as they're already in the parent component
 import { usePermissions } from '@/composables/usePermissions'
 import TablePagination from '@/components/TablePagination.vue'
+import ErrorPopup from '@/components/ErrorPopup.vue'
 
 // Import stores
 import { useCPLStore } from '@/stores/cpl'
@@ -23,7 +24,8 @@ const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
 // Data untuk CPL
 const cplList = computed(() => cplStore.cplList)
 const isLoading = computed(() => cplStore.isLoading)
-const error = computed(() => cplStore.error)
+const storeError = computed(() => cplStore.error)
+const popupError = ref('')
 const currentPage = ref(1)
 const itemsPerPage = 10
 const showAll = ref(false)
@@ -56,14 +58,24 @@ const fetchCPL = async () => {
 // Tambah CPL baru menggunakan store
 const saveCPL = async () => {
   try {
+    popupError.value = ''
     if (isEditing.value) {
-      await cplStore.editCPL(form.value.id_cpl, form.value)
+      const result = await cplStore.editCPL(form.value.id_cpl, form.value)
+      if (result === false || result?.success === false) {
+        popupError.value = result?.error || storeError.value || 'Gagal memperbarui CPL'
+        return
+      }
     } else {
-      await cplStore.createCPL(form.value)
+      const result = await cplStore.createCPL(form.value)
+      if (result === false || result?.success === false) {
+        popupError.value = result?.error || storeError.value || 'Gagal menambahkan CPL'
+        return
+      }
     }
     resetForm()
   } catch (err) {
     console.error('Error saving CPL:', err)
+    popupError.value = isEditing.value ? 'Gagal memperbarui CPL' : 'Gagal menambahkan CPL'
   }
 }
 
@@ -77,7 +89,10 @@ const editCPL = (cpl) => {
 // Hapus CPL
 const removeCPL = async (id) => {
   if (confirm('Apakah anda yakin ingin menghapus CPL ini?')) {
-    await cplStore.removeCPL(id)
+    const result = await cplStore.removeCPL(id)
+    if (result === false || result?.success === false) {
+      popupError.value = result?.error || storeError.value || 'Gagal menghapus CPL'
+    }
   }
 }
 
@@ -86,6 +101,10 @@ const resetForm = () => {
   form.value = { id_cpl: '', deskripsi: '', id_pl: 'PL001' }
   isEditing.value = false
   showForm.value = false
+}
+
+const clearError = () => {
+  popupError.value = ''
 }
 
 const setCurrentPage = (page) => {
@@ -98,6 +117,10 @@ const setShowAll = (value) => {
 
 watch(totalPages, (newTotal) => {
   if (currentPage.value > newTotal) currentPage.value = newTotal
+})
+
+watch(storeError, (newError) => {
+  if (newError) popupError.value = newError
 })
 
 // Load data saat komponen dimuat
@@ -142,11 +165,8 @@ onMounted(async () => {
       <!-- Loading indicator -->
       <div v-if="isLoading" class="loading">Loading...</div>
 
-      <!-- Error message -->
-      <div v-if="error" class="error-message">{{ error }}</div>
-
       <!-- CPL Content -->
-      <div v-if="!isLoading && !error">
+      <div v-if="!isLoading">
         <p>
           Capaian Pembelajaran Lulusan (CPL) untuk
           {{ currentKurikulum?.nama_kurikulum || 'Kurikulum' }} mencakup beberapa kompetensi yang
@@ -192,6 +212,8 @@ onMounted(async () => {
         />
       </div>
     </div>
+
+    <ErrorPopup :message="popupError" @close="clearError" />
   </div>
 </template>
 
@@ -213,6 +235,12 @@ onMounted(async () => {
   margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 1px solid #f0f0f0;
+}
+
+p {
+  margin-bottom: 16px;
+  color: #6b7280;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .section-box h3 {

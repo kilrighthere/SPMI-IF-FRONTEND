@@ -1,9 +1,10 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useMahasiswaStore } from '@/stores/mahasiswa'
 import { usePermissions } from '@/composables/usePermissions'
 import ExcelJS from 'exceljs'
 import TablePagination from '@/components/TablePagination.vue'
+import ErrorPopup from '@/components/ErrorPopup.vue'
 
 const mahasiswaStore = useMahasiswaStore()
 
@@ -13,6 +14,7 @@ const { isAdmin, isDosen, isMahasiswa, userId, userRole, can } = usePermissions(
 const mahasiswaList = computed(() => mahasiswaStore.mahasiswaList)
 const isLoading = computed(() => mahasiswaStore.isLoading)
 const error = computed(() => mahasiswaStore.error)
+const popupError = ref('')
 
 // Pagination state
 const currentPage = ref(1)
@@ -286,6 +288,10 @@ const showNotification = (type, message) => {
 
 const hideNotification = () => {
   notification.value.show = false
+}
+
+const clearPopupError = () => {
+  popupError.value = ''
 }
 
 const getNotificationIcon = (type) => {
@@ -586,6 +592,10 @@ const openUploadModal = () => {
 onMounted(() => {
   fetchMahasiswa()
 })
+
+watch(error, (newError) => {
+  if (newError) popupError.value = newError
+})
 </script>
 
 <template>
@@ -610,11 +620,8 @@ onMounted(() => {
       <!-- Loading indicator -->
       <div v-if="isLoading" class="loading">Loading...</div>
 
-      <!-- Error message -->
-      <div v-else-if="error" class="error-message">{{ error }}</div>
-
       <!-- Profile data -->
-      <div v-else-if="currentUserData" class="profile-container">
+      <div v-if="!isLoading && currentUserData" class="profile-container">
         <div class="profile-card">
           <div class="profile-header">
             <div class="profile-avatar">
@@ -629,7 +636,7 @@ onMounted(() => {
       </div>
 
       <!-- No data found -->
-      <div v-else class="no-data">Data profil tidak ditemukan</div>
+      <div v-if="!isLoading && !currentUserData" class="no-data">Data profil tidak ditemukan</div>
     </div>
 
     <!-- View untuk Dosen/Admin - manajemen semua mahasiswa -->
@@ -679,11 +686,8 @@ onMounted(() => {
       <!-- Loading indicator -->
       <div v-if="isLoading" class="loading">Loading...</div>
 
-      <!-- Error message -->
-      <div v-else-if="error" class="error-message">{{ error }}</div>
-
       <!-- Mahasiswa List -->
-      <div v-else class="mahasiswa-content">
+      <div v-if="!isLoading" class="mahasiswa-content">
         <div v-if="mahasiswaList.length === 0" class="empty-state">Belum ada data mahasiswa.</div>
 
         <div v-else>
@@ -727,6 +731,8 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <ErrorPopup :message="popupError" @close="clearPopupError" />
 
     <!-- Upload Excel Modal -->
     <div v-if="showUploadModal" class="modal-overlay" @click="closeUploadModal">

@@ -7,6 +7,7 @@ import { usePermissions } from '@/composables/usePermissions'
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import TablePagination from '@/components/TablePagination.vue'
+import ErrorPopup from '@/components/ErrorPopup.vue'
 
 // Initialize stores
 const cplSndiktiStore = useCplSndiktiStore()
@@ -24,7 +25,8 @@ const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
 const cplSndiktiList = computed(() => cplSndiktiStore.cplSndiktiList)
 const cplList = computed(() => cplStore.cplList)
 const isLoading = computed(() => cplSndiktiStore.isLoading || cplStore.isLoading)
-const error = ref('')
+const popupError = ref('')
+const storeError = computed(() => cplSndiktiStore.error)
 const currentPage = ref(1)
 const itemsPerPage = 10
 const showAll = ref(false)
@@ -101,7 +103,7 @@ const validateForm = () => {
 const saveCplSndikti = async () => {
   try {
     // Reset error message first
-    error.value = ''
+    popupError.value = ''
 
     // Validate form before submission
     if (!validateForm()) {
@@ -109,14 +111,22 @@ const saveCplSndikti = async () => {
     }
 
     if (isEditing.value) {
-      await cplSndiktiStore.editCplSndikti(form.value.id_sn, form.value)
+      const result = await cplSndiktiStore.editCplSndikti(form.value.id_sn, form.value)
+      if (result === false || result?.success === false) {
+        popupError.value = result?.error || storeError.value || 'Gagal memperbarui CPL SNDIKTI'
+        return
+      }
     } else {
-      await cplSndiktiStore.createCplSndikti(form.value)
+      const result = await cplSndiktiStore.createCplSndikti(form.value)
+      if (result === false || result?.success === false) {
+        popupError.value = result?.error || storeError.value || 'Gagal menambahkan CPL SNDIKTI'
+        return
+      }
     }
     resetForm()
   } catch (err) {
     console.error('Error saving CPL SNDIKTI:', err)
-    error.value = isEditing.value ? 'Gagal mengupdate data' : 'Gagal menambah data'
+    popupError.value = isEditing.value ? 'Gagal mengupdate data' : 'Gagal menambah data'
   }
 }
 
@@ -136,7 +146,10 @@ const editCplSndikti = (item) => {
 // Hapus CPL SNDIKTI
 const removeCplSndikti = async (id) => {
   if (confirm('Apakah anda yakin ingin menghapus CPL SNDIKTI ini?')) {
-    await cplSndiktiStore.removeCplSndikti(id)
+    const result = await cplSndiktiStore.removeCplSndikti(id)
+    if (result === false || result?.success === false) {
+      popupError.value = result?.error || storeError.value || 'Gagal menghapus CPL SNDIKTI'
+    }
   }
 }
 
@@ -144,14 +157,14 @@ const removeCplSndikti = async (id) => {
 const resetForm = () => {
   form.value = { id_sn: '', aspek: '', deskripsi: '', id_cpl: '' }
   formErrors.value = { id_sn: '', aspek: '', deskripsi: '', id_cpl: '' }
-  error.value = ''
+  popupError.value = ''
   isEditing.value = false
   showForm.value = false
 }
 
 // Clear error message only (keep form data)
 const clearError = () => {
-  error.value = ''
+  popupError.value = ''
 }
 
 const setCurrentPage = (page) => {
@@ -164,6 +177,10 @@ const setShowAll = (value) => {
 
 watch(totalPages, (newTotal) => {
   if (currentPage.value > newTotal) currentPage.value = newTotal
+})
+
+watch(storeError, (newError) => {
+  if (newError) popupError.value = newError
 })
 
 // Load data saat komponen dimuat
@@ -245,14 +262,8 @@ onMounted(async () => {
       <!-- Loading indicator -->
       <div v-if="isLoading" class="loading">Loading...</div>
 
-      <!-- Error message -->
-      <div v-if="error" class="error-message">
-        {{ error }}
-        <button class="btn-close" @click="clearError">×</button>
-      </div>
-
       <!-- CPL SNDIKTI List -->
-      <div v-else class="cpl-sndikti-content">
+      <div v-if="!isLoading" class="cpl-sndikti-content">
         <p>
           CPL SNDIKTI untuk {{ currentKurikulum?.nama_kurikulum || 'Kurikulum' }} merupakan capaian
           pembelajaran yang mengacu pada Standar Nasional Pendidikan Tinggi yang mencakup aspek
@@ -309,6 +320,8 @@ onMounted(async () => {
         />
       </div>
     </div>
+
+    <ErrorPopup :message="popupError" @close="clearError" />
   </div>
 </template>
 

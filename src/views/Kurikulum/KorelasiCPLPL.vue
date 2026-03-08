@@ -8,11 +8,8 @@
       <!-- Loading indicator -->
       <div v-if="isLoading" class="loading">Loading...</div>
 
-      <!-- Error message -->
-      <div v-if="error" class="error-message">{{ error }}</div>
-
       <!-- CPL-PL Content -->
-      <div v-if="!isLoading && !error">
+      <div v-if="!isLoading">
         <p class="description">
           Matriks berikut menunjukkan korelasi antara Capaian Pembelajaran Lulusan (CPL) dengan
           Profil Lulusan (PL). Pilih satu Profil Lulusan untuk setiap CPL.
@@ -70,13 +67,16 @@
         </div>
       </div>
     </div>
+
+    <ErrorPopup :message="popupError" @close="clearError" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useKorelasiCPLPLStore } from '@/stores/korelasiCPLPL'
 import { usePermissions } from '@/composables/usePermissions'
+import ErrorPopup from '@/components/ErrorPopup.vue'
 
 // Initialize store
 const cplPlStore = useKorelasiCPLPLStore()
@@ -90,6 +90,7 @@ const plList = computed(() => cplPlStore.plList)
 const matrixData = computed(() => cplPlStore.matrixData)
 const isLoading = computed(() => cplPlStore.isLoading)
 const error = computed(() => cplPlStore.error)
+const popupError = ref('')
 
 // Check if CPL and PL are related
 const isRelated = (cplId, plId) => {
@@ -149,6 +150,10 @@ const selectRelation = async (cplId, plId) => {
   }
 }
 
+const clearError = () => {
+  popupError.value = ''
+}
+
 // Load data saat komponen dimuat
 onMounted(async () => {
   await cplPlStore.fetchAllData()
@@ -157,6 +162,10 @@ onMounted(async () => {
   console.log('Matrix Data:', matrixData.value)
   console.log('isAdmin:', isAdmin.value)
   console.log('isDosen:', isDosen.value)
+})
+
+watch(error, (newError) => {
+  if (newError) popupError.value = newError
 })
 </script>
 
@@ -388,7 +397,6 @@ input[type='radio']:disabled:checked {
   margin-bottom: 20px;
   font-family: 'Montserrat', sans-serif;
 }
-
 .empty-state {
   text-align: center;
   padding: 40px;

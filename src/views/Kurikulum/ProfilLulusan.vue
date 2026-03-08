@@ -6,6 +6,7 @@ import { usePermissions } from '@/composables/usePermissions'
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import TablePagination from '@/components/TablePagination.vue'
+import ErrorPopup from '@/components/ErrorPopup.vue'
 
 // Initialize stores
 const plStore = usePLStore()
@@ -260,17 +261,7 @@ onMounted(async () => {
       </div>
     </div>
 
-    <!-- Error popup (non-blocking for table content) -->
-    <div v-if="popupError" class="error-popup-overlay" @click.self="clearError">
-      <div class="error-popup" role="alert" aria-live="assertive">
-        <button class="error-popup-close" @click="clearError" aria-label="Tutup popup error">
-          ×
-        </button>
-        <div class="error-popup-icon" aria-hidden="true">✕</div>
-        <p class="error-popup-title">Terjadi Kesalahan</p>
-        <p class="error-popup-message">{{ popupError }}</p>
-      </div>
-    </div>
+    <ErrorPopup :message="popupError" @close="clearError" />
   </div>
 </template>
 
@@ -547,72 +538,6 @@ textarea {
   border-radius: 8px;
   margin-bottom: 20px;
   font-family: 'Montserrat', sans-serif;
-}
-
-.error-popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(17, 24, 39, 0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-  padding: 16px;
-}
-
-.error-popup {
-  width: 100%;
-  max-width: 420px;
-  background: white;
-  border-radius: 16px;
-  padding: 24px 20px 20px;
-  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.2);
-  position: relative;
-  text-align: center;
-  border: 1px solid #fecaca;
-}
-
-.error-popup-close {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  border: none;
-  background: transparent;
-  color: #9ca3af;
-  font-size: 30px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.error-popup-close:hover {
-  color: var(--color-button);
-}
-
-.error-popup-icon {
-  width: 58px;
-  height: 58px;
-  margin: 0 auto 12px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  font-weight: 900;
-  color: var(--color-button-hover);
-  border: 2px solid var(--color-button-hover);
-  background: #fff5f5;
-}
-
-.error-popup-title {
-  margin: 0;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.error-popup-message {
-  margin: 8px 0 0;
-  color: #4b5563;
-  line-height: 1.5;
 }
 
 .empty-state {

@@ -8,11 +8,10 @@
         </button>
       </div>
 
-      <!-- Success & Error Messages -->
       <div v-if="successMessage" class="success-message">{{ successMessage }}</div>
-      <div v-if="error" class="error-message">{{ error }}</div>
 
-      <!-- Form to add a new relation -->
+      <ErrorPopup :message="popupError" @close="clearError" />
+
       <div v-if="showForm" class="form-container">
         <div class="form-group">
           <label for="bk-select">Bahan Kajian (BK)</label>
@@ -37,13 +36,13 @@
         </div>
       </div>
 
-      <!-- Loading Indicator -->
       <div v-if="isLoading" class="loading">Memuat data...</div>
 
-      <!-- Data Table -->
       <div v-if="!isLoading">
         <p>Halaman ini menampilkan korelasi antara Bahan Kajian (BK) dan Mata Kuliah (MK).</p>
+
         <div v-if="totalItems === 0" class="empty-state">Belum ada data korelasi.</div>
+
         <table v-else class="data-table">
           <thead>
             <tr>
@@ -89,16 +88,17 @@ import { computed, ref, onMounted, watch } from 'vue'
 import { useBkMkStore } from '@/stores/bkMk'
 import { usePermissions } from '@/composables/usePermissions'
 import TablePagination from '@/components/TablePagination.vue'
+import ErrorPopup from '@/components/ErrorPopup.vue'
 
 const store = useBkMkStore()
 const { can } = usePermissions()
 
-// Use the new computed property from the store
 const itemsList = computed(() => store.itemsWithDetails)
 const bkList = computed(() => store.bkList)
 const mkList = computed(() => store.mkList)
 const isLoading = computed(() => store.isLoading)
-const error = computed(() => store.error)
+const storeError = computed(() => store.error)
+const popupError = ref('')
 const currentPage = ref(1)
 const itemsPerPage = 10
 const showAll = ref(false)
@@ -117,7 +117,6 @@ const form = ref({ id_bk: '', id_mk: '' })
 const successMessage = ref('')
 const showForm = ref(false)
 
-// Simplified onMounted hook
 const fetchData = async () => {
   await store.fetchAll()
 }
@@ -127,28 +126,47 @@ const saveData = async () => {
     alert('Silakan pilih Bahan Kajian dan Mata Kuliah.')
     return
   }
+
   try {
-    await store.create(form.value)
+    popupError.value = ''
+    const result = await store.create(form.value)
+
+    if (result === false || result?.success === false) {
+      popupError.value = result?.error || storeError.value || 'Gagal menambahkan korelasi BK-MK'
+      return
+    }
+
     successMessage.value = 'Korelasi BK-MK berhasil ditambahkan.'
     setTimeout(() => (successMessage.value = ''), 3000)
     form.value = { id_bk: '', id_mk: '' }
     showForm.value = false
   } catch (err) {
     console.error('Error saving BK-MK:', err)
-    // Error is handled by the store's error state
+    popupError.value = 'Gagal menambahkan korelasi BK-MK'
   }
 }
 
 const removeData = async (id_bk, id_mk) => {
   if (confirm('Apakah Anda yakin ingin menghapus korelasi ini?')) {
     try {
-      await store.remove(id_bk, id_mk)
+      const result = await store.remove(id_bk, id_mk)
+
+      if (result === false || result?.success === false) {
+        popupError.value = result?.error || storeError.value || 'Gagal menghapus korelasi BK-MK'
+        return
+      }
+
       successMessage.value = 'Korelasi berhasil dihapus.'
       setTimeout(() => (successMessage.value = ''), 3000)
     } catch (err) {
       console.error('Error removing BK-MK:', err)
+      popupError.value = 'Gagal menghapus korelasi BK-MK'
     }
   }
+}
+
+const clearError = () => {
+  popupError.value = ''
 }
 
 const setCurrentPage = (page) => {
@@ -163,6 +181,10 @@ watch(totalPages, (newTotal) => {
   if (currentPage.value > newTotal) currentPage.value = newTotal
 })
 
+watch(storeError, (newError) => {
+  if (newError) popupError.value = newError
+})
+
 onMounted(fetchData)
 </script>
 
@@ -171,11 +193,13 @@ onMounted(fetchData)
   width: 100%;
   margin: 0 auto;
 }
+
 .section-box {
   background: white;
   border-radius: 10px;
   padding: 24px;
 }
+
 .section-header {
   display: flex;
   justify-content: space-between;
@@ -184,6 +208,7 @@ onMounted(fetchData)
   padding-bottom: 16px;
   border-bottom: 1px solid #f0f0f0;
 }
+
 .section-box h3 {
   font-size: 18px;
   font-weight: 700;
@@ -191,6 +216,7 @@ onMounted(fetchData)
   color: var(--color-text);
   font-family: 'Montserrat', sans-serif;
 }
+
 .form-container {
   background: #f9fafb;
   padding: 20px;
@@ -198,9 +224,11 @@ onMounted(fetchData)
   margin-bottom: 24px;
   border: 1px solid #e5e7eb;
 }
+
 .form-group {
   margin-bottom: 16px;
 }
+
 .form-group label {
   display: block;
   margin-bottom: 8px;
@@ -208,6 +236,7 @@ onMounted(fetchData)
   font-size: 14px;
   color: #374151;
 }
+
 .form-group select {
   width: 100%;
   padding: 10px 14px;
@@ -216,17 +245,20 @@ onMounted(fetchData)
   font-size: 14px;
   font-family: 'Montserrat', sans-serif;
 }
+
 .form-group select:focus {
   outline: none;
   border-color: var(--color-button);
   box-shadow: 0 0 0 3px rgba(116, 183, 8, 0.1);
 }
+
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 20px;
 }
+
 .data-table {
   width: 100%;
   border-collapse: separate;
@@ -236,9 +268,11 @@ onMounted(fetchData)
   border-radius: 10px;
   overflow: hidden;
 }
+
 .data-table thead {
   background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
 }
+
 .data-table th {
   padding: 16px 18px;
   text-align: left;
@@ -247,21 +281,26 @@ onMounted(fetchData)
   font-size: 13px;
   text-transform: uppercase;
 }
+
 .data-table td {
   padding: 16px 18px;
   border-bottom: 1px solid #f3f4f6;
   color: #4b5563;
   font-size: 14px;
 }
+
 .data-table tbody tr:hover {
   background: #faffec;
 }
+
 .data-table tbody tr:last-child td {
   border-bottom: none;
 }
+
 .action-buttons {
   text-align: right;
 }
+
 .btn-add,
 .btn-save,
 .btn-delete {
@@ -277,36 +316,43 @@ onMounted(fetchData)
   font-family: 'Montserrat', sans-serif;
   transition: all 0.25s ease;
 }
+
 .btn-add {
   background: var(--color-button);
   color: white;
   border-color: var(--color-button);
 }
+
 .btn-add:hover {
   background: var(--color-buttonsec);
   color: var(--color-text);
   border-color: var(--color-buttonsec);
 }
+
 .btn-save {
   background: var(--color-button);
   color: white;
   border-color: var(--color-button);
 }
+
 .btn-save:hover {
   background: var(--color-buttonsec);
   color: var(--color-text);
   border-color: var(--color-buttonsec);
 }
+
 .btn-delete {
   background: white;
   color: var(--color-button-hover);
   border-color: #fca5a5;
 }
+
 .btn-delete:hover {
   background: var(--color-button-hover);
   color: white;
   border-color: var(--color-button-hover);
 }
+
 .loading,
 .empty-state {
   text-align: center;
@@ -314,6 +360,7 @@ onMounted(fetchData)
   color: #6b7280;
   font-size: 16px;
 }
+
 .error-message,
 .success-message {
   padding: 12px 16px;
@@ -321,11 +368,13 @@ onMounted(fetchData)
   margin: 20px 0;
   font-family: 'Montserrat', sans-serif;
 }
+
 .error-message {
   color: #b91c1c;
   background-color: #fee2e2;
   border: 1px solid #fecaca;
 }
+
 .success-message {
   color: #047857;
   background-color: #d1fae5;

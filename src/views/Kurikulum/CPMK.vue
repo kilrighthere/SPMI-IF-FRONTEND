@@ -8,6 +8,7 @@ import { useCPLStore } from '@/stores/cpl'
 import { useKurikulumStore } from '@/stores/kurikulum'
 import { usePermissions } from '@/composables/usePermissions'
 import TablePagination from '@/components/TablePagination.vue'
+import ErrorPopup from '@/components/ErrorPopup.vue'
 
 // Initialize stores
 const cpmkStore = useCPMKStore()
@@ -25,7 +26,8 @@ const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
 const cpmkList = computed(() => cpmkStore.cpmkList)
 const cplList = computed(() => cplStore.cplList)
 const isLoading = computed(() => cpmkStore.isLoading || cplStore.isLoading)
-const error = ref('') // Mengubah dari computed ke ref untuk kontrol lebih baik
+const popupError = ref('')
+const storeError = computed(() => cpmkStore.error)
 const currentPage = ref(1)
 const itemsPerPage = 10
 const showAll = ref(false)
@@ -94,7 +96,7 @@ const validateForm = () => {
 const saveCPMK = async () => {
   try {
     // Reset error message first
-    error.value = ''
+    popupError.value = ''
 
     // Validate form before submission
     if (!validateForm()) {
@@ -102,14 +104,22 @@ const saveCPMK = async () => {
     }
 
     if (isEditing.value) {
-      await cpmkStore.editCPMK(form.value.id_cpmk, form.value)
+      const result = await cpmkStore.editCPMK(form.value.id_cpmk, form.value)
+      if (result === false || result?.success === false) {
+        popupError.value = result?.error || storeError.value || 'Gagal mengupdate data CPMK'
+        return
+      }
     } else {
-      await cpmkStore.createCPMK(form.value)
+      const result = await cpmkStore.createCPMK(form.value)
+      if (result === false || result?.success === false) {
+        popupError.value = result?.error || storeError.value || 'Gagal menambah data CPMK'
+        return
+      }
     }
     resetForm()
   } catch (err) {
     console.error('Error saving CPMK:', err)
-    error.value = isEditing.value ? 'Gagal mengupdate data' : 'Gagal menambah data'
+    popupError.value = isEditing.value ? 'Gagal mengupdate data' : 'Gagal menambah data'
   }
 }
 
@@ -129,7 +139,10 @@ const editCPMK = (cpmk) => {
 // Hapus CPMK
 const removeCPMK = async (id) => {
   if (confirm('Apakah anda yakin ingin menghapus CPMK ini?')) {
-    await cpmkStore.removeCPMK(id)
+    const result = await cpmkStore.removeCPMK(id)
+    if (result === false || result?.success === false) {
+      popupError.value = result?.error || storeError.value || 'Gagal menghapus CPMK'
+    }
   }
 }
 
@@ -137,14 +150,14 @@ const removeCPMK = async (id) => {
 const resetForm = () => {
   form.value = { id_cpmk: '', deskripsi: '', id_cpl: '' }
   formErrors.value = { id_cpmk: '', deskripsi: '', id_cpl: '' }
-  error.value = ''
+  popupError.value = ''
   isEditing.value = false
   showForm.value = false
 }
 
 // Hapus pesan error saja (tetap simpan data form)
 const clearError = () => {
-  error.value = ''
+  popupError.value = ''
 }
 
 const setCurrentPage = (page) => {
@@ -157,6 +170,10 @@ const setShowAll = (value) => {
 
 watch(totalPages, (newTotal) => {
   if (currentPage.value > newTotal) currentPage.value = newTotal
+})
+
+watch(storeError, (newError) => {
+  if (newError) popupError.value = newError
 })
 
 // Mendapatkan nama CPL berdasarkan ID
@@ -233,11 +250,8 @@ onMounted(async () => {
       <!-- Loading indicator -->
       <div v-if="isLoading" class="loading">Loading...</div>
 
-      <!-- Error message -->
-      <div v-if="error" class="error-message">{{ error }}</div>
-
       <!-- CPMK List -->
-      <div v-else class="cpmk-content">
+      <div v-if="!isLoading" class="cpmk-content">
         <p>
           Capaian Pembelajaran Mata Kuliah (CPMK) adalah kemampuan yang diharapkan dimiliki oleh
           mahasiswa setelah menyelesaikan suatu mata kuliah.
@@ -286,6 +300,8 @@ onMounted(async () => {
         </div>
       </div>
     </div>
+
+    <ErrorPopup :message="popupError" @close="clearError" />
   </div>
 </template>
 

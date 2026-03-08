@@ -5,6 +5,7 @@ import { useMKStore } from '@/stores/mataKuliah'
 import { useKurikulumStore } from '@/stores/kurikulum'
 import { usePermissions } from '@/composables/usePermissions'
 import TablePagination from '@/components/TablePagination.vue'
+import ErrorPopup from '@/components/ErrorPopup.vue'
 
 // Initialize stores
 const mkStore = useMKStore()
@@ -20,7 +21,8 @@ const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
 // Data
 const mataKuliahList = computed(() => mkStore.mataKuliahList)
 const isLoading = computed(() => mkStore.isLoading)
-const error = computed(() => mkStore.error)
+const storeError = computed(() => mkStore.error)
+const popupError = ref('')
 const showSuccess = ref(false)
 const successMessage = ref('')
 const showModal = ref(false)
@@ -124,11 +126,11 @@ const saveMK = async () => {
         showSuccess.value = false
       }, 3000)
     } else {
-      alert('Gagal menyimpan mata kuliah')
+      popupError.value = storeError.value || 'Gagal menyimpan mata kuliah'
     }
   } catch (err) {
     console.error('Error saving mata kuliah:', err)
-    alert('Terjadi kesalahan saat menyimpan data mata kuliah: ' + (err.message || err))
+    popupError.value = 'Terjadi kesalahan saat menyimpan data mata kuliah'
   }
 }
 
@@ -145,19 +147,17 @@ const deleteMK = async (mk) => {
           showSuccess.value = false
         }, 3000)
       } else {
-        error.value = result.error || 'Gagal menghapus mata kuliah'
-        setTimeout(() => {
-          error.value = null
-        }, 3000)
+        popupError.value = result.error || storeError.value || 'Gagal menghapus mata kuliah'
       }
     } catch (err) {
       console.error('Error deleting mata kuliah:', err)
-      error.value = 'Terjadi kesalahan saat menghapus mata kuliah'
-      setTimeout(() => {
-        error.value = null
-      }, 3000)
+      popupError.value = 'Terjadi kesalahan saat menghapus mata kuliah'
     }
   }
+}
+
+const clearError = () => {
+  popupError.value = ''
 }
 
 const setCurrentPage = (page) => {
@@ -176,6 +176,10 @@ watch(totalPages, (newTotal) => {
   if (currentPage.value > newTotal) currentPage.value = newTotal
 })
 
+watch(storeError, (newError) => {
+  if (newError) popupError.value = newError
+})
+
 // Load data when component is mounted
 onMounted(async () => {
   console.log('StrukMatkul component mounted, fetching data...')
@@ -189,7 +193,7 @@ onMounted(async () => {
     console.log('Data fetched successfully, found', mataKuliahList.value.length, 'mata kuliah')
   } catch (err) {
     console.error('Failed to fetch data:', err)
-    error.value = 'Gagal memuat data mata kuliah'
+    popupError.value = 'Gagal memuat data mata kuliah'
   }
 })
 </script>
@@ -204,14 +208,11 @@ onMounted(async () => {
       <!-- Loading indicator -->
       <div v-if="isLoading" class="loading">Loading...</div>
 
-      <!-- Error message -->
-      <div v-if="error" class="error-message">{{ error }}</div>
-
       <!-- Success message -->
       <div v-if="showSuccess" class="success-message">{{ successMessage }}</div>
 
       <!-- Content -->
-      <div v-if="!isLoading && !error" class="struktur-content">
+      <div v-if="!isLoading" class="struktur-content">
         <p>
           Halaman ini digunakan untuk mengelola struktur mata kuliah pada
           {{ currentKurikulum?.nama_kurikulum || 'Kurikulum' }}.
@@ -275,6 +276,8 @@ onMounted(async () => {
         </div>
       </div>
     </div>
+
+    <ErrorPopup :message="popupError" @close="clearError" />
 
     <!-- Modal for Adding/Editing Mata Kuliah -->
     <div v-if="showModal" class="modal-overlay">

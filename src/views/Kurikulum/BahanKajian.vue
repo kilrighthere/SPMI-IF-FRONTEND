@@ -34,11 +34,8 @@
       <!-- Loading indicator -->
       <div v-if="isLoading" class="loading">Loading...</div>
 
-      <!-- Error message -->
-      <div v-if="error" class="error-message">{{ error }}</div>
-
       <!-- BK Content -->
-      <div v-if="!isLoading && !error">
+      <div v-if="!isLoading">
         <p>
           Bahan Kajian (BK) merupakan komponen-komponen keilmuan yang menjadi bahan dari mata kuliah
           dalam kurikulum program studi.
@@ -83,6 +80,8 @@
         />
       </div>
     </div>
+
+    <ErrorPopup :message="popupError" @close="clearError" />
   </div>
 </template>
 
@@ -91,6 +90,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useBKStore } from '@/stores/bk'
 import { usePermissions } from '@/composables/usePermissions'
 import TablePagination from '@/components/TablePagination.vue'
+import ErrorPopup from '@/components/ErrorPopup.vue'
 
 // Use centralized permissions
 const { isAdmin, isDosen, isMahasiswa, can } = usePermissions()
@@ -101,7 +101,8 @@ const bkStore = useBKStore()
 // Data untuk BK
 const bkList = computed(() => bkStore.bkList)
 const isLoading = computed(() => bkStore.isLoading)
-const error = computed(() => bkStore.error)
+const storeError = computed(() => bkStore.error)
+const popupError = ref('')
 const currentPage = ref(1)
 const itemsPerPage = 10
 const showAll = ref(false)
@@ -133,14 +134,26 @@ const fetchBK = async () => {
 // Tambah BK baru menggunakan store
 const saveBK = async () => {
   try {
+    popupError.value = ''
     if (isEditing.value) {
-      await bkStore.editBK(form.value.id_bk, form.value)
+      const result = await bkStore.editBK(form.value.id_bk, form.value)
+      if (result === false || result?.success === false) {
+        popupError.value = result?.error || storeError.value || 'Gagal memperbarui Bahan Kajian'
+        return
+      }
     } else {
-      await bkStore.createBK(form.value)
+      const result = await bkStore.createBK(form.value)
+      if (result === false || result?.success === false) {
+        popupError.value = result?.error || storeError.value || 'Gagal menambahkan Bahan Kajian'
+        return
+      }
     }
     resetForm()
   } catch (err) {
     console.error('Error saving BK:', err)
+    popupError.value = isEditing.value
+      ? 'Gagal memperbarui Bahan Kajian'
+      : 'Gagal menambahkan Bahan Kajian'
   }
 }
 
@@ -154,7 +167,10 @@ const editBK = (bk) => {
 // Hapus BK
 const removeBK = async (id) => {
   if (confirm('Apakah anda yakin ingin menghapus Bahan Kajian ini?')) {
-    await bkStore.removeBK(id)
+    const result = await bkStore.removeBK(id)
+    if (result === false || result?.success === false) {
+      popupError.value = result?.error || storeError.value || 'Gagal menghapus Bahan Kajian'
+    }
   }
 }
 
@@ -163,6 +179,10 @@ const resetForm = () => {
   form.value = { id_bk: '', deskripsi: '' }
   isEditing.value = false
   showForm.value = false
+}
+
+const clearError = () => {
+  popupError.value = ''
 }
 
 const setCurrentPage = (page) => {
@@ -175,6 +195,10 @@ const setShowAll = (value) => {
 
 watch(totalPages, (newTotal) => {
   if (currentPage.value > newTotal) currentPage.value = newTotal
+})
+
+watch(storeError, (newError) => {
+  if (newError) popupError.value = newError
 })
 
 // Load data saat komponen dimuat

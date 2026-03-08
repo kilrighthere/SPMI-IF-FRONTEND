@@ -1,28 +1,61 @@
 <template>
   <div class="dash-container">
     <Sidebar />
-    <Header />
-
     <div class="main-content" :class="{ 'minimized-sidebar': sidebarStore.isMinimized }">
+      <div class="page-header">
+        <div class="page-title">
+          <h2>Dosen Wali</h2>
+          <p class="breadcrumb">
+            <RouterLink to="/dashboard">Dashboard</RouterLink>
+            <span class="separator">/</span>
+            <span class="current">Dosen Wali</span>
+          </p>
+        </div>
+        <Header />
+      </div>
+
       <div class="page-wrap">
-        <div class="page-header">
-          <div>
-            <h2>Dosen Wali</h2>
-            <p class="breadcrumb">
-              <RouterLink to="/dashboard">Dashboard</RouterLink>
-              <span class="separator">/</span>
-              <span class="current">Dosen Wali</span>
-            </p>
+        <div class="section-header">
+          <div class="section-title">
+            <h3>Pengelolaan Dosen Wali</h3>
+            <p class="muted">Atur dosen untuk mahasiswa langsung dari panel utama</p>
           </div>
-          <div class="header-actions" v-if="isAdmin">
-            <label class="field">
-              <span>Dosen</span>
-              <select v-model="selectedNip" :disabled="isDosen" class="select">
-                <option value="" disabled>Pilih dosen</option>
-                <option v-for="d in dosenList" :key="d.nip" :value="d.nip">
-                  {{ d.nip }} — {{ d.nama || 'Tanpa nama' }}
-                </option>
-              </select>
+        </div>
+
+        <div class="action-row" v-if="isAdmin">
+          <div class="section-actions">
+            <label class="field field-dosen">
+              <span class="input-label">Dosen</span>
+              <div ref="comboboxRef" class="combobox">
+                <input
+                  v-model="dosenQuery"
+                  type="text"
+                  class="combobox-input"
+                  placeholder="Pilih atau ketik dosen"
+                  :disabled="isDosen"
+                  autocomplete="off"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  :aria-expanded="showDosenOptions"
+                  aria-label="Cari dosen"
+                  @focus="showDosenOptions = true"
+                  @input="handleDosenInput"
+                />
+                <ul v-if="showDosenOptions" class="combobox-options" role="listbox">
+                  <li
+                    v-for="d in filteredDosenOptions"
+                    :key="d.nip"
+                    class="combobox-option"
+                    role="option"
+                    @mousedown.prevent="selectDosen(d.nip)"
+                  >
+                    {{ formatDosenLabel(d) }}
+                  </li>
+                  <li v-if="!filteredDosenOptions.length" class="combobox-empty">
+                    Dosen tidak ditemukan
+                  </li>
+                </ul>
+              </div>
             </label>
           </div>
         </div>
@@ -32,35 +65,39 @@
             <div class="card-header">
               <div>
                 <h3>Mahasiswa Tersedia</h3>
-                <p class="muted">Hanya menampilkan mahasiswa yang belum punya dosen wali</p>
+                <p class="muted">Hanya menampilkan mahasiswa yang belum memiliki dosen wali</p>
               </div>
-              <input
-                v-model="search"
-                type="text"
-                class="input"
-                placeholder="Cari nama atau NIM"
-              />
             </div>
             <div class="card-body">
-              <div class="actions">
-                <label class="checkbox">
-                  <input
-                    type="checkbox"
-                    :checked="allFilteredSelected"
-                    :indeterminate="someFilteredSelected"
-                    @change="toggleSelectFiltered"
-                  />
-                  <span>Pilih semua yang terlihat</span>
-                </label>
-                <button class="btn btn-primary" :disabled="!canAdd" @click="handleAdd">
-                  Tambahkan ke dosen
+              <div class="actions actions-toolbar">
+                <input
+                  v-model="search"
+                  type="text"
+                  class="input"
+                  placeholder="Cari nama atau NIM"
+                />
+                <button
+                  class="btn btn-primary btn-with-icon"
+                  :disabled="!canAdd"
+                  @click="handleAdd"
+                >
+                  <span class="btn-icon" aria-hidden="true">+</span>
+                  <span>Tambahkan ke Dosen</span>
                 </button>
               </div>
               <div class="table-wrapper">
                 <table class="modern-table">
                   <thead>
                     <tr>
-                      <th style="width: 52px"></th>
+                      <th style="width: 52px" class="center">
+                        <input
+                          type="checkbox"
+                          :checked="allFilteredSelected"
+                          :indeterminate.prop="someFilteredSelected"
+                          @change="toggleSelectFiltered"
+                          aria-label="Pilih semua mahasiswa yang terlihat"
+                        />
+                      </th>
                       <th>NIM</th>
                       <th>Nama</th>
                     </tr>
@@ -68,11 +105,7 @@
                   <tbody>
                     <tr v-for="m in filteredAvailable" :key="m.nim">
                       <td class="center">
-                        <input
-                          type="checkbox"
-                          :value="m.nim"
-                          v-model="selectedMahasiswa"
-                        />
+                        <input type="checkbox" :value="m.nim" v-model="selectedMahasiswa" />
                       </td>
                       <td>{{ m.nim }}</td>
                       <td>{{ m.nama || '-' }}</td>
@@ -100,14 +133,14 @@
                     <tr>
                       <th>NIM</th>
                       <th>Nama</th>
-                      <th style="width: 160px">Aksi</th>
+                      <th style="width: 160px" class="aksi">Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-for="row in assignedForSelected" :key="row.nim">
                       <td>{{ row.nim }}</td>
                       <td>{{ row.nama || '-' }}</td>
-                      <td>
+                      <td class="action">
                         <button
                           v-if="isAdmin"
                           class="btn btn-danger"
@@ -115,17 +148,19 @@
                         >
                           Hapus
                         </button>
-                        <button
-                          v-else
-                          class="btn btn-accent"
-                          @click="handleViewCpl(row.nim)"
-                        >
+                        <button v-else class="btn btn-accent" @click="handleViewCpl(row.nim)">
                           Lihat Pengukuran CPL
                         </button>
                       </td>
                     </tr>
                     <tr v-if="!assignedForSelected.length">
-                      <td colspan="3" class="muted center">Belum ada mahasiswa</td>
+                      <td colspan="3" class="muted center">
+                        {{
+                          selectedNip
+                            ? 'Belum ada mahasiswa'
+                            : 'Silakan pilih dosen terlebih dahulu'
+                        }}
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -134,17 +169,19 @@
           </div>
         </div>
 
-        <div v-if="error" class="alert alert-error">{{ error }}</div>
-        <div v-if="loading" class="alert">Memuat data...</div>
+        <div v-if="loading" class="loading-state">Memuat data...</div>
       </div>
+
+      <ErrorPopup :message="error" @close="error = ''" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Header from '@/components/Header.vue'
+import ErrorPopup from '@/components/ErrorPopup.vue'
 import Sidebar from '@/components/Sidebar.vue'
 import { useSidebarStore } from '@/stores/sidebar'
 import { useAuthStore } from '@/stores/auth'
@@ -164,6 +201,9 @@ const mahasiswaList = ref([])
 const assignments = ref([]) // { nip, nim }
 const selectedNip = ref('')
 const selectedMahasiswa = ref([]) // nim[]
+const dosenQuery = ref('')
+const showDosenOptions = ref(false)
+const comboboxRef = ref(null)
 const search = ref('')
 const loading = ref(false)
 const saving = ref(false)
@@ -171,10 +211,20 @@ const error = ref('')
 
 const isAdmin = computed(() => auth.user?.role === 'admin')
 const isDosen = computed(() => auth.user?.role === 'dosen')
-const isDosenOnly = computed(() => isDosen.value && !isAdmin.value)
 const defaultKurikulumId = import.meta.env.VITE_DEFAULT_KURIKULUM_ID || '2020'
 
 const assignmentNimSet = computed(() => new Set(assignments.value.map((a) => a.nim)))
+
+const formatDosenLabel = (dosen) => `${dosen.nip} - ${dosen.nama || 'Tanpa nama'}`
+
+const filteredDosenOptions = computed(() => {
+  const term = dosenQuery.value.trim().toLowerCase()
+  if (!term) return dosenList.value
+  return dosenList.value.filter((d) => {
+    const label = formatDosenLabel(d).toLowerCase()
+    return label.includes(term)
+  })
+})
 
 const filteredAvailable = computed(() => {
   const term = search.value.trim().toLowerCase()
@@ -182,10 +232,7 @@ const filteredAvailable = computed(() => {
     .filter((m) => !assignmentNimSet.value.has(m.nim))
     .filter((m) => {
       if (!term) return true
-      return (
-        m.nim?.toLowerCase().includes(term) ||
-        m.nama?.toLowerCase().includes(term)
-      )
+      return m.nim?.toLowerCase().includes(term) || m.nama?.toLowerCase().includes(term)
     })
 })
 
@@ -202,22 +249,63 @@ const assignedForSelected = computed(() => {
     })
 })
 
-const allFilteredSelected = computed(() =>
-  filteredAvailable.value.length > 0 &&
-  filteredAvailable.value.every((m) => selectedMahasiswa.value.includes(m.nim))
+const allFilteredSelected = computed(
+  () =>
+    filteredAvailable.value.length > 0 &&
+    filteredAvailable.value.every((m) => selectedMahasiswa.value.includes(m.nim)),
 )
 
 const someFilteredSelected = computed(() => {
   const total = filteredAvailable.value.length
-  const selected = filteredAvailable.value.filter((m) => selectedMahasiswa.value.includes(m.nim)).length
+  const selected = filteredAvailable.value.filter((m) =>
+    selectedMahasiswa.value.includes(m.nim),
+  ).length
   return selected > 0 && selected < total
 })
 
-const canAdd = computed(() =>
-  !!selectedNip.value &&
-  selectedMahasiswa.value.length > 0 &&
-  !saving.value
+const canAdd = computed(
+  () => !!selectedNip.value && selectedMahasiswa.value.length > 0 && !saving.value,
 )
+
+const syncDosenQueryFromSelection = () => {
+  if (!selectedNip.value) {
+    dosenQuery.value = ''
+    return
+  }
+  const selected = dosenList.value.find((d) => d.nip === selectedNip.value)
+  dosenQuery.value = selected ? formatDosenLabel(selected) : ''
+}
+
+const selectDosen = (nip) => {
+  selectedNip.value = nip
+  syncDosenQueryFromSelection()
+  showDosenOptions.value = false
+}
+
+const handleDosenInput = () => {
+  const term = dosenQuery.value.trim().toLowerCase()
+  showDosenOptions.value = true
+  const exactMatch = dosenList.value.find((d) => formatDosenLabel(d).toLowerCase() === term)
+  selectedNip.value = exactMatch ? exactMatch.nip : ''
+}
+
+const closeDosenOptions = (shouldSync = true) => {
+  setTimeout(() => {
+    showDosenOptions.value = false
+    if (shouldSync) {
+      syncDosenQueryFromSelection()
+    }
+  }, 120)
+}
+
+const handleOutsideComboboxClick = (event) => {
+  if (!showDosenOptions.value) return
+  const root = comboboxRef.value
+  if (!root) return
+  if (!root.contains(event.target)) {
+    closeDosenOptions()
+  }
+}
 
 const loadData = async () => {
   loading.value = true
@@ -260,7 +348,9 @@ const handleAdd = async () => {
   saving.value = true
   error.value = ''
   try {
-    const tasks = selectedMahasiswa.value.map((nim) => addDosenWali({ nip: selectedNip.value, nim }))
+    const tasks = selectedMahasiswa.value.map((nim) =>
+      addDosenWali({ nip: selectedNip.value, nim }),
+    )
     const results = await Promise.allSettled(tasks)
     const failed = results.filter((r) => r.status === 'rejected')
     if (failed.length) {
@@ -306,10 +396,16 @@ const toggleSelectFiltered = (e) => {
 
 watch(selectedNip, () => {
   selectedMahasiswa.value = []
+  syncDosenQueryFromSelection()
 })
 
 onMounted(() => {
   loadData()
+  document.addEventListener('mousedown', handleOutsideComboboxClick)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('mousedown', handleOutsideComboboxClick)
 })
 </script>
 
@@ -334,76 +430,110 @@ onMounted(() => {
   margin-left: 126px;
 }
 
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-top: 36px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.page-title h2 {
+  font-weight: 700;
+  font-size: 28px;
+  margin-bottom: 8px;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+  letter-spacing: -0.5px;
+}
+
 .page-wrap {
   flex: 1;
-  margin-top: 92px;
-  padding: 32px;
+  margin: 20px 0;
+  padding: 16px 32px;
   border-radius: 20px;
   background: #fff;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 12px;
-  flex-wrap: wrap;
+.section-header {
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.page-header h2 {
-  font-size: 24px;
+.action-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 20px;
+}
+
+.section-title h3 {
+  margin: 0;
+  font-size: 18px;
   font-weight: 700;
   color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+}
+
+.section-actions {
+  display: flex;
+  grid-column: 1 / -1;
+  width: 100%;
+  justify-self: stretch;
 }
 
 .breadcrumb {
   display: flex;
   align-items: center;
-  gap: 6px;
-  color: var(--color-border);
+  gap: 8px;
+  color: #6b7280;
   font-size: 14px;
+  font-weight: 500;
 }
 
 .breadcrumb a {
-  color: var(--color-text);
+  color: var(--color-button);
   text-decoration: none;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+.breadcrumb a:hover {
+  color: var(--color-button-hover);
 }
 
 .separator {
-  color: var(--color-border);
-}
-
-.header-actions {
-  display: flex;
-  gap: 12px;
-  align-items: flex-end;
+  color: #d1d5db;
 }
 
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 20px;
 }
 
 .card {
-  border: 1px solid var(--color-border2);
-  border-radius: 14px;
-  background: linear-gradient(180deg, #fbfbfb 0%, #f7f7f7 100%);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
 }
 
 .card-header {
-  padding: 16px 16px 0 16px;
+  padding: 16px 18px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .card-header h3 {
@@ -414,31 +544,118 @@ onMounted(() => {
 }
 
 .card-body {
-  padding: 16px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .muted {
-  color: var(--color-border);
+  color: #6b7280;
   font-size: 13px;
 }
 
 .field {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  gap: 15px;
   min-width: 240px;
+  align-items: center;
+}
+
+.field-dosen {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.field span.input-label {
+  font-weight: 600;
+}
+
+.field-dosen .select {
+  width: 100%;
+  min-width: 0;
+}
+
+.combobox {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.combobox-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 14px;
+  background: #fff;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.combobox-input:focus {
+  outline: none;
+  border-color: var(--color-button);
+  box-shadow: 0 0 0 3px rgba(116, 183, 8, 0.1);
+}
+
+.combobox-options {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+}
+
+.combobox-option,
+.combobox-empty {
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.combobox-option {
+  cursor: pointer;
+}
+
+.combobox-option:hover {
+  background: #f3f9df;
+}
+
+.combobox-empty {
+  color: #6b7280;
 }
 
 .select,
 .input {
   padding: 10px 12px;
-  border: 1px solid var(--color-border2);
+  border: 1px solid #d1d5db;
   border-radius: 10px;
   font-size: 14px;
   background: #fff;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.select:focus,
+.input:focus {
+  outline: none;
+  border-color: var(--color-button);
+  box-shadow: 0 0 0 3px rgba(116, 183, 8, 0.1);
 }
 
 .actions {
@@ -446,6 +663,37 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.actions-toolbar {
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.actions-toolbar .input {
+  flex: 1;
+  min-width: 220px;
+  max-width: 360px;
+}
+
+.btn-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  color: inherit;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .checkbox {
@@ -461,7 +709,9 @@ onMounted(() => {
   border-radius: 10px;
   font-size: 14px;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .btn:hover:not(:disabled) {
@@ -472,19 +722,20 @@ onMounted(() => {
 .btn-primary {
   background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
   color: var(--color-text);
-  border-color: var(--color-border2);
+  border-color: var(--spmi-c-green2);
 }
 
 .btn-danger {
   background: #dc2626;
   color: #fff;
   border-color: #c81e1e;
+  min-width: 88px;
 }
 
 .btn-accent {
   background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
   color: var(--color-text);
-  border-color: var(--color-border2);
+  border-color: var(--spmi-c-green2);
 }
 
 .btn:disabled {
@@ -496,43 +747,149 @@ onMounted(() => {
 
 .table-wrapper {
   width: 100%;
-  overflow: auto;
-  border: 1px solid var(--color-border2);
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
   border-radius: 10px;
   background: #fff;
 }
 
 .modern-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 14px;
 }
 
 .modern-table th,
 .modern-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--color-border2);
+  padding: 14px 12px;
+  border-bottom: 1px solid #f3f4f6;
   text-align: left;
+  font-family: 'Montserrat', sans-serif;
 }
 
+.modern-table td.action {
+  text-align: center;
+}
 .modern-table thead {
-  background: #f3f4f6;
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+}
+
+.modern-table th {
+  color: var(--color-text);
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+th.aksi {
+  text-align: center;
+}
+
+.modern-table tbody tr {
+  background: #fff;
+  transition: all 0.2s ease;
+}
+
+.modern-table tbody tr:hover {
+  background: #faffec;
+}
+
+.modern-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .center {
   text-align: center;
 }
 
-.alert {
-  padding: 12px 14px;
-  background: #eef2ff;
-  border: 1px solid #c7d2fe;
+.loading-state {
+  text-align: center;
+  padding: 14px 16px;
   border-radius: 10px;
+  border: 1px solid #c7d2fe;
+  background: #eef2ff;
+  color: #1d4ed8;
+  font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
 }
 
-.alert-error {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #b91c1c;
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 282px;
+  }
+
+  .main-content.minimized-sidebar {
+    margin-left: 114px;
+  }
+
+  .cards {
+    grid-template-columns: 1fr;
+  }
+
+  .action-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 256px;
+    padding: 0 16px;
+  }
+
+  .main-content.minimized-sidebar {
+    margin-left: 100px;
+  }
+
+  .page-wrap {
+    margin-top: 76px;
+    padding: 20px;
+  }
+
+  .page-title h2 {
+    font-size: 22px;
+  }
+
+  .section-header {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .section-actions {
+    width: 100%;
+  }
+
+  .field {
+    min-width: 100%;
+  }
+
+  .field-dosen {
+    grid-template-columns: 1fr;
+    row-gap: 8px;
+  }
+
+  .actions-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions-toolbar .input {
+    max-width: 100%;
+  }
+
+  .actions-toolbar .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .card-header {
+    flex-direction: column;
+  }
+
+  .card-header .input {
+    width: 100%;
+  }
 }
 </style>
