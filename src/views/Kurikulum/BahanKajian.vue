@@ -20,6 +20,10 @@
           />
         </div>
         <div class="form-group">
+          <label>Nama BK</label>
+          <input type="text" v-model="form.nama" placeholder="Nama Bahan Kajian" />
+        </div>
+        <div class="form-group">
           <label>Deskripsi</label>
           <textarea v-model="form.deskripsi" placeholder="Deskripsi Bahan Kajian"></textarea>
         </div>
@@ -47,6 +51,7 @@
           <thead>
             <tr>
               <th class="head-id">Kode BK</th>
+              <th class="head-name">Nama BK</th>
               <th class="head-desc">Deskripsi</th>
               <th v-if="can('bahanKajian', 'edit')" class="aksi-title">Aksi</th>
             </tr>
@@ -54,6 +59,7 @@
           <tbody>
             <tr v-for="bk in paginatedBkList" :key="bk.id_bk">
               <td class="bk-id">{{ bk.id_bk }}</td>
+              <td class="bk-name">{{ bk.nama || '-' }}</td>
               <td class="desk-item">{{ bk.deskripsi }}</td>
               <td class="action-buttons" v-if="can('bahanKajian', 'edit')">
                 <button class="btn-edit" @click="editBK(bk)">
@@ -120,6 +126,7 @@ const paginatedBkList = computed(() => {
 // Form untuk tambah/edit BK
 const form = ref({
   id_bk: '',
+  nama: '',
   deskripsi: '',
 })
 
@@ -135,14 +142,25 @@ const fetchBK = async () => {
 const saveBK = async () => {
   try {
     popupError.value = ''
+    const payload = {
+      id_bk: String(form.value.id_bk || '').trim(),
+      nama: String(form.value.nama || '').trim(),
+      deskripsi: String(form.value.deskripsi || '').trim(),
+    }
+
+    if (!payload.id_bk || !payload.nama || !payload.deskripsi) {
+      popupError.value = 'Kode BK, Nama BK, dan Deskripsi wajib diisi'
+      return
+    }
+
     if (isEditing.value) {
-      const result = await bkStore.editBK(form.value.id_bk, form.value)
+      const result = await bkStore.editBK(form.value.id_bk, payload)
       if (result === false || result?.success === false) {
         popupError.value = result?.error || storeError.value || 'Gagal memperbarui Bahan Kajian'
         return
       }
     } else {
-      const result = await bkStore.createBK(form.value)
+      const result = await bkStore.createBK(payload)
       if (result === false || result?.success === false) {
         popupError.value = result?.error || storeError.value || 'Gagal menambahkan Bahan Kajian'
         return
@@ -159,7 +177,11 @@ const saveBK = async () => {
 
 // Edit BK
 const editBK = (bk) => {
-  form.value = { ...bk }
+  form.value = {
+    id_bk: bk.id_bk || '',
+    nama: bk.nama || '',
+    deskripsi: bk.deskripsi || '',
+  }
   isEditing.value = true
   showForm.value = true
 }
@@ -176,7 +198,7 @@ const removeBK = async (id) => {
 
 // Reset form
 const resetForm = () => {
-  form.value = { id_bk: '', deskripsi: '' }
+  form.value = { id_bk: '', nama: '', deskripsi: '' }
   isEditing.value = false
   showForm.value = false
 }
@@ -314,6 +336,7 @@ onMounted(() => {
 }
 
 .bk-table th.head-id,
+.bk-table th.head-name,
 .bk-table th.head-desc {
   text-align: left;
 }
@@ -334,6 +357,11 @@ onMounted(() => {
   text-align: left;
   font-weight: 700;
   color: var(--color-button);
+}
+
+.bk-table .bk-name {
+  text-align: left;
+  font-weight: 600;
 }
 
 .bk-table .desk-item {

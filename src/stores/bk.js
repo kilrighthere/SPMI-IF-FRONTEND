@@ -8,11 +8,17 @@ export const useBKStore = defineStore('bk', () => {
   const isLoading = ref(false)
   const error = ref(null)
 
+  const normalizeBKPayload = (bkData = {}) => ({
+    id_bk: String(bkData.id_bk || '').trim(),
+    nama: String(bkData.nama || '').trim(),
+    deskripsi: String(bkData.deskripsi || '').trim(),
+  })
+
   // Actions
   async function fetchAllBK() {
     isLoading.value = true
     error.value = null
-    
+
     try {
       const response = await getBKList()
       // Handle API response format
@@ -24,29 +30,29 @@ export const useBKStore = defineStore('bk', () => {
     } catch (err) {
       console.error('Error fetching BK:', err)
       error.value = 'Gagal memuat data Bahan Kajian'
-      
+
       // Fallback data sesuai format API
       bkList.value = [
         {
           id_bk: 'BK001',
-          deskripsi: 'Pemrograman Dasar'
+          deskripsi: 'Pemrograman Dasar',
         },
         {
           id_bk: 'BK002',
-          deskripsi: 'Struktur Data dan Algoritma'
+          deskripsi: 'Struktur Data dan Algoritma',
         },
         {
           id_bk: 'BK003',
-          deskripsi: 'Basis Data'
+          deskripsi: 'Basis Data',
         },
         {
           id_bk: 'BK004',
-          deskripsi: 'Rekayasa Perangkat Lunak'
+          deskripsi: 'Rekayasa Perangkat Lunak',
         },
         {
           id_bk: 'BK005',
-          deskripsi: 'Jaringan Komputer'
-        }
+          deskripsi: 'Jaringan Komputer',
+        },
       ]
     } finally {
       isLoading.value = false
@@ -56,7 +62,7 @@ export const useBKStore = defineStore('bk', () => {
   async function fetchBKById(id) {
     isLoading.value = true
     error.value = null
-    
+
     try {
       const response = await getBKById(id)
       currentBK.value = response.data
@@ -73,9 +79,10 @@ export const useBKStore = defineStore('bk', () => {
   async function createBK(bkData) {
     isLoading.value = true
     error.value = null
-    
+
     try {
-      const response = await addBK(bkData)
+      const payload = normalizeBKPayload(bkData)
+      const response = await addBK(payload)
       // Refresh list after adding
       await fetchAllBK()
       return response.data
@@ -91,9 +98,10 @@ export const useBKStore = defineStore('bk', () => {
   async function editBK(id, bkData) {
     isLoading.value = true
     error.value = null
-    
+
     try {
-      const response = await updateBK(id, bkData)
+      const payload = normalizeBKPayload({ ...bkData, id_bk: id })
+      const response = await updateBK(id, payload)
       // Refresh list after updating
       await fetchAllBK()
       return response.data
@@ -109,11 +117,11 @@ export const useBKStore = defineStore('bk', () => {
   async function removeBK(id) {
     isLoading.value = true
     error.value = null
-    
+
     try {
       await deleteBK(id)
       // Remove from local list
-      bkList.value = bkList.value.filter(bk => bk.id_bk !== id)
+      bkList.value = bkList.value.filter((bk) => bk.id_bk !== id)
       return { success: true }
     } catch (err) {
       console.error(`Error deleting BK with id ${id}:`, err)
@@ -133,6 +141,6 @@ export const useBKStore = defineStore('bk', () => {
     fetchBKById,
     createBK,
     editBK,
-    removeBK
+    removeBK,
   }
 })
