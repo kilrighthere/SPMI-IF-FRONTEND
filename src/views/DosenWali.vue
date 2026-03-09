@@ -6,9 +6,8 @@
         <div class="page-title">
           <h2>Dosen Wali</h2>
           <p class="breadcrumb">
-            <RouterLink to="/dashboard">Dashboard</RouterLink>
+            <RouterLink to="/dosen-wali">Dosen Wali</RouterLink>
             <span class="separator">/</span>
-            <span class="current">Dosen Wali</span>
           </p>
         </div>
         <Header />
@@ -383,7 +382,7 @@ const handleDelete = async (nim) => {
 
 const handleViewCpl = (nim) => {
   if (!nim) return
-  router.push(`/kurikulum/${defaultKurikulumId}/ukur-cpl?nim=${nim}`)
+  router.push(`/kurikulum/${defaultKurikulumId}/ukur-cpl/detail/${nim}`)
 }
 
 const toggleSelectFiltered = (e) => {

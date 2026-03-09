@@ -5,7 +5,6 @@ import { useMKStore } from '@/stores/mataKuliah'
 import { useKurikulumStore } from '@/stores/kurikulum'
 import { usePermissions } from '@/composables/usePermissions'
 import TablePagination from '@/components/TablePagination.vue'
-import ErrorPopup from '@/components/ErrorPopup.vue'
 
 // Initialize stores
 const mkStore = useMKStore()
@@ -22,17 +21,23 @@ const currentKurikulum = computed(() => kurikulumStore.currentKurikulum)
 const mataKuliahList = computed(() => mkStore.mataKuliahList)
 const isLoading = computed(() => mkStore.isLoading)
 const storeError = computed(() => mkStore.error)
-const popupError = ref('')
+const formSubmitError = ref('')
+const pageError = ref('')
 const showSuccess = ref(false)
 const successMessage = ref('')
-const showModal = ref(false)
-const formMode = ref('add') // 'add' or 'edit'
 const currentPage = ref(1)
 const itemsPerPage = 10
 const showAll = ref(false)
+const isEditing = ref(false)
+const showForm = ref(false)
 
 // Form data
-const newMK = ref({
+const form = ref({
+  kode_mk: '',
+  nama_mk: '',
+  deskripsi: '',
+})
+const formErrors = ref({
   kode_mk: '',
   nama_mk: '',
   deskripsi: '',
@@ -49,7 +54,16 @@ const filteredMataKuliah = computed(() => {
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     filtered = filtered.filter(
-      (mk) => mk.kode_mk.toLowerCase().includes(query) || mk.nama_mk.toLowerCase().includes(query),
+      (mk) =>
+        String(mk.kode_mk || '')
+          .toLowerCase()
+          .includes(query) ||
+        String(mk.nama_mk || '')
+          .toLowerCase()
+          .includes(query) ||
+        String(mk.deskripsi || '')
+          .toLowerCase()
+          .includes(query),
     )
   }
 
@@ -72,65 +86,90 @@ const fetchData = async () => {
   await mkStore.fetchAllMK()
 }
 
-// Open modal to add new mata kuliah
-const openAddModal = () => {
-  formMode.value = 'add'
-  newMK.value = {
+const validateForm = () => {
+  let isValid = true
+  formErrors.value = { kode_mk: '', nama_mk: '', deskripsi: '' }
+
+  if (!String(form.value.kode_mk || '').trim()) {
+    formErrors.value.kode_mk = 'Kode mata kuliah tidak boleh kosong'
+    isValid = false
+  }
+
+  if (!String(form.value.nama_mk || '').trim()) {
+    formErrors.value.nama_mk = 'Nama mata kuliah tidak boleh kosong'
+    isValid = false
+  }
+
+  return isValid
+}
+
+const resetForm = () => {
+  form.value = {
     kode_mk: '',
     nama_mk: '',
     deskripsi: '',
   }
-  showModal.value = true
+  formErrors.value = { kode_mk: '', nama_mk: '', deskripsi: '' }
+  formSubmitError.value = ''
+  isEditing.value = false
+  showForm.value = false
 }
 
-// Open modal to edit mata kuliah
-const openEditModal = (mk) => {
-  formMode.value = 'edit'
-  newMK.value = { ...mk }
-  showModal.value = true
+const editMK = (mk) => {
+  form.value = {
+    kode_mk: mk.kode_mk || '',
+    nama_mk: mk.nama_mk || '',
+    deskripsi: mk.deskripsi || '',
+  }
+  formErrors.value = { kode_mk: '', nama_mk: '', deskripsi: '' }
+  formSubmitError.value = ''
+  isEditing.value = true
+  showForm.value = true
+
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // Save mata kuliah (add or edit)
 const saveMK = async () => {
   try {
-    if (!newMK.value.kode_mk || !newMK.value.nama_mk) {
-      alert('Mohon lengkapi kode dan nama mata kuliah')
+    formSubmitError.value = ''
+    pageError.value = ''
+
+    if (!validateForm()) {
       return
     }
 
-    console.log('Saving MK with data:', newMK.value)
+    const payload = {
+      kode_mk: String(form.value.kode_mk || '').trim(),
+      nama_mk: String(form.value.nama_mk || '').trim(),
+      deskripsi: String(form.value.deskripsi || '').trim() || '-',
+    }
 
     let result
-    if (formMode.value === 'add') {
-      result = await mkStore.createMK(newMK.value)
-      if (result) {
-        successMessage.value = 'Mata kuliah berhasil ditambahkan'
-      }
-    } else {
-      result = await mkStore.editMK(newMK.value.kode_mk, newMK.value)
+    if (isEditing.value) {
+      result = await mkStore.editMK(payload.kode_mk, payload)
       if (result) {
         successMessage.value = 'Mata kuliah berhasil diperbarui'
+      }
+    } else {
+      result = await mkStore.createMK(payload)
+      if (result) {
+        successMessage.value = 'Mata kuliah berhasil ditambahkan'
       }
     }
 
     if (result) {
-      showModal.value = false
+      resetForm()
       showSuccess.value = true
-      // Reset form
-      newMK.value = {
-        kode_mk: '',
-        nama_mk: '',
-        deskripsi: '',
-      }
       setTimeout(() => {
         showSuccess.value = false
       }, 3000)
     } else {
-      popupError.value = storeError.value || 'Gagal menyimpan mata kuliah'
+      formSubmitError.value = storeError.value || 'Gagal menyimpan mata kuliah'
     }
   } catch (err) {
     console.error('Error saving mata kuliah:', err)
-    popupError.value = 'Terjadi kesalahan saat menyimpan data mata kuliah'
+    formSubmitError.value = 'Terjadi kesalahan saat menyimpan data mata kuliah'
   }
 }
 
@@ -138,7 +177,7 @@ const saveMK = async () => {
 const deleteMK = async (mk) => {
   if (confirm(`Apakah anda yakin ingin menghapus mata kuliah ${mk.kode_mk} - ${mk.nama_mk}?`)) {
     try {
-      const result = await mkStore.removeMK(mk.id)
+      const result = await mkStore.removeMK(mk.kode_mk)
 
       if (result.success) {
         successMessage.value = 'Mata kuliah berhasil dihapus'
@@ -147,17 +186,13 @@ const deleteMK = async (mk) => {
           showSuccess.value = false
         }, 3000)
       } else {
-        popupError.value = result.error || storeError.value || 'Gagal menghapus mata kuliah'
+        pageError.value = result.error || storeError.value || 'Gagal menghapus mata kuliah'
       }
     } catch (err) {
       console.error('Error deleting mata kuliah:', err)
-      popupError.value = 'Terjadi kesalahan saat menghapus mata kuliah'
+      pageError.value = 'Terjadi kesalahan saat menghapus mata kuliah'
     }
   }
-}
-
-const clearError = () => {
-  popupError.value = ''
 }
 
 const setCurrentPage = (page) => {
@@ -177,7 +212,9 @@ watch(totalPages, (newTotal) => {
 })
 
 watch(storeError, (newError) => {
-  if (newError) popupError.value = newError
+  if (newError && showForm.value) {
+    formSubmitError.value = newError
+  }
 })
 
 // Load data when component is mounted
@@ -193,7 +230,7 @@ onMounted(async () => {
     console.log('Data fetched successfully, found', mataKuliahList.value.length, 'mata kuliah')
   } catch (err) {
     console.error('Failed to fetch data:', err)
-    popupError.value = 'Gagal memuat data mata kuliah'
+    pageError.value = 'Gagal memuat data mata kuliah'
   }
 })
 </script>
@@ -203,6 +240,53 @@ onMounted(async () => {
     <div class="section-box">
       <div class="section-header">
         <h3>Struktur Mata Kuliah</h3>
+        <button
+          class="btn-add"
+          :class="{ 'is-cancel': showForm }"
+          @click="showForm ? resetForm() : (showForm = true)"
+          v-if="can('strukturMatkul', 'create')"
+        >
+          {{ showForm ? 'Batal' : 'Tambah Mata Kuliah' }}
+        </button>
+      </div>
+
+      <div v-if="showForm" class="form-container">
+        <div class="form-group">
+          <label>Kode Mata Kuliah</label>
+          <input
+            type="text"
+            v-model="form.kode_mk"
+            placeholder="Contoh: IF2110"
+            :disabled="isEditing"
+            :class="{ 'input-error': formErrors.kode_mk }"
+          />
+          <div v-if="formErrors.kode_mk" class="error-text">{{ formErrors.kode_mk }}</div>
+        </div>
+        <div class="form-group">
+          <label>Nama Mata Kuliah</label>
+          <input
+            type="text"
+            v-model="form.nama_mk"
+            placeholder="Nama mata kuliah"
+            :class="{ 'input-error': formErrors.nama_mk }"
+          />
+          <div v-if="formErrors.nama_mk" class="error-text">{{ formErrors.nama_mk }}</div>
+        </div>
+        <div class="form-group">
+          <label>Deskripsi</label>
+          <textarea
+            v-model="form.deskripsi"
+            placeholder="Deskripsi mata kuliah (opsional)"
+            :class="{ 'input-error': formErrors.deskripsi }"
+          ></textarea>
+          <div v-if="formErrors.deskripsi" class="error-text">{{ formErrors.deskripsi }}</div>
+        </div>
+        <div v-if="formSubmitError" class="error-message">{{ formSubmitError }}</div>
+        <div class="form-actions">
+          <button class="btn-save" @click="saveMK">
+            {{ isEditing ? 'Perbarui' : 'Simpan' }}
+          </button>
+        </div>
       </div>
 
       <!-- Loading indicator -->
@@ -210,6 +294,7 @@ onMounted(async () => {
 
       <!-- Success message -->
       <div v-if="showSuccess" class="success-message">{{ successMessage }}</div>
+      <div v-if="pageError" class="error-message">{{ pageError }}</div>
 
       <!-- Content -->
       <div v-if="!isLoading" class="struktur-content">
@@ -229,10 +314,6 @@ onMounted(async () => {
               />
             </div>
           </div>
-
-          <button class="btn-add" @click="openAddModal" v-if="can('strukturMatkul', 'create')">
-            <i class="ri-add-line"></i> Tambah Mata Kuliah
-          </button>
         </div>
 
         <!-- Mata Kuliah Table -->
@@ -240,17 +321,19 @@ onMounted(async () => {
           <table v-if="totalItems > 0" class="mk-table">
             <thead>
               <tr>
-                <th>Kode</th>
-                <th>Nama Mata Kuliah</th>
+                <th class="head-kode">Kode</th>
+                <th class="head-nama">Nama Mata Kuliah</th>
+                <th class="head-deskripsi">Deskripsi</th>
                 <th v-if="can('strukturMatkul', 'edit')">Aksi</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="mk in paginatedMataKuliah" :key="mk.id">
+              <tr v-for="mk in paginatedMataKuliah" :key="mk.kode_mk">
                 <td class="mk-code-col">{{ mk.kode_mk }}</td>
                 <td class="mk-name-col">{{ mk.nama_mk }}</td>
+                <td class="mk-desc-col">{{ mk.deskripsi || '-' }}</td>
                 <td v-if="can('strukturMatkul', 'edit')" class="action-cell">
-                  <button class="btn-edit" @click="openEditModal(mk)">
+                  <button class="btn-edit" @click="editMK(mk)">
                     <i class="ri-edit-line"></i>
                     Edit
                   </button>
@@ -276,57 +359,6 @@ onMounted(async () => {
         </div>
       </div>
     </div>
-
-    <ErrorPopup :message="popupError" @close="clearError" />
-
-    <!-- Modal for Adding/Editing Mata Kuliah -->
-    <div v-if="showModal" class="modal-overlay">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>{{ formMode === 'add' ? 'Tambah' : 'Edit' }} Mata Kuliah</h3>
-          <button class="close-button" @click="showModal = false">&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label for="kode">Kode Mata Kuliah:</label>
-            <input
-              type="text"
-              id="kode"
-              v-model="newMK.kode_mk"
-              class="form-input"
-              placeholder="Contoh: IF2110"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="nama">Nama Mata Kuliah:</label>
-            <input
-              type="text"
-              id="nama"
-              v-model="newMK.nama_mk"
-              class="form-input"
-              placeholder="Nama mata kuliah"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="deskripsi">Deskripsi:</label>
-            <textarea
-              id="deskripsi"
-              v-model="newMK.deskripsi"
-              class="form-input"
-              placeholder="Deskripsi mata kuliah (kosong akan diisi dengan '-')"
-              rows="3"
-            ></textarea>
-            <small class="form-help">Jika kosong, akan diisi dengan "-"</small>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-cancel" @click="showModal = false">Batal</button>
-          <button class="btn-save" @click="saveMK">Simpan</button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -334,13 +366,14 @@ onMounted(async () => {
 .struktur-matkul-container {
   width: 100%;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .section-box {
   background: white;
   border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  margin-bottom: 20px;
+  /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); */
+  /* margin-bottom: 20px; */
 }
 
 .section-header {
@@ -372,9 +405,11 @@ onMounted(async () => {
 }
 
 .struktur-content p {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   line-height: 1.6;
+  color: #6b7280;
   font-family: 'Montserrat', sans-serif;
+
 }
 
 .action-bar {
@@ -430,9 +465,18 @@ onMounted(async () => {
 }
 
 .btn-add:hover {
-  background: var(--color-button-hover);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  border-color: var(--spmi-c-green2);
+  color: var(--color-text);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
+}
+
+.btn-add.is-cancel:hover {
+  background: var(--color-button-hover);
+  border-color: var(--color-button-hover);
+  color: white;
+  box-shadow: 0 4px 12px rgba(218, 42, 45, 0.3);
 }
 
 .btn-add i {
@@ -469,6 +513,12 @@ onMounted(async () => {
   text-align: center;
 }
 
+.mk-table th.head-kode,
+.mk-table th.head-nama,
+.mk-table th.head-deskripsi {
+  text-align: left;
+}
+
 .mk-table td {
   text-align: left;
   color: #4b5563;
@@ -482,6 +532,12 @@ onMounted(async () => {
 }
 
 .mk-table .mk-name-col {
+  text-align: left;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.mk-table .mk-desc-col {
   text-align: left;
   line-height: 1.6;
 }
@@ -505,7 +561,8 @@ onMounted(async () => {
 }
 
 .btn-edit,
-.btn-delete {
+.btn-delete,
+.btn-save {
   cursor: pointer;
   margin: 0 4px;
   font-size: 13px;
@@ -516,6 +573,79 @@ onMounted(async () => {
   padding: 6px 12px;
   border-radius: 8px;
   transition: all 0.25s ease;
+}
+
+.form-container {
+  background: #f9fafb;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  border: 1px solid #e5e7eb;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.form-group input.input-error,
+.form-group textarea.input-error {
+  border-color: #ef4444;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--color-button);
+  box-shadow: 0 0 0 3px rgba(116, 183, 8, 0.1);
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.error-text {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 6px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-save {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--color-button);
+  color: white;
+  border: 1.5px solid var(--color-button);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.btn-save:hover {
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 .btn-edit {
@@ -584,68 +714,6 @@ onMounted(async () => {
   font-family: 'Montserrat', sans-serif;
 }
 
-/* Modal styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
-  border-radius: 10px;
-  width: 500px;
-  max-width: 90%;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-.modal-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--color-text);
-  font-family: 'Montserrat', sans-serif;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #6b7280;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-}
-
-.close-button:hover {
-  background-color: #f3f4f6;
-  color: var(--color-text);
-}
-
-.modal-body {
-  padding: 24px;
-}
-
 .form-group {
   margin-bottom: 20px;
 }
@@ -657,65 +725,6 @@ onMounted(async () => {
   color: var(--color-text);
   font-family: 'Montserrat', sans-serif;
   font-size: 14px;
-}
-
-.form-input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: 'Montserrat', sans-serif;
-  resize: vertical;
-  transition: all 0.25s ease;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: var(--color-button);
-  box-shadow: 0 0 0 3px rgba(116, 183, 8, 0.1);
-}
-
-.modal-footer {
-  padding: 20px 24px;
-  border-top: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.btn-cancel {
-  background-color: transparent;
-  color: var(--color-text);
-  border: 1.5px solid #e5e7eb;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  font-family: 'Montserrat', sans-serif;
-  transition: all 0.25s ease;
-}
-
-.btn-cancel:hover {
-  background-color: #f3f4f6;
-}
-
-.btn-save {
-  background-color: var(--color-button);
-  color: var(--color-text);
-  border: 1.5px solid var(--color-button);
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  font-family: 'Montserrat', sans-serif;
-  transition: all 0.25s ease;
-}
-
-.btn-save:hover {
-  background: var(--color-button-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 /* Responsive adjustments */
@@ -740,14 +749,5 @@ onMounted(async () => {
     justify-content: center;
     margin-top: 10px;
   }
-}
-
-.form-help {
-  display: block;
-  margin-top: 6px;
-  font-size: 12px;
-  color: #6b7280;
-  font-style: italic;
-  font-family: 'Montserrat', sans-serif;
 }
 </style>

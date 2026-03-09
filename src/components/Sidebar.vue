@@ -71,13 +71,13 @@ async function handleLogout() {
             <span class="menu-title" v-show="!sidebarStore.isMinimized">Dosen Wali</span>
           </RouterLink>
           <RouterLink
-            to="/kurikulum"
+            to="/kurikulum/K2020/sub-menu"
             class="menu-sidebar"
             :class="{ 'router-link-active': isKurikulumActive }"
-            :title="sidebarStore.isMinimized ? 'Kurikulum' : ''"
+            :title="sidebarStore.isMinimized ? 'Kurikulum 2020' : ''"
           >
             <i class="ri-folder-2-fill"></i>
-            <span class="menu-title" v-show="!sidebarStore.isMinimized">Kurikulum</span>
+            <span class="menu-title" v-show="!sidebarStore.isMinimized">Kurikulum 2020</span>
           </RouterLink>
         </template>
       </div>

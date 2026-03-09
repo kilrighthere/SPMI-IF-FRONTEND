@@ -227,7 +227,7 @@ onMounted(async () => {
           <thead>
             <tr>
               <th width="15%" class="head-IDPL">ID PL</th>
-              <th width="65%">Deskripsi</th>
+              <th width="65%" class="head-desk">Deskripsi</th>
               <th width="20%" class="aksi-title" v-if="can('profilLulusan', 'edit')">Aksi</th>
             </tr>
           </thead>
@@ -324,7 +324,7 @@ onMounted(async () => {
   text-align: center;
 }
 
-.pl-table th.head-IDPL {
+.pl-table th.head-IDPL, th.head-desk {
   text-align: left;
 }
 
@@ -411,6 +411,7 @@ textarea {
   padding: 10px 14px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
+  box-sizing: border-box;
   font-size: 14px;
   font-family: 'Montserrat', sans-serif;
   transition:
@@ -519,7 +520,7 @@ textarea {
 .btn-delete:hover {
   background: var(--color-button-hover);
   color: white;
-  border-color: var(--color-button);
+  border-color: var(--color-button-hover);
 }
 
 .loading {

@@ -202,6 +202,7 @@ onMounted(async () => {
         <h3>CPL SNDIKTI (Standar Nasional Pendidikan Tinggi)</h3>
         <button
           class="btn-add"
+          :class="{ 'is-cancel': showForm }"
           @click="showForm ? resetForm() : (showForm = true)"
           v-if="can('cplSndikti', 'create')"
         >
@@ -253,9 +254,8 @@ onMounted(async () => {
         </div>
         <div class="form-actions">
           <button class="btn-save" @click="saveCplSndikti">
-            {{ isEditing ? 'Update' : 'Simpan' }}
+            {{ isEditing ? 'Perbarui' : 'Simpan' }}
           </button>
-          <button v-if="isEditing" class="btn-cancel" @click="resetForm">Batal</button>
         </div>
       </div>
 
@@ -354,7 +354,7 @@ onMounted(async () => {
 
 .cpl-sndikti-content p {
   color: #6b7280;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   line-height: 1.6;
   font-family: 'Montserrat', sans-serif;
 }
@@ -386,12 +386,13 @@ onMounted(async () => {
 }
 
 .cpl-sndikti-table th:nth-child(1),
+.cpl-sndikti-table th:nth-child(2),
 .cpl-sndikti-table th:nth-child(3) {
   text-align: left;
 }
 
 .cpl-sndikti-table th.aksi-title {
-  text-align: center;
+  text-align: lef;
 }
 
 .cpl-sndikti-table td {
@@ -418,28 +419,29 @@ onMounted(async () => {
 .sn-id {
   font-weight: 700;
   color: var(--color-button);
-  text-align: center;
+  text-align: left;
 }
 
 .aspek-item {
-  text-align: center;
+  text-align: left;
+  font-weight: 600;
 }
 
-.aspek-badge {
+/* .aspek-badge {
   display: inline-block;
   padding: 6px 14px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
   text-transform: capitalize;
-}
+} */
 
-.aspek-sikap {
+/* .aspek-sikap {
   background: #e0f2fe;
   color: #0369a1;
-}
+} */
 
-.aspek-pengetahuan {
+/* .aspek-pengetahuan {
   background: #fef3c7;
   color: #92400e;
 }
@@ -452,7 +454,7 @@ onMounted(async () => {
 .aspek-keterampilan-khusus {
   background: #fce7f3;
   color: #9f1239;
-}
+} */
 
 .desk-item {
   text-align: left;
@@ -600,6 +602,7 @@ onMounted(async () => {
   padding: 10px 14px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
+  box-sizing: border-box;
   font-size: 14px;
   font-family: 'Montserrat', sans-serif;
   transition: all 0.2s ease;
@@ -652,10 +655,18 @@ onMounted(async () => {
 }
 
 .btn-add:hover {
-  background: var(--color-button-hover);
-  border-color: var(--color-button-hover);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
+}
+
+.btn-add.is-cancel:hover {
+  background: var(--color-button-hover);
+  border-color: var(--color-button-hover);
+  color: white;
+  box-shadow: 0 4px 12px rgba(218, 42, 45, 0.3);
 }
 
 .btn-save {
@@ -665,8 +676,9 @@ onMounted(async () => {
 }
 
 .btn-save:hover {
-  background: var(--color-button-hover);
-  border-color: var(--color-button-hover);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  border-color: var(--color-buttonsec);
+  color: var(--color-text);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }

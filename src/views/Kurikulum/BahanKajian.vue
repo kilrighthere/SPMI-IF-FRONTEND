@@ -3,7 +3,12 @@
     <div class="section-box">
       <div class="section-header">
         <h3>Bahan Kajian (BK)</h3>
-        <button class="btn-add" @click="showForm = !showForm" v-if="can('bahanKajian', 'create')">
+        <button
+          class="btn-add"
+          :class="{ 'is-cancel': showForm }"
+          @click="showForm ? resetForm() : (showForm = true)"
+          v-if="can('bahanKajian', 'create')"
+        >
           {{ showForm ? 'Batal' : 'Tambah BK' }}
         </button>
       </div>
@@ -17,21 +22,33 @@
             v-model="form.id_bk"
             placeholder="Kode BK (contoh: BK001)"
             :disabled="isEditing"
+            :class="{ 'input-error': formErrors.id_bk }"
           />
+          <div v-if="formErrors.id_bk" class="error-text">{{ formErrors.id_bk }}</div>
         </div>
         <div class="form-group">
           <label>Nama BK</label>
-          <input type="text" v-model="form.nama" placeholder="Nama Bahan Kajian" />
+          <input
+            type="text"
+            v-model="form.nama"
+            placeholder="Nama Bahan Kajian"
+            :class="{ 'input-error': formErrors.nama }"
+          />
+          <div v-if="formErrors.nama" class="error-text">{{ formErrors.nama }}</div>
         </div>
         <div class="form-group">
           <label>Deskripsi</label>
-          <textarea v-model="form.deskripsi" placeholder="Deskripsi Bahan Kajian"></textarea>
+          <textarea
+            v-model="form.deskripsi"
+            placeholder="Deskripsi Bahan Kajian"
+            :class="{ 'input-error': formErrors.deskripsi }"
+          ></textarea>
+          <div v-if="formErrors.deskripsi" class="error-text">{{ formErrors.deskripsi }}</div>
         </div>
         <div class="form-actions">
           <button class="btn-save" @click="saveBK">
-            {{ isEditing ? 'Update' : 'Simpan' }}
+            {{ isEditing ? 'Perbarui' : 'Simpan' }}
           </button>
-          <button v-if="isEditing" class="btn-cancel" @click="resetForm">Batal</button>
         </div>
       </div>
 
@@ -39,7 +56,7 @@
       <div v-if="isLoading" class="loading">Loading...</div>
 
       <!-- BK Content -->
-      <div v-if="!isLoading">
+      <div v-if="!isLoading" class="bk-content">
         <p>
           Bahan Kajian (BK) merupakan komponen-komponen keilmuan yang menjadi bahan dari mata kuliah
           dalam kurikulum program studi.
@@ -132,6 +149,33 @@ const form = ref({
 
 const isEditing = ref(false)
 const showForm = ref(false)
+const formErrors = ref({
+  id_bk: '',
+  nama: '',
+  deskripsi: '',
+})
+
+const validateForm = () => {
+  let isValid = true
+  formErrors.value = { id_bk: '', nama: '', deskripsi: '' }
+
+  if (!String(form.value.id_bk || '').trim()) {
+    formErrors.value.id_bk = 'Kode BK tidak boleh kosong'
+    isValid = false
+  }
+
+  if (!String(form.value.nama || '').trim()) {
+    formErrors.value.nama = 'Nama BK tidak boleh kosong'
+    isValid = false
+  }
+
+  if (!String(form.value.deskripsi || '').trim()) {
+    formErrors.value.deskripsi = 'Deskripsi tidak boleh kosong'
+    isValid = false
+  }
+
+  return isValid
+}
 
 // Fetch data BK dari store
 const fetchBK = async () => {
@@ -142,15 +186,15 @@ const fetchBK = async () => {
 const saveBK = async () => {
   try {
     popupError.value = ''
+
+    if (!validateForm()) {
+      return
+    }
+
     const payload = {
       id_bk: String(form.value.id_bk || '').trim(),
       nama: String(form.value.nama || '').trim(),
       deskripsi: String(form.value.deskripsi || '').trim(),
-    }
-
-    if (!payload.id_bk || !payload.nama || !payload.deskripsi) {
-      popupError.value = 'Kode BK, Nama BK, dan Deskripsi wajib diisi'
-      return
     }
 
     if (isEditing.value) {
@@ -182,6 +226,7 @@ const editBK = (bk) => {
     nama: bk.nama || '',
     deskripsi: bk.deskripsi || '',
   }
+  formErrors.value = { id_bk: '', nama: '', deskripsi: '' }
   isEditing.value = true
   showForm.value = true
 }
@@ -199,6 +244,7 @@ const removeBK = async (id) => {
 // Reset form
 const resetForm = () => {
   form.value = { id_bk: '', nama: '', deskripsi: '' }
+  formErrors.value = { id_bk: '', nama: '', deskripsi: '' }
   isEditing.value = false
   showForm.value = false
 }
@@ -257,6 +303,16 @@ onMounted(() => {
   font-family: 'Montserrat', sans-serif;
 }
 
+.bk-content{
+  line-height: 1.6;
+}
+
+.bk-content p{
+  margin-bottom: 16px;
+  color: #6b7280;
+  font-family: 'Montserrat', sans-serif;
+}
+
 .form-container {
   background: #f9fafb;
   padding: 20px;
@@ -284,6 +340,7 @@ onMounted(() => {
   padding: 10px 14px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
+  box-sizing: border-box;
   font-size: 14px;
   font-family: 'Montserrat', sans-serif;
   transition:
@@ -296,6 +353,18 @@ onMounted(() => {
   outline: none;
   border-color: var(--color-button);
   box-shadow: 0 0 0 3px rgba(116, 183, 8, 0.1);
+}
+
+.form-group input.input-error,
+.form-group textarea.input-error {
+  border-color: #ef4444;
+}
+
+.error-text {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 6px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .form-group textarea {
@@ -414,11 +483,18 @@ onMounted(() => {
 }
 
 .btn-add:hover {
-  background: var(--color-buttonsec);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
   color: var(--color-text);
-  border-color: var(--color-buttonsec);
+  border-color: var(--spmi-c-green2);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(166, 214, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
+}
+
+.btn-add.is-cancel:hover {
+  background: var(--color-button-hover);
+  border-color: var(--color-button-hover);
+  color: white;
+  box-shadow: 0 4px 12px rgba(218, 42, 45, 0.3);
 }
 
 .btn-save {
@@ -428,7 +504,7 @@ onMounted(() => {
 }
 
 .btn-save:hover {
-  background: var(--color-buttonsec);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
   color: var(--color-text);
   border-color: var(--color-buttonsec);
   transform: translateY(-2px);

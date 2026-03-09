@@ -14,6 +14,7 @@ import RPS from '@/views/Kurikulum/RPS.vue'
 import StrukMatkul from '@/views/Kurikulum/StrukMatkul.vue'
 import KurikulumMk from '@/views/Kurikulum/KurikulumMk.vue'
 import UkurCPL from '@/views/Kurikulum/UkurCPL.vue'
+import UkurCPLDetail from '@/views/Kurikulum/UkurCPLDetail.vue'
 import BahanKajian from '@/views/Kurikulum/BahanKajian.vue'
 import KorelasiCPLPL from '@/views/Kurikulum/KorelasiCPLPL.vue'
 import CpmkMk from '@/views/Kurikulum/CpmkMk.vue'
@@ -182,6 +183,16 @@ const routes = [
         component: UkurCPL,
         meta: {
           title: 'Pengukuran CPL Mahasiswa',
+          requiresAuth: true,
+          roles: ['admin', 'dosen', 'mahasiswa'],
+        },
+      },
+      {
+        path: 'ukur-cpl/detail/:nim',
+        component: UkurCPLDetail,
+        name: 'UkurCPLDetail',
+        meta: {
+          title: 'Detail Pengukuran CPL Mahasiswa',
           requiresAuth: true,
           roles: ['admin', 'dosen', 'mahasiswa'],
         },

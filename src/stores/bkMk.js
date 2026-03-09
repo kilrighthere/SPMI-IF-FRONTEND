@@ -10,13 +10,13 @@ export const useBkMkStore = defineStore('bkMk', () => {
   const error = ref(null)
 
   const itemsWithDetails = computed(() => {
-    return items.value.map(item => {
-      const bk = bkList.value.find(b => b.id_bk === item.id_bk)
-      const mk = mkList.value.find(m => m.kode_mk === item.id_mk)
+    return items.value.map((item) => {
+      const bk = bkList.value.find((b) => b.id_bk === item.id_bk)
+      const mk = mkList.value.find((m) => m.kode_mk === item.id_mk)
       return {
         ...item,
-        bk: bk || { kode_bk: 'N/A', nama_bk: 'Tidak Ditemukan' },
-        mk: mk || { kode_mk: 'N/A', nama_mk: 'Tidak Ditemukan' }
+        bk: bk || { id_bk: 'N/A', nama: 'Tidak Ditemukan' },
+        mk: mk || { kode_mk: 'N/A', nama_mk: 'Tidak Ditemukan' },
       }
     })
   })
@@ -28,13 +28,12 @@ export const useBkMkStore = defineStore('bkMk', () => {
       const [bkMkResponse, bkResponse, mkResponse] = await Promise.all([
         getBkMkList(),
         getBKList(),
-        getMKList()
-      ]);
+        getMKList(),
+      ])
 
       items.value = bkMkResponse.data?.data || bkMkResponse.data || []
       bkList.value = bkResponse.data?.data || bkResponse.data || []
       mkList.value = mkResponse.data?.data || mkResponse.data || []
-
     } catch (err) {
       console.error('Error fetching BK-MK data:', err)
       error.value = 'Gagal memuat data korelasi BK-MK.'
@@ -49,10 +48,11 @@ export const useBkMkStore = defineStore('bkMk', () => {
     try {
       await addBkMk(data)
       await fetchAll() // Refresh all data
+      return { success: true }
     } catch (err) {
       console.error('Error creating BK-MK:', err)
       error.value = 'Gagal menambahkan korelasi.'
-      throw err
+      return { success: false, error: err.response?.data?.message || error.value }
     } finally {
       isLoading.value = false
     }
@@ -65,10 +65,40 @@ export const useBkMkStore = defineStore('bkMk', () => {
       await deleteBkMk(id_bk, id_mk)
       // Refresh data locally without hitting the server again
       items.value = items.value.filter((item) => !(item.id_bk === id_bk && item.id_mk === id_mk))
+      return { success: true }
     } catch (err) {
       console.error('Error deleting BK-MK:', err)
       error.value = 'Gagal menghapus korelasi.'
-      throw err
+      return { success: false, error: err.response?.data?.message || error.value }
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function update(oldPair, newData) {
+    isLoading.value = true
+    error.value = null
+    try {
+      const oldBk = oldPair?.id_bk
+      const oldMk = oldPair?.id_mk
+
+      if (!oldBk || !oldMk) {
+        return { success: false, error: 'Data korelasi lama tidak valid.' }
+      }
+
+      // If nothing changed, treat as successful no-op.
+      if (oldBk === newData?.id_bk && oldMk === newData?.id_mk) {
+        return { success: true }
+      }
+
+      await deleteBkMk(oldBk, oldMk)
+      await addBkMk(newData)
+      await fetchAll()
+      return { success: true }
+    } catch (err) {
+      console.error('Error updating BK-MK:', err)
+      error.value = 'Gagal memperbarui korelasi.'
+      return { success: false, error: err.response?.data?.message || error.value }
     } finally {
       isLoading.value = false
     }
@@ -83,6 +113,7 @@ export const useBkMkStore = defineStore('bkMk', () => {
     itemsWithDetails, // Expose the new computed property
     fetchAll,
     create,
+    update,
     remove,
   }
 })

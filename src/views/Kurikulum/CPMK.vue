@@ -275,14 +275,16 @@ onMounted(async () => {
                 <td class="desk-item">{{ cpmk.deskripsi }}</td>
                 <td class="cpl-item">{{ getCPLName(cpmk.id_cpl) }}</td>
                 <td class="action-button" v-if="can('cpmk', 'edit')">
-                  <button class="btn-edit" @click="editCPMK(cpmk)">
-                    <i class="ri-edit-line"></i>
-                    Edit
-                  </button>
-                  <button class="btn-delete" @click="removeCPMK(cpmk.id_cpmk)">
-                    <i class="ri-delete-bin-line"></i>
-                    Hapus
-                  </button>
+                  <div class="action-buttons-wrap">
+                    <button class="btn-edit" @click="editCPMK(cpmk)">
+                      <i class="ri-edit-line"></i>
+                      Edit
+                    </button>
+                    <button class="btn-delete" @click="removeCPMK(cpmk.id_cpmk)">
+                      <i class="ri-delete-bin-line"></i>
+                      Hapus
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -402,8 +404,17 @@ onMounted(async () => {
 
 .cpmk-table .action-button {
   text-align: center;
-  width: 180px;
-  white-space: nowrap;
+  width: 220px;
+  min-width: 220px;
+  white-space: normal;
+}
+
+.cpmk-table .action-buttons-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .cpmk-table tbody tr {
@@ -448,6 +459,7 @@ onMounted(async () => {
   padding: 10px 14px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
+  box-sizing: border-box;
   font-size: 14px;
   font-family: 'Montserrat', sans-serif;
   transition:
@@ -578,6 +590,13 @@ onMounted(async () => {
   background: var(--color-button-hover);
   color: white;
   border-color: var(--color-button-hover);
+}
+
+@media (max-width: 1024px) {
+  .cpmk-table .action-button {
+    width: 200px;
+    min-width: 200px;
+  }
 }
 
 .loading {

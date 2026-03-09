@@ -139,7 +139,12 @@ onMounted(async () => {
     <div class="section-box">
       <div class="section-header">
         <h3>Capaian Pembelajaran Lulusan (CPL) Program Studi</h3>
-        <button v-if="can('cplProdi', 'create')" class="btn-add" @click="showForm = !showForm">
+        <button
+          v-if="can('cplProdi', 'create')"
+          class="btn-add"
+          :class="{ 'is-cancel': showForm }"
+          @click="showForm ? resetForm() : (showForm = true)"
+        >
           {{ showForm ? 'Batal' : 'Tambah CPL' }}
         </button>
       </div>
@@ -156,9 +161,8 @@ onMounted(async () => {
         </div>
         <div class="form-actions">
           <button class="btn-save" @click="saveCPL">
-            {{ isEditing ? 'Update' : 'Simpan' }}
+            {{ isEditing ? 'Perbarui' : 'Simpan' }}
           </button>
-          <button v-if="isEditing" class="btn-cancel" @click="resetForm">Batal</button>
         </div>
       </div>
 
@@ -278,6 +282,7 @@ p {
   padding: 10px 14px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
+  box-sizing: border-box;
   font-size: 14px;
   font-family: 'Montserrat', sans-serif;
   transition:
@@ -402,11 +407,18 @@ p {
 }
 
 .btn-add:hover {
-  background: var(--color-buttonsec);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
   color: var(--color-text);
-  border-color: var(--color-buttonsec);
+  border-color: var(--spmi-c-green2);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(166, 214, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
+}
+
+.btn-add.is-cancel:hover {
+  background: var(--color-button-hover);
+  border-color: var(--color-button-hover);
+  color: white;
+  box-shadow: 0 4px 12px rgba(218, 42, 45, 0.3);
 }
 
 .btn-save {
@@ -416,7 +428,7 @@ p {
 }
 
 .btn-save:hover {
-  background: var(--color-buttonsec);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
   color: var(--color-text);
   border-color: var(--color-buttonsec);
   transform: translateY(-2px);

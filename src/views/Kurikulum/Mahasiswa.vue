@@ -647,7 +647,11 @@ watch(error, (newError) => {
           <button class="btn-upload" @click="openUploadModal">
             <i class="ri-upload-2-line"></i> Upload Excel
           </button>
-          <button class="btn-add" @click="showForm ? resetForm() : (showForm = true)">
+          <button
+            class="btn-add"
+            :class="{ 'is-cancel': showForm }"
+            @click="showForm ? resetForm() : (showForm = true)"
+          >
             {{ showForm ? 'Batal' : 'Tambah Mahasiswa' }}
           </button>
         </div>
@@ -678,7 +682,7 @@ watch(error, (newError) => {
         </div>
         <div class="form-actions">
           <button class="btn-save" @click="saveMahasiswa">
-            {{ isEditing ? 'Update' : 'Simpan' }}
+            {{ isEditing ? 'Perbarui' : 'Simpan' }}
           </button>
         </div>
       </div>
@@ -925,6 +929,10 @@ watch(error, (newError) => {
   text-align: center;
 }
 
+.mahasiswa-table th:nth-child(3) {
+  text-align: left;
+}
+
 .mahasiswa-table td {
   padding: 16px 14px;
   border-bottom: 1px solid #f3f4f6;
@@ -943,6 +951,7 @@ watch(error, (newError) => {
 .mahasiswa-table .nim-col {
   font-weight: 700;
   color: var(--color-button);
+  text-align: center;
 }
 
 .mahasiswa-table .nama-col {
@@ -968,29 +977,40 @@ watch(error, (newError) => {
   border-bottom: none;
 }
 
+/* Form Styles */
 .form-container {
-  background-color: #f9f9f9;
-  padding: 15px;
-  border-radius: 4px;
-  margin-bottom: 20px;
+  background: #f9fafb;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  border: 1px solid #e5e7eb;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 16px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 5px;
-  font-weight: 500;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+  font-family: 'Montserrat', sans-serif;
 }
 
-.form-group input {
+.form-group input,
+.form-group textarea {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-family: 'Inter', Arial, Helvetica, sans-serif;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .form-group input:disabled {
@@ -998,14 +1018,21 @@ watch(error, (newError) => {
   cursor: not-allowed;
 }
 
+.form-group input:focus {
+  outline: none;
+  border-color: var(--color-button);
+  box-shadow: 0 0 0 3px rgba(116, 183, 8, 0.1);
+}
+
 .input-error {
   border-color: var(--color-button) !important;
 }
 
 .error-text {
-  color: var(--color-button);
-  font-size: 14px;
-  margin-top: 3px;
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 6px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .form-actions {
@@ -1013,46 +1040,65 @@ watch(error, (newError) => {
   gap: 10px;
 }
 
-.btn-add {
-  background-color: var(--color-buttonsec);
-  color: var(--color-text);
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
+.btn-add,
+.btn-save,
+.btn-edit,
+.btn-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1.5px solid;
+  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.25s ease;
+  font-weight: 600;
   font-size: 14px;
-  transition: all 0.2s ease;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.btn-add {
+  background: var(--color-button);
+  color: white;
+  border-color: var(--color-button);
 }
 
 .btn-add:hover {
-  background-color: var(--color-buttonter);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
+}
+
+.btn-add.is-cancel:hover {
+  background: var(--color-button-hover);
+  border-color: var(--color-button-hover);
   color: white;
+  box-shadow: 0 4px 12px rgba(218, 42, 45, 0.3);
 }
 
 .btn-save {
-  background-color: var(--color-buttonter);
+  background: var(--color-button);
   color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  border-color: var(--color-button);
 }
 
 .btn-save:hover {
-  opacity: 0.9;
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 .btn-edit {
   background: white;
   color: var(--color-text);
-  border: 1.5px solid var(--color-button);
+  border-color: var(--color-button);
   padding: 6px 12px;
-  border-radius: 8px;
-  cursor: pointer;
   font-size: 13px;
-  margin-right: 5px;
-  transition: all 0.25s ease;
+  margin-right: 6px;
 }
 
 .btn-edit:hover {
@@ -1064,12 +1110,9 @@ watch(error, (newError) => {
 .btn-delete {
   background: white;
   color: var(--color-button-hover);
-  border: 1.5px solid #fca5a5;
+  border-color: #fca5a5;
   padding: 6px 12px;
-  border-radius: 8px;
-  cursor: pointer;
   font-size: 13px;
-  transition: all 0.25s ease;
 }
 
 .btn-delete:hover {
@@ -1386,22 +1429,28 @@ watch(error, (newError) => {
 }
 
 .btn-upload {
-  background-color: var(--color-buttonter);
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s ease;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
+  padding: 8px 16px;
+  border: 1.5px solid;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  background: white;
+  color: var(--color-text);
+  border-color: var(--color-button);
 }
 
 .btn-upload:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 /* Modal Styles */
@@ -1411,7 +1460,8 @@ watch(error, (newError) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1421,10 +1471,11 @@ watch(error, (newError) => {
 
 .modal-content {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.22);
   width: 100%;
-  max-width: 700px;
+  max-width: 760px;
   max-height: 90vh;
   overflow: hidden;
   display: flex;
@@ -1436,29 +1487,35 @@ watch(error, (newError) => {
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  border-bottom: 1px solid #e0e0e0;
-  background: linear-gradient(90deg, #a6d600 0%, #d5ff5f 100%);
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
 }
 
 .modal-header h4 {
   margin: 0;
   font-size: 18px;
-  font-weight: 600;
-  color: #2c3e50;
+  font-weight: 700;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
 }
 
 .modal-close {
-  background: none;
-  border: none;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.9);
   cursor: pointer;
-  padding: 6px;
-  border-radius: 4px;
-  color: #2c3e50;
-  transition: background-color 0.2s;
+  border-radius: 8px;
+  color: #374151;
+  transition: all 0.2s;
 }
 
 .modal-close:hover {
-  background: rgba(44, 62, 80, 0.1);
+  background: white;
+  transform: translateY(-1px);
 }
 
 .modal-close i {
@@ -1469,81 +1526,94 @@ watch(error, (newError) => {
   flex: 1;
   overflow-y: auto;
   padding: 24px;
+  background: #fcfdf8;
 }
 
 .modal-footer {
   padding: 16px 24px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid #e5e7eb;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  background: #f8f9fa;
+  background: #f9fafb;
 }
 
 /* Upload Steps */
 .upload-step {
-  margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: white;
 }
 
 .upload-step:last-child {
-  border-bottom: none;
+  border-bottom: 1px solid #e5e7eb;
   margin-bottom: 0;
 }
 
 .upload-step h5 {
   margin: 0 0 12px 0;
-  color: #2c3e50;
-  font-size: 16px;
+  color: #1f2937;
+  font-size: 15px;
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 8px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .upload-step h5 i {
-  color: var(--color-buttonter);
+  color: var(--color-button);
 }
 
 .upload-step p {
   margin: 0 0 16px 0;
-  color: #666;
+  color: #6b7280;
   line-height: 1.5;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .btn-template {
-  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1.5px solid;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  background: var(--color-button);
+  color: white;
+  border-color: var(--color-button);
 }
 
 .btn-template:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 /* File Upload Area */
 .file-upload-area {
   position: relative;
-  border: 2px dashed #d1d5db;
-  border-radius: 8px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 10px;
   padding: 32px 20px;
   text-align: center;
-  transition: all 0.2s;
-  background: #f9fafb;
+  transition: all 0.25s;
+  background: #f8fafc;
 }
 
 .file-upload-area:hover {
-  border-color: var(--color-buttonter);
-  background: #f0fff4;
+  border-color: var(--color-button);
+  background: #f6fdea;
 }
 
 .file-input {
@@ -1562,13 +1632,14 @@ watch(error, (newError) => {
 
 .file-upload-content i {
   font-size: 48px;
-  color: var(--color-buttonter);
+  color: var(--color-button);
   margin-bottom: 12px;
 }
 
 .file-upload-content p {
   margin: 8px 0;
   color: #374151;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .file-upload-content .file-info {
@@ -1601,15 +1672,21 @@ watch(error, (newError) => {
 /* Upload Results */
 .upload-results {
   margin-top: 20px;
+  padding: 16px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
 }
 
 .upload-results h5 {
   margin: 0 0 16px 0;
-  color: #2c3e50;
-  font-size: 16px;
+  color: #1f2937;
+  font-size: 15px;
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 8px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .results-summary {
@@ -1623,9 +1700,10 @@ watch(error, (newError) => {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  border-radius: 6px;
-  font-weight: 500;
+  border-radius: 8px;
+  font-weight: 600;
   font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .summary-item.valid,
@@ -1643,8 +1721,9 @@ watch(error, (newError) => {
 .upload-final-results {
   margin: 20px 0;
   padding: 16px;
-  background: #f8f9fa;
+  background: #f8fafc;
   border-radius: 8px;
+  border: 1px solid #e5e7eb;
 }
 
 .valid-data-preview h6,
@@ -1663,19 +1742,24 @@ watch(error, (newError) => {
 
 .data-preview-table table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .data-preview-table th,
 .data-preview-table td {
-  padding: 8px 12px;
+  padding: 10px 12px;
   text-align: left;
   border-bottom: 1px solid #e5e7eb;
 }
 
 .data-preview-table th {
-  background: #f3f4f6;
+  background: #f1f5f9;
   font-weight: 600;
   color: #374151;
 }
@@ -1691,7 +1775,7 @@ watch(error, (newError) => {
 .failed-items {
   margin: 16px 0;
   padding: 16px;
-  background: #fef2f2;
+  background: #fff1f2;
   border: 1px solid #fecaca;
   border-radius: 8px;
 }
@@ -1717,36 +1801,51 @@ watch(error, (newError) => {
 
 /* Modal Buttons */
 .btn-cancel {
-  background: #f3f4f6;
-  color: #374151;
-  border: 1px solid #d1d5db;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: white;
+  color: var(--color-text);
+  border: 1.5px solid var(--color-button);
   padding: 8px 16px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  transition: all 0.25s ease;
 }
 
 .btn-cancel:hover {
-  background: #e5e7eb;
+  background: var(--color-button-hover);
+  color: white;
+  border-color: var(--color-button-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 37, 37, 0.25);
 }
 
 .btn-confirm {
-  background: var(--color-buttonter);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
+  background: var(--color-button);
+  color: white;
+  border: 1.5px solid var(--color-button);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  transition: all 0.25s ease;
 }
 
 .btn-confirm:hover:not(:disabled) {
-  opacity: 0.9;
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 .btn-confirm:disabled {

@@ -61,6 +61,8 @@ const filteredMK = ref([])
 // Filter dan pencarian
 const searchQuery = ref('')
 const selectedMataKuliah = ref('')
+const filterMkQuery = ref('')
+const showFilterMkDropdown = ref(false)
 const currentPage = ref(1)
 const itemsPerPage = 10
 const showAll = ref(false)
@@ -71,6 +73,8 @@ const selectedPeriode = computed({
   get: () => nilaiMkStore.selectedPeriode,
   set: async (value) => {
     selectedMataKuliah.value = '' // Reset mata kuliah filter
+    filterMkQuery.value = ''
+    showFilterMkDropdown.value = false
     nilaiMkStore.selectedPeriode = value
 
     if (value) {
@@ -181,6 +185,17 @@ const availableMataKuliahInPeriode = computed(() => {
 
   // Return mata kuliah that are included in mk-periode for this periode
   return availableMataKuliah.value.filter((mk) => uniqueKodeMK.includes(mk.kode_mk))
+})
+
+const filteredFilterMataKuliah = computed(() => {
+  const query = filterMkQuery.value.toLowerCase().trim()
+  const source = availableMataKuliahInPeriode.value
+
+  if (!query) return source
+
+  return source.filter(
+    (mk) => mk.kode_mk.toLowerCase().includes(query) || mk.nama_mk.toLowerCase().includes(query),
+  )
 })
 
 // Get current kurikulum name
@@ -353,6 +368,32 @@ function hideMkDropdown() {
   // Delay untuk memungkinkan click pada option
   setTimeout(() => {
     showMkDropdown.value = false
+  }, 150)
+}
+
+function onFilterMkInput() {
+  if (!selectedPeriode.value) {
+    showFilterMkDropdown.value = false
+    return
+  }
+  showFilterMkDropdown.value = true
+}
+
+function selectFilterMataKuliah(mk) {
+  selectedMataKuliah.value = mk.kode_mk
+  filterMkQuery.value = `${mk.kode_mk} - ${mk.nama_mk}`
+  showFilterMkDropdown.value = false
+}
+
+function clearFilterMataKuliah() {
+  selectedMataKuliah.value = ''
+  filterMkQuery.value = ''
+  showFilterMkDropdown.value = false
+}
+
+function hideFilterMkDropdown() {
+  setTimeout(() => {
+    showFilterMkDropdown.value = false
   }, 150)
 }
 
@@ -860,6 +901,13 @@ function handleFileUpload(event) {
 
 // Watch untuk perubahan filter mata kuliah
 watch(selectedMataKuliah, async (newValue, oldValue) => {
+  if (!newValue) {
+    filterMkQuery.value = ''
+  } else {
+    const mk = availableMataKuliahInPeriode.value.find((item) => item.kode_mk === newValue)
+    if (mk) filterMkQuery.value = `${mk.kode_mk} - ${mk.nama_mk}`
+  }
+
   // Untuk mahasiswa, tidak perlu selectedPeriode
   if ((isMahasiswa.value || selectedPeriode.value) && newValue !== oldValue) {
     await loadNilaiData()
@@ -925,7 +973,7 @@ onMounted(async () => {
 
     <!-- Period & Mata Kuliah Selection -->
     <div class="filter-section">
-      <div class="filters-container">
+      <div class="filters-panel">
         <!-- Untuk dosen/admin, tampilkan kedua filter -->
         <template v-if="!isMahasiswa">
           <div class="filter-group">
@@ -944,27 +992,60 @@ onMounted(async () => {
 
           <div class="filter-group">
             <label for="matakuliah" class="filter-label">Mata Kuliah:</label>
-            <select
-              id="matakuliah"
-              v-model="selectedMataKuliah"
-              class="filter-select"
-              :disabled="!selectedPeriode"
-            >
-              <option value="">Semua Mata Kuliah</option>
-              <option
-                v-for="mk in availableMataKuliahInPeriode"
-                :key="mk.kode_mk"
-                :value="mk.kode_mk"
+            <div class="filter-combobox-wrapper">
+              <input
+                id="matakuliah"
+                v-model="filterMkQuery"
+                type="text"
+                class="filter-select filter-combobox-input"
+                :disabled="!selectedPeriode"
+                placeholder="Cari kode / nama mata kuliah..."
+                @focus="onFilterMkInput"
+                @input="onFilterMkInput"
+                @blur="hideFilterMkDropdown"
+              />
+              <button
+                v-if="selectedMataKuliah"
+                type="button"
+                class="clear-filter-btn"
+                @click="clearFilterMataKuliah"
+                title="Reset mata kuliah"
               >
-                {{ mk.kode_mk }} - {{ mk.nama_mk }}
-              </option>
-            </select>
+                <i class="ri-close-line"></i>
+              </button>
+
+              <div
+                v-if="
+                  showFilterMkDropdown && selectedPeriode && filteredFilterMataKuliah.length > 0
+                "
+                class="filter-combobox-dropdown"
+              >
+                <div
+                  v-for="mk in filteredFilterMataKuliah"
+                  :key="mk.kode_mk"
+                  class="filter-combobox-option"
+                  @mousedown.prevent="selectFilterMataKuliah(mk)"
+                >
+                  <span class="filter-mk-code">{{ mk.kode_mk }}</span>
+                  <span class="filter-mk-name">{{ mk.nama_mk }}</span>
+                </div>
+              </div>
+
+              <div
+                v-if="
+                  showFilterMkDropdown && selectedPeriode && filteredFilterMataKuliah.length === 0
+                "
+                class="filter-combobox-empty"
+              >
+                Mata kuliah tidak ditemukan
+              </div>
+            </div>
           </div>
         </template>
       </div>
 
       <!-- Action Button -->
-      <div class="action-section" v-if="canManageKurikulumMk || isDosen">
+      <div class="action-panel" v-if="canManageKurikulumMk || isDosen">
         <input
           type="file"
           id="excelUpload"
@@ -1009,37 +1090,43 @@ onMounted(async () => {
 
     <!-- Search & Content -->
     <div v-else-if="selectedPeriode || isMahasiswa" class="content-section">
-      <!-- Search -->
-      <div class="search-section">
-        <div class="search-box">
-          <i class="ri-search-line"></i>
-          <input
-            v-model="searchQuery"
-            type="text"
-            :placeholder="
-              isMahasiswa
-                ? 'Cari berdasarkan kode MK atau nama mata kuliah...'
-                : 'Cari berdasarkan kode MK, NIM, atau nama...'
-            "
-            class="search-input"
-          />
-        </div>
-      </div>
-
       <!-- Data Table -->
       <div class="table-container">
         <div class="table-header">
-          <h2>
-            {{
-              isMahasiswa ? 'Daftar Nilai Mata Kuliah' : `Daftar Nilai - Periode ${selectedPeriode}`
-            }}
-          </h2>
-          <div class="table-info">
-            <span class="total-items">Total: {{ filteredNilaiList.length }} data nilai</span>
+          <div class="table-title-wrap">
+            <h2>
+              {{
+                isMahasiswa
+                  ? 'Daftar Nilai Mata Kuliah'
+                  : `Daftar Nilai - Periode ${selectedPeriode}`
+              }}
+            </h2>
+            <div class="table-info">
+              <span class="total-items">Total: {{ filteredNilaiList.length }} data nilai</span>
+            </div>
+          </div>
+          <div class="search-box table-search-box">
+            <i class="ri-search-line"></i>
+            <input
+              v-model="searchQuery"
+              type="text"
+              :placeholder="
+                isMahasiswa
+                  ? 'Cari kode MK atau nama mata kuliah...'
+                  : 'Cari kode MK, NIM, atau nama mahasiswa...'
+              "
+              class="search-input"
+            />
           </div>
         </div>
 
-        <div v-if="filteredNilaiList.length === 0" class="empty-state">
+        <div v-if="!isMahasiswa && !selectedMataKuliah" class="empty-state">
+          <i class="ri-filter-3-line"></i>
+          <h3>Pilih Mata Kuliah</h3>
+          <p>Silakan pilih mata kuliah untuk menampilkan data.</p>
+        </div>
+
+        <div v-else-if="filteredNilaiList.length === 0" class="empty-state">
           <i class="ri-file-list-3-line"></i>
           <h3>{{ isMahasiswa ? 'Belum ada nilai' : 'Belum ada data nilai' }}</h3>
           <p>
@@ -1055,13 +1142,13 @@ onMounted(async () => {
           <table class="nilai-table">
             <thead>
               <tr>
-                <th>No</th>
-                <th>Kode MK</th>
-                <th>Mata Kuliah</th>
-                <th v-if="!isMahasiswa">NIM</th>
-                <th v-if="!isMahasiswa">Nama Mahasiswa</th>
-                <th>Nilai Akhir</th>
-                <th>Huruf Mutu</th>
+                <th class="col-center col-no">No</th>
+                <th class="col-center col-kode">Kode MK</th>
+                <th class="col-left col-mk">Mata Kuliah</th>
+                <th v-if="!isMahasiswa" class="col-center col-nim">NIM</th>
+                <th v-if="!isMahasiswa" class="col-left col-nama">Nama Mahasiswa</th>
+                <th class="col-right col-nilai">Nilai Akhir</th>
+                <th class="col-center col-huruf">Huruf Mutu</th>
               </tr>
             </thead>
             <tbody>
@@ -1069,23 +1156,23 @@ onMounted(async () => {
                 v-for="(nilai, index) in paginatedNilaiList"
                 :key="`${nilai.id_periode}-${nilai.kode_mk}-${nilai.nim}`"
               >
-                <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
-                <td>
+                <td class="col-center">{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
+                <td class="col-center">
                   <span class="kode-mk">{{ nilai.kode_mk }}</span>
                 </td>
-                <td>
+                <td class="col-left">
                   <span class="nama-mk">{{ mkStore.getMataKuliahNama(nilai.kode_mk) }}</span>
                 </td>
-                <td v-if="!isMahasiswa">
+                <td v-if="!isMahasiswa" class="col-center">
                   <span class="nim">{{ nilai.nim }}</span>
                 </td>
-                <td v-if="!isMahasiswa">
+                <td v-if="!isMahasiswa" class="col-left">
                   <span class="nama-mhs">{{ nilaiMkStore.getMahasiswaNama(nilai.nim) }}</span>
                 </td>
-                <td>
+                <td class="col-right">
                   <span class="nilai-akhir">{{ nilaiMkStore.formatNilai(nilai.nilai_akhir) }}</span>
                 </td>
-                <td>
+                <td class="col-center col-huruf-cell">
                   <span
                     class="huruf-mutu"
                     :class="getHurufMutuClass(nilaiMkStore.getHurufMutu(nilai.nilai_akhir))"
@@ -1341,39 +1428,53 @@ onMounted(async () => {
 .filter-section {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 24px;
-  padding: 20px;
-  background-color: #f8fafc;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  padding: 18px 20px;
+  background-color: #f9fafb;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
 }
 
-.filters-container {
+.filters-panel {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
   gap: 24px;
 }
 
 .filter-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 .filter-label {
   font-weight: 600;
   color: #374151;
-  min-width: 90px;
+  min-width: 95px;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .filter-select {
-  padding: 8px 12px;
+  padding: 10px 12px;
   border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border-radius: 8px;
   background-color: white;
   font-size: 14px;
-  min-width: 180px;
+  min-width: 240px;
+  font-family: 'Montserrat', sans-serif;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--color-button);
+  box-shadow: 0 0 0 3px rgba(116, 183, 8, 0.1);
 }
 
 .filter-select:disabled {
@@ -1382,9 +1483,10 @@ onMounted(async () => {
   cursor: not-allowed;
 }
 
-.action-section {
+.action-panel {
   display: flex;
   gap: 12px;
+  align-items: center;
 }
 
 .hidden-input {
@@ -1392,21 +1494,26 @@ onMounted(async () => {
 }
 
 .btn-upload {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  background-color: #15803d;
-  color: white;
-  border: none;
-  border-radius: 6px;
+  padding: 8px 16px;
+  background: white;
+  color: var(--color-text);
+  border: 1.5px solid var(--color-button);
+  border-radius: 8px;
   font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.25s ease;
 }
 
 .btn-upload:hover:not(:disabled) {
-  background-color: #166534;
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 .btn-upload:disabled {
@@ -1492,13 +1599,10 @@ onMounted(async () => {
   cursor: pointer;
 }
 
-.search-section {
-  margin-bottom: 24px;
-}
-
 .search-box {
   position: relative;
-  max-width: 400px;
+  width: 100%;
+  max-width: 420px;
 }
 
 .search-box i {
@@ -1511,51 +1615,74 @@ onMounted(async () => {
 
 .search-input {
   width: 100%;
-  padding: 12px 12px 12px 40px;
+  padding: 10px 12px 10px 40px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  box-sizing: border-box;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-button);
+  box-shadow: 0 0 0 3px rgba(116, 183, 8, 0.1);
 }
 
 .table-container {
-  background-color: white;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 100%;
 }
 
 .table-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 18px 0px;
+  background: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
+}
+
+.table-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .table-header h2 {
   font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
+  font-weight: 700;
+  color: var(--color-text);
   margin: 0;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .total-items {
   font-size: 14px;
   color: #6b7280;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.table-search-box {
+  flex-shrink: 0;
 }
 
 .table-wrapper {
+  width: 100%;
+  margin-top: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
   overflow-x: auto;
+  background: white;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .nilai-table {
   width: 100%;
+  min-width: 920px;
   border-collapse: separate;
   border-spacing: 0;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  overflow: hidden;
+  table-layout: auto;
   font-family: 'Montserrat', sans-serif;
 }
 
@@ -1565,7 +1692,7 @@ onMounted(async () => {
 
 .nilai-table th {
   padding: 16px 14px;
-  text-align: left;
+  text-align: center;
   font-weight: 700;
   color: var(--color-text);
   font-size: 13px;
@@ -1574,43 +1701,51 @@ onMounted(async () => {
   border-bottom: none;
 }
 
-/* Alignment khusus untuk kolom tertentu */
-.nilai-table th:nth-last-child(-n + 2) {
+.nilai-table th.col-left,
+.nilai-table td.col-left {
+  text-align: left;
+}
+
+.nilai-table th.col-center,
+.nilai-table td.col-center {
   text-align: center;
 }
 
-/* Lebar kolom yang spesifik */
-.nilai-table th:first-child,
-.nilai-table td:first-child {
+.nilai-table th.col-right,
+.nilai-table td.col-right {
+  text-align: right;
+}
+
+.nilai-table .col-no {
   width: 60px;
-  text-align: center;
 }
 
-.nilai-table th:nth-last-child(2),
-.nilai-table td:nth-last-child(2) {
-  width: 100px;
+.nilai-table .col-kode {
+  width: 120px;
 }
 
-.nilai-table th:last-child,
-.nilai-table td:last-child {
-  width: 100px;
+.nilai-table .col-nim {
+  width: 150px;
+}
+
+.nilai-table .col-nilai {
+  width: 120px;
+}
+
+.nilai-table .col-huruf {
+  width: 110px;
 }
 
 .nilai-table td {
   padding: 16px 14px;
   border-bottom: 1px solid #f3f4f6;
+  vertical-align: top;
+  color: #4b5563;
+  font-size: 14px;
 }
 
-/* Alignment khusus untuk kolom nilai akhir dan huruf mutu */
-.nilai-table td:nth-last-child(-n + 2) {
-  text-align: center;
-}
-
-/* Kolom No juga center */
-.nilai-table td:first-child {
-  text-align: center;
-  font-weight: 600;
-  color: #6b7280;
+.nilai-table td.col-huruf-cell {
+  vertical-align: middle;
 }
 
 .nilai-table tbody tr {
@@ -1628,17 +1763,25 @@ onMounted(async () => {
 }
 
 .kode-mk {
-  font-family: 'Monaco', 'Menlo', monospace;
-  background-color: #e0f2fe;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-button);
+  white-space: nowrap;
+}
+
+.nama-mk,
+.nama-mhs {
+  display: block;
+  line-height: 1.6;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .nim {
-  font-family: 'Monaco', 'Menlo', monospace;
-  font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  color: #475569;
 }
 
 .periode {
@@ -1648,7 +1791,7 @@ onMounted(async () => {
 }
 
 .nilai-akhir {
-  font-weight: 600;
+  font-weight: 700;
   color: #1f2937;
   font-size: 14px;
   display: inline-block;
@@ -1656,13 +1799,15 @@ onMounted(async () => {
 }
 
 .huruf-mutu {
-  display: inline-block;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
   text-align: center;
-  min-width: 40px;
   letter-spacing: 0.5px;
 }
 
@@ -1705,6 +1850,7 @@ onMounted(async () => {
   padding: 80px 20px;
   text-align: center;
   color: #6b7280;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .empty-state i,
@@ -1726,6 +1872,93 @@ onMounted(async () => {
 .no-period-state p {
   font-size: 14px;
   margin: 0;
+}
+
+.filter-combobox-wrapper {
+  position: relative;
+  min-width: 260px;
+}
+
+.filter-combobox-input {
+  width: 100%;
+  padding-right: 34px;
+}
+
+.clear-filter-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-filter-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.filter-combobox-dropdown,
+.filter-combobox-empty {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  z-index: 50;
+}
+
+.filter-combobox-dropdown {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.filter-combobox-option {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.filter-combobox-option:last-child {
+  border-bottom: none;
+}
+
+.filter-combobox-option:hover {
+  background: #f8fafc;
+}
+
+.filter-mk-code {
+  font-weight: 700;
+  color: #334155;
+  min-width: 92px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.filter-mk-name {
+  color: #475569;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.filter-combobox-empty {
+  padding: 10px 12px;
+  color: #9ca3af;
+  text-align: center;
+  font-style: italic;
+  font-family: 'Montserrat', sans-serif;
 }
 
 /* Modal Styles */
@@ -2079,13 +2312,16 @@ onMounted(async () => {
     gap: 16px;
   }
 
-  .filters-container {
+  .filters-panel {
     flex-direction: column;
     gap: 16px;
   }
 
   .filter-group {
-    justify-content: center;
+    justify-content: flex-start;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 
   .filter-label {
@@ -2093,17 +2329,27 @@ onMounted(async () => {
   }
 
   .filter-select {
-    min-width: 200px;
+    min-width: 100%;
   }
 
-  .action-section {
-    justify-content: center;
+  .filter-combobox-wrapper {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .action-panel {
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
 
   .table-header {
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
+  }
+
+  .table-search-box {
+    max-width: none;
   }
 
   .modal-content {
