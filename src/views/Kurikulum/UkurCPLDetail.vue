@@ -55,6 +55,19 @@ const chartData = computed(() => {
   }
 })
 
+const avgCplValue = computed(() => {
+  const values = chartData.value?.datasets?.[0]?.data
+  if (!Array.isArray(values) || values.length === 0) return null
+
+  const total = values.reduce((sum, value) => sum + Number(value || 0), 0)
+  return total / values.length
+})
+
+const avgCplDisplay = computed(() => {
+  if (avgCplValue.value == null || Number.isNaN(avgCplValue.value)) return '-'
+  return avgCplValue.value.toFixed(2)
+})
+
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: true,
@@ -216,9 +229,20 @@ onMounted(async () => {
                 </div>
                 <p class="mt-2">Memuat radar chart...</p>
               </div>
-              <div v-else-if="chartData" class="chart-container">
-                <Radar :data="chartData" :options="chartOptions" />
-              </div>
+              <template v-else-if="chartData">
+                <div class="chart-meta">
+                <div class="meta-icon">
+                    <i class="ri-line-chart-line"></i>
+                </div>
+                <div class="meta-content">
+                    <span class="meta-label">Rata-rata CPL</span>
+                    <strong class="meta-value">{{ avgCplDisplay }}</strong>
+                </div>
+                </div>
+                <div class="chart-container">
+                  <Radar :data="chartData" :options="chartOptions" />
+                </div>
+              </template>
               <div v-else class="no-data-message-inline">
                 <i class="ri-information-line"></i>
                 <span>Data grafik tidak tersedia</span>
@@ -234,7 +258,7 @@ onMounted(async () => {
                 <i class="ri-table-line"></i>
                 Detail Nilai CPL Per Mata Kuliah
               </h5>
-              <p class="chart-subtitle">RIncian capaian CPL mahasiswa berdasarkan mata kuliah.</p>
+              <p class="chart-subtitle">Rincian capaian CPL mahasiswa berdasarkan mata kuliah.</p>
             </div>
             <div class="cpl-detail-body">
               <div v-if="isLoadingTable" class="text-center my-4">
@@ -334,7 +358,7 @@ onMounted(async () => {
 .chart-card,
 .cpl-detail-card {
   background: white;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid #e0e0e0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   overflow: hidden;
@@ -351,6 +375,10 @@ onMounted(async () => {
   padding: 1rem 1.25rem;
 }
 
+.info-card {
+  padding: 0.2rem;
+}
+
 .info-details {
   display: flex;
   align-items: center;
@@ -358,8 +386,8 @@ onMounted(async () => {
 }
 
 .info-avatar {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   background: linear-gradient(135deg, #a6d600 0%, #d5ff5f 100%);
   display: flex;
@@ -411,7 +439,7 @@ onMounted(async () => {
 .chart-header,
 .cpl-detail-header {
   background: linear-gradient(90deg, #a6d600 0%, #d5ff5f 100%);
-  padding: 1rem 1.25rem;
+  padding: 0.8rem 1.2rem;
 }
 
 .chart-title,
@@ -426,26 +454,101 @@ onMounted(async () => {
 }
 
 .chart-subtitle {
-  margin: 0.4rem 0 0;
-  font-size: 0.8rem;
-  line-height: 1.5;
-  color: #506070;
+  margin: 0.25rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #43464b;
+}
+
+.chart-meta {
+  /* Posisikan menggantung di sisi kiri atas chart */
+  position: absolute;
+  left: 25px;
+  top: 25px;
+  z-index: 10;
+  
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease;
+}
+
+.chart-meta:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(166, 214, 0, 0.2);
+}
+
+.meta-icon {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, #a6d600 0%, #d5ff5f 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2c3e50;
+  font-size: 1.2rem;
+}
+
+.meta-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.meta-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #7a8696;
+  margin-bottom: -2px;
+}
+
+.meta-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #2c3e50;
+  font-family: 'Inter', sans-serif; /* atau font sans-serif favorit Anda */
+}
+
+/* Responsif: Pindahkan ke tengah atas jika di layar kecil */
+@media (max-width: 768px) {
+  .chart-meta {
+    position: relative;
+    left: 0;
+    top: 0;
+    margin-bottom: 1.5rem;
+    width: fit-content;
+  }
 }
 
 .chart-body {
-  padding: 1.25rem;
+  position: relative;
+  padding: 1.5rem 1.25rem;
   display: flex;
-  flex: 1;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+}
+
+.chart-card,
+.cpl-detail-card {
+  height: 100%;
 }
 
 .chart-container {
   position: relative;
   width: 100%;
-  max-width: 560px;
+  max-width: 680px;
+  height: 420px;
   margin: 0 auto;
-  padding: 0.35rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .no-data-message-inline {

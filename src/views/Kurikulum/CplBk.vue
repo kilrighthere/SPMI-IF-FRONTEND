@@ -1,13 +1,5 @@
 <template>
   <div class="cpl-bk-container">
-    <!-- Page Header -->
-    <div class="page-title">
-      <h2>Korelasi CPL dengan Bahan Kajian</h2>
-      <p class="subtitle">
-        Memetakan hubungan antara Capaian Pembelajaran Lulusan (CPL) dan Bahan Kajian (BK)
-      </p>
-    </div>
-
     <!-- Success Message -->
     <div v-if="successMessage" class="alert alert-success">
       <i class="ri-checkbox-circle-line"></i>
@@ -28,17 +20,32 @@
 
     <!-- All roles can view -->
     <div v-if="!isLoading" class="content-section">
-      <!-- Info Card -->
-      <div class="info-card">
-        <div class="info-header">
-          <i class="ri-information-line"></i>
-          <h3>Petunjuk Penggunaan</h3>
-        </div>
-        <div class="info-body">
-          <p>
-            Centang kotak untuk menandakan adanya korelasi antara CPL dan Bahan Kajian. Satu CPL
-            dapat terkait dengan beberapa BK, dan sebaliknya.
-          </p>
+      <div class="section-header plain-header">
+        <h3>Matriks Korelasi CPL - BK</h3>
+        <button
+          v-if="can('cplBk', 'edit')"
+          class="btn-save"
+          @click="saveChanges"
+          :disabled="isLoading"
+        >
+          <i class="ri-save-line"></i>
+          {{ isLoading ? 'Menyimpan...' : 'Simpan Perubahan' }}
+        </button>
+      </div>
+
+      <div class="section-description">
+        <p>Memetakan hubungan antara Capaian Pembelajaran Lulusan (CPL) dan Bahan Kajian (BK).</p>
+      </div>
+
+      <details class="tutorial-dropdown">
+        <summary>
+          <span class="summary-left">
+            <i class="ri-book-open-line"></i>
+            Tutorial Penggunaan
+          </span>
+          <i class="ri-arrow-down-s-line"></i>
+        </summary>
+        <div class="tutorial-body">
           <div class="legend">
             <span class="legend-label">Legenda:</span>
             <div class="legend-items">
@@ -54,88 +61,64 @@
           </div>
           <div v-if="can('cplBk', 'edit')" class="info-note">
             <i class="ri-edit-line"></i>
-            <span
-              >Anda dapat mengubah korelasi dengan mencentang/membatalkan centang kotak, lalu klik
-              "Simpan Perubahan".</span
-            >
+            <span>Ubah korelasi lalu klik "Simpan Perubahan".</span>
           </div>
           <div v-else class="info-note view-only">
             <i class="ri-eye-line"></i>
-            <span>Anda hanya dapat melihat data pada halaman ini (mode baca saja).</span>
+            <span>Mode baca saja.</span>
           </div>
         </div>
-      </div>
+      </details>
 
-      <!-- Table Section -->
-      <div class="table-section">
-        <div class="table-header">
-          <div class="table-title">
-            <i class="ri-table-line"></i>
-            <h3>Matriks Korelasi CPL - BK</h3>
-          </div>
-          <button
-            v-if="can('cplBk', 'edit')"
-            class="btn-save"
-            @click="saveChanges"
-            :disabled="isLoading"
-          >
-            <i class="ri-save-line"></i>
-            {{ isLoading ? 'Menyimpan...' : 'Simpan Perubahan' }}
-          </button>
-        </div>
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th class="sticky-col">
-                  <div class="th-content">Capaian Pembelajaran Lulusan (CPL)</div>
-                </th>
-                <th v-for="bk in bkList" :key="bk.id_bk" class="bk-col">
-                  <div class="th-content" :title="bk.deskripsi || bk.id_bk">
-                    {{ bk.kode_bk || bk.id_bk }}
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="cplList.length === 0">
-                <td :colspan="bkList.length + 1" class="empty-cell">
-                  <div class="empty-state-inline">
-                    <i class="ri-inbox-line"></i>
-                    <span>Belum ada data CPL pada kurikulum ini</span>
-                  </div>
-                </td>
-              </tr>
-              <tr v-for="cpl in cplList" :key="cpl.id_cpl" class="table-row">
-                <td class="sticky-col">
-                  <div class="cpl-info">
-                    <span class="cpl-code">{{ cpl.kode_cpl || cpl.id_cpl }}</span>
-                    <span class="cpl-count">
-                      <i class="ri-links-line"></i>
-                      {{ getCount(cpl.id_cpl) }} BK
-                    </span>
-                  </div>
-                </td>
-                <td v-for="bk in bkList" :key="bk.id_bk" class="checkbox-cell">
-                  <label class="checkbox-wrapper">
-                    <input
-                      type="checkbox"
-                      class="custom-checkbox"
-                      :checked="
-                        matrixState[cpl.id_cpl] && matrixState[cpl.id_cpl].has(String(bk.id_bk))
-                      "
-                      :disabled="!can('cplBk', 'edit')"
-                      :aria-label="`Korelasi ${cpl.kode_cpl || cpl.id_cpl} dengan ${bk.deskripsi || bk.id_bk}`"
-                      :title="`Korelasi ${cpl.kode_cpl || cpl.id_cpl} ↔ ${bk.deskripsi || bk.id_bk}`"
-                      @change="handleCheckboxChange(cpl.id_cpl, bk.id_bk, $event)"
-                    />
-                    <span class="checkmark"></span>
-                  </label>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="sticky-col">
+                <div class="th-content">Capaian Pembelajaran Lulusan (CPL)</div>
+              </th>
+              <th v-for="bk in bkList" :key="bk.id_bk" class="bk-col">
+                <div class="th-content" :title="bk.deskripsi || bk.id_bk">
+                  {{ bk.kode_bk || bk.id_bk }}
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="cplList.length === 0">
+              <td :colspan="bkList.length + 1" class="empty-cell">
+                <div class="empty-state-inline">
+                  <i class="ri-inbox-line"></i>
+                  <span>Belum ada data CPL pada kurikulum ini</span>
+                </div>
+              </td>
+            </tr>
+            <tr v-for="cpl in cplList" :key="cpl.id_cpl" class="table-row">
+              <td class="sticky-col">
+                <div class="cpl-info">
+                  <span class="cpl-code">{{ cpl.kode_cpl || cpl.id_cpl }}</span>
+                  <span class="cpl-count"> {{ getCount(cpl.id_cpl) }} BK terkait </span>
+                </div>
+              </td>
+              <td v-for="bk in bkList" :key="bk.id_bk" class="checkbox-cell">
+                <label class="checkbox-wrapper">
+                  <input
+                    type="checkbox"
+                    class="custom-checkbox"
+                    :checked="
+                      matrixState[cpl.id_cpl] && matrixState[cpl.id_cpl].has(String(bk.id_bk))
+                    "
+                    :disabled="!can('cplBk', 'edit')"
+                    :aria-label="`Korelasi ${cpl.kode_cpl || cpl.id_cpl} dengan ${bk.deskripsi || bk.id_bk}`"
+                    :title="`Korelasi ${cpl.kode_cpl || cpl.id_cpl} ↔ ${bk.deskripsi || bk.id_bk}`"
+                    @change="handleCheckboxChange(cpl.id_cpl, bk.id_bk, $event)"
+                  />
+                  <span class="checkmark"></span>
+                </label>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -251,28 +234,17 @@ const getCount = (cplId) => {
 /* Container */
 .cpl-bk-container {
   width: 100%;
-  max-width: 1600px;
+  max-width: 100%;
+  min-width: 0;
   margin: 0 auto;
   font-family: 'Montserrat', sans-serif;
 }
 
-/* Page Title */
-.page-title {
-  margin-bottom: 24px;
-}
-
-.page-title h2 {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--color-text);
-  margin: 0 0 8px 0;
-  font-family: 'Montserrat', sans-serif;
-}
-
-.subtitle {
+.section-note {
   font-size: 14px;
   color: #6b7280;
-  margin: 0;
+  margin: 0 0 16px;
+  line-height: 1.6;
   font-family: 'Montserrat', sans-serif;
 }
 
@@ -341,57 +313,94 @@ const getCount = (cplId) => {
 .content-section {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
+  min-width: 0;
 }
 
-/* Info Card */
-.info-card {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  gap: 12px;
+}
+
+.plain-header {
+  background: transparent;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 0 0 14px;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.section-description {
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.section-description p {
+  font-size: 14px;
+  color: var(--color-text);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.tutorial-dropdown {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fcfdf8;
   overflow: hidden;
 }
 
-.info-header {
+.tutorial-dropdown summary {
+  list-style: none;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 20px 24px;
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-  border-bottom: 2px solid #bbf7d0;
-}
-
-.info-header i {
-  font-size: 24px;
-  color: #15803d;
-}
-
-.info-header h3 {
-  font-size: 16px;
-  font-weight: 700;
-  color: #15803d;
-  margin: 0;
-  font-family: 'Montserrat', sans-serif;
-}
-
-.info-body {
-  padding: 20px 24px;
-}
-
-.info-body p {
+  justify-content: space-between;
+  padding: 12px 14px;
   font-size: 14px;
-  color: var(--color-text);
-  margin: 0 0 16px 0;
-  line-height: 1.6;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.tutorial-dropdown summary::-webkit-details-marker {
+  display: none;
+}
+
+.tutorial-dropdown summary i {
+  font-size: 16px;
+  transition: transform 0.2s ease;
+}
+
+.tutorial-dropdown[open] summary i.ri-arrow-down-s-line {
+  transform: rotate(180deg);
+}
+
+.summary-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tutorial-body {
+  padding: 0 14px 14px;
 }
 
 .legend {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 12px 16px;
-  background: #f9fafb;
-  border-radius: 10px;
+  padding: 10px 14px;
+  background: #f7f9ef;
+  border-radius: 8px;
+  border: 1px solid #e4ebca;
   margin-bottom: 16px;
 }
 
@@ -442,9 +451,9 @@ const getCount = (cplId) => {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  border-radius: 10px;
+  border-radius: 8px;
   font-size: 13px;
   color: #1e40af;
   margin-top: 12px;
@@ -460,56 +469,37 @@ const getCount = (cplId) => {
   flex-shrink: 0;
 }
 
-/* Table Section */
-.table-section {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-}
-
-.table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  background: #f9fafb;
-  border-bottom: 2px solid #e5e7eb;
-}
-
-.table-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.table-title i {
-  font-size: 24px;
-  color: var(--spmi-c-green2);
-}
-
-.table-title h3 {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--color-text);
-  margin: 0;
-  font-family: 'Montserrat', sans-serif;
-}
-
 .table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 68vh;
+  /* padding: 10px 12px 12px; */
+  background: #fff;
+  /* border: 1px solid #e5e7eb; */
+  border-radius: 10px;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
 }
 
 .data-table {
-  width: 100%;
-  border-collapse: collapse;
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
   font-family: 'Montserrat', sans-serif;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .data-table thead {
   background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
   position: sticky;
-  top: 0;
+  top: -1px;
   z-index: 10;
 }
 
@@ -522,7 +512,7 @@ const getCount = (cplId) => {
 }
 
 .th-content {
-  padding: 16px 20px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
   font-size: 13px;
@@ -536,23 +526,31 @@ const getCount = (cplId) => {
 }
 
 .data-table tbody tr {
-  border-bottom: 1px solid #f3f4f6;
   transition: background-color 0.2s ease;
 }
 
+.data-table tbody tr:nth-child(odd) {
+  background: #ffffff;
+}
+
+.data-table tbody tr:nth-child(even) {
+  background: #fafcf4;
+}
+
 .data-table tbody tr:hover {
-  background-color: #f9fafb;
+  background-color: #f1f8df;
 }
 
 .data-table td {
   padding: 0;
   border: none;
+  border-bottom: 1px solid #edf1e4;
 }
 
 .sticky-col {
   position: sticky;
   left: 0;
-  background: white;
+  background: inherit;
   z-index: 5;
   min-width: 280px;
   border-right: 2px solid #e5e7eb;
@@ -563,14 +561,14 @@ const getCount = (cplId) => {
 }
 
 .data-table tbody tr:hover .sticky-col {
-  background-color: #f9fafb;
+  background-color: #f1f8df;
 }
 
 .cpl-info {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 16px 20px;
+  gap: 6px;
+  padding: 14px 16px;
 }
 
 .cpl-code {
@@ -582,18 +580,14 @@ const getCount = (cplId) => {
 .cpl-count {
   display: flex;
   align-items: center;
-  gap: 6px;
   font-size: 12px;
   color: #6b7280;
-}
-
-.cpl-count i {
-  font-size: 14px;
+  font-weight: 600;
 }
 
 .checkbox-cell {
   text-align: center;
-  padding: 16px 20px;
+  padding: 14px 16px;
 }
 
 /* Custom Checkbox */
@@ -615,8 +609,8 @@ const getCount = (cplId) => {
 
 .checkmark {
   display: inline-block;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border: 2px solid #d1d5db;
   border-radius: 6px;
   background: white;
@@ -636,13 +630,17 @@ const getCount = (cplId) => {
 .custom-checkbox:checked ~ .checkmark::after {
   content: '';
   position: absolute;
-  left: 7px;
-  top: 3px;
-  width: 5px;
-  height: 10px;
+  left: 6px;
+  top: 2px;
+  width: 4px;
+  height: 9px;
   border: solid var(--spmi-c-dgray);
   border-width: 0 2.5px 2.5px 0;
   transform: rotate(45deg);
+}
+
+.checkbox-cell:has(.custom-checkbox:checked) {
+  background: #edf7d5;
 }
 
 .custom-checkbox:disabled ~ .checkmark {
@@ -678,20 +676,20 @@ const getCount = (cplId) => {
 }
 /* Save Button */
 .btn-save {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
-  color: var(--color-text);
-  border: none;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: 'Montserrat', sans-serif;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 12px rgba(166, 214, 0, 0.3);
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1.5px solid;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  background: var(--color-button);
+  color: white;
+  border-color: var(--color-button);
 }
 
 .btn-save i {
@@ -699,8 +697,11 @@ const getCount = (cplId) => {
 }
 
 .btn-save:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(166, 214, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 .btn-save:disabled {
@@ -750,7 +751,7 @@ const getCount = (cplId) => {
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .table-header {
+  .section-header {
     flex-direction: column;
     gap: 16px;
     align-items: flex-start;
@@ -763,19 +764,13 @@ const getCount = (cplId) => {
 }
 
 @media (max-width: 768px) {
-  .page-title h2 {
-    font-size: 24px;
+  .section-description,
+  .section-header {
+    padding: 0;
   }
 
-  .info-card,
-  .table-section {
-    border-radius: 12px;
-  }
-
-  .info-header,
-  .info-body,
-  .table-header {
-    padding: 16px 20px;
+  .plain-header {
+    padding-bottom: 12px;
   }
 
   .legend {
@@ -792,6 +787,11 @@ const getCount = (cplId) => {
 
   .sticky-col {
     min-width: 200px;
+  }
+
+  .table-wrapper {
+    max-height: 60vh;
+    padding: 8px;
   }
 
   .th-content,

@@ -39,10 +39,11 @@ const submenuTitles = {
   'struktur-matkul': 'Struktur Mata Kuliah',
   rps: 'RPS Mata Kuliah',
   'nilai-matkul': 'Nilai Mata Kuliah',
-  'mk-periode': 'MK Periode',
+  'mk-periode': 'Mata Kuliah Periode',
   'ukur-cpl': 'Pengukuran CPL Mahasiswa',
   'ukur-cpl-detail': 'Detail CPL',
   mahasiswa: 'Mahasiswa',
+  'cpl-bk': 'Korelasi CPL-Bahan Kajian'
 }
 
 const subMenuPath = computed(() => `/kurikulum/${route.params.id}/sub-menu`)
