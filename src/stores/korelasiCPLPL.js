@@ -80,7 +80,6 @@ export const useKorelasiCPLPLStore = defineStore('korelasiCPLPL', () => {
         plList.value = plResponse.data || []
       }
     } catch (err) {
-      console.error('Error fetching CPL-PL data:', err)
       error.value = 'Gagal memuat data korelasi CPL-PL'
 
       // Fallback data
@@ -162,7 +161,6 @@ export const useKorelasiCPLPLStore = defineStore('korelasiCPLPL', () => {
 
       return true
     } catch (err) {
-      console.error(`Error ${isChecked ? 'adding' : 'removing'} CPL-PL relation:`, err)
       error.value = `Gagal ${isChecked ? 'menambahkan' : 'menghapus'} relasi CPL-PL`
       return false
     } finally {

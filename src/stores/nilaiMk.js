@@ -74,7 +74,6 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
       })
       
     } catch (err) {
-      console.error('Error fetching nilai data:', err)
       error.value = 'Gagal memuat data nilai mata kuliah'
       
       // Fallback data if needed
@@ -113,7 +112,6 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
           if (mpResp?.data && mpResp.data.success) mkPeriodeList.value = mpResp.data.data
           else if (mpResp?.data && Array.isArray(mpResp.data)) mkPeriodeList.value = mpResp.data
         } catch (err) {
-          console.warn('Failed to load mk-periode list:', err)
         }
         mkPeriodeMap.value = {}
         mkPeriodeList.value.forEach((mp) => (mkPeriodeMap.value[String(mp.id_mk_periode)] = mp))
@@ -158,13 +156,10 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
 
       // Ensure mk-periode list is not empty; if it is, try to fetch it and rebuild params
       if (!mkPeriodeList.value || mkPeriodeList.value.length === 0) {
-        console.warn('mkPeriodeList is empty; fetching mk-periode list again')
         await fetchMkPeriodeList()
       }
 
       // Debug: log final params used for API request so we can inspect in network logs
-      console.log('Fetching nilai list with params:', paramsToSend)
-      console.log('mkPeriodeList length:', mkPeriodeList.value.length)
       const nilaiResponse = await getNilaiMkList(paramsToSend)
       
       // Handle API response untuk nilai MK
@@ -180,11 +175,6 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
         })
 
         if (allowedIds.size > 0 && filteredRaw.length !== rawList.length) {
-          console.warn('Server returned rows outside requested id_mk_periode. Filtering on client to show only requested entries.', {
-            requested: Array.from(allowedIds),
-            returnedCount: rawList.length,
-            filteredCount: filteredRaw.length,
-          })
         }
 
         nilaiList.value = filteredRaw.map((item) => {
@@ -221,7 +211,6 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
       }
     } catch (err) {
       error.value = err.response?.data?.message || 'Gagal mengambil data nilai'
-      console.error('Error fetching nilai:', err)
     } finally {
       isLoading.value = false
     }
@@ -304,18 +293,6 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
       return false
     })
 
-    // Debug information
-    try {
-      const kurikulumSet = new Set(result.map((r) => r.id_kurikulum).filter(Boolean))
-      console.debug('filteredNilaiByPeriode', {
-        periode,
-        mkPeriodeLen: mkPeriodeList.value.length,
-        nilaiTotal: nilaiList.value.length,
-        nilaiFiltered: result.length,
-        kurikulumSet: Array.from(kurikulumSet).slice(0, 10),
-      })
-    } catch (e) {}
-
     return result
   })
 
@@ -348,7 +325,6 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
         }
       }
       
-      // console.log('Creating nilai with data:', apiData)
       let response
       try {
         response = await addNilaiMk(apiData)
@@ -357,7 +333,6 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
         const status = err.response?.status
         const errData = err.response?.data
           if (status === 409) {
-          console.warn('409 Conflict detected while adding nilai, attempting to update existing record', errData)
           // Derive id_periode and kode_mk if possible to perform update
           let idPeriode = nilaiData.id_periode
           let kodeMk = nilaiData.kode_mk
@@ -371,12 +346,9 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
           // If we have enough info to update, try updating
           if (idPeriode && kodeMk && nilaiData.nim) {
             try {
-              console.log('Attempting updateNilaiMk for conflict:', { idPeriode, kodeMk, nim: nilaiData.nim, nilai_akhir: apiData.nilai_akhir })
               const upd = await updateNilaiMk(idPeriode, kodeMk, nilaiData.nim, { nilai_akhir: apiData.nilai_akhir })
-              console.log('Update after conflict succeeded:', { idPeriode, kodeMk, nim: nilaiData.nim, response: upd })
               response = upd
             } catch (updateErr) {
-              console.error('Update after conflict failed:', updateErr)
               throw updateErr
             }
           } else {
@@ -387,9 +359,6 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
           throw err
         }
       }
-      // console.log('API response:', response)
-      // console.log('API response.data:', response.data)
-      // console.log('API response.data.success:', response.data?.success)
       
       // Refresh data after adding - refresh using provided params or selectedPeriode
       if (refreshParams) {
@@ -408,8 +377,6 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
       
       return { success: false, message: 'Unexpected response format' }
     } catch (err) {
-      console.error('Error creating nilai:', err)
-      console.error('Error details:', err.response?.data || err.message)
       error.value = 'Gagal menambahkan nilai: ' + (err.response?.data?.message || err.message)
       return null
     } finally {
@@ -442,7 +409,6 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
       }
     } catch (err) {
       error.value = err.response?.data?.message || 'Gagal mengambil data periode'
-      console.error('Error fetching periode:', err)
     } finally {
       isLoading.value = false
     }
@@ -460,7 +426,6 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
         })
       }
     } catch (err) {
-      console.error('Error fetching mahasiswa:', err)
       // Fallback data jika API error
       mahasiswaMap.value = {
         '24060120140001': 'Nurul Saputra',
@@ -478,7 +443,6 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
       mkPeriodeMap.value = {}
       mkPeriodeList.value.forEach((mp) => (mkPeriodeMap.value[String(mp.id_mk_periode)] = mp))
     } catch (err) {
-      console.error('Error fetching mk-periode:', err)
     }
   }
 
@@ -519,7 +483,6 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
       }
       return Number(first.id_mk_periode)
     } catch (err) {
-      console.warn('Error fetching mk-periode by kode/id_periode:', { kode_mk, id_periode, err })
       return null
     }
   }
@@ -544,7 +507,6 @@ export const useNilaiMkStore = defineStore('nilaiMk', () => {
       })
       return match ? Number(match.id_mk_periode) : null
     } catch (err) {
-      console.warn('resolveIdMkPeriode error:', err)
       return null
     }
   }

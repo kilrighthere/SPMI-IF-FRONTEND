@@ -212,7 +212,6 @@ const saveBK = async () => {
     }
     resetForm()
   } catch (err) {
-    console.error('Error saving BK:', err)
     popupError.value = isEditing.value
       ? 'Gagal memperbarui Bahan Kajian'
       : 'Gagal menambahkan Bahan Kajian'

@@ -28,7 +28,6 @@ export const useCplSndiktiStore = defineStore('cplSndikti', () => {
         cplSndiktiList.value = response.data
       }
     } catch (err) {
-      console.error('Error fetching CPL SNDIKTI:', err)
       error.value = 'Gagal memuat data CPL SNDIKTI'
 
       // Fallback data sesuai format API
@@ -86,7 +85,6 @@ export const useCplSndiktiStore = defineStore('cplSndikti', () => {
       }
       return currentCplSndikti.value
     } catch (err) {
-      console.error(`Error fetching CPL SNDIKTI with id ${id}:`, err)
       error.value = 'Gagal memuat detail CPL SNDIKTI'
       return null
     } finally {
@@ -104,7 +102,6 @@ export const useCplSndiktiStore = defineStore('cplSndikti', () => {
       await fetchAllCplSndikti()
       return response.data
     } catch (err) {
-      console.error('Error creating CPL SNDIKTI:', err)
       error.value = 'Gagal menambahkan CPL SNDIKTI'
       return null
     } finally {
@@ -122,7 +119,6 @@ export const useCplSndiktiStore = defineStore('cplSndikti', () => {
       await fetchAllCplSndikti()
       return response.data
     } catch (err) {
-      console.error(`Error updating CPL SNDIKTI with id ${id}:`, err)
       error.value = 'Gagal memperbarui CPL SNDIKTI'
       return null
     } finally {
@@ -140,7 +136,6 @@ export const useCplSndiktiStore = defineStore('cplSndikti', () => {
       cplSndiktiList.value = cplSndiktiList.value.filter((item) => item.id_sn !== id)
       return { success: true }
     } catch (err) {
-      console.error(`Error deleting CPL SNDIKTI with id ${id}:`, err)
       error.value = 'Gagal menghapus CPL SNDIKTI'
       return { success: false, error: error.value }
     } finally {

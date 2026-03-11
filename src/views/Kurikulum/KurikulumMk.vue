@@ -328,8 +328,6 @@ function getMataKuliahName(kodeMk) {
   const mk = mataKuliahStore.mataKuliahList.find((item) => item.kode_mk === kodeMk)
   // Debug: log data for troubleshooting
   if (!mk) {
-    console.log('Mata kuliah tidak ditemukan untuk kode:', kodeMk)
-    console.log('Available mata kuliah:', mataKuliahStore.mataKuliahList)
   }
   return mk ? mk.nama_mk : kodeMk
 }
@@ -412,7 +410,6 @@ async function submitForm() {
       }
     }
   } catch (error) {
-    console.error('Error submitting form:', error)
   }
 }
 
@@ -426,7 +423,6 @@ async function deleteItem() {
       closeDeleteModal()
     }
   } catch (error) {
-    console.error('Error deleting item:', error)
   }
 }
 

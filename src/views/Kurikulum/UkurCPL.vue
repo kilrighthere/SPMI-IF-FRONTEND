@@ -44,7 +44,6 @@ async function fetchMahasiswaList() {
       }
     }
   } catch (err) {
-    console.error('Error fetching mahasiswa:', err)
     error.value = 'Gagal memuat daftar mahasiswa.'
   } finally {
     isLoading.value = false

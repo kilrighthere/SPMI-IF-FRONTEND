@@ -273,7 +273,6 @@ async function loadPeriode() {
     if (resp?.data && resp.data.success) periodeList.value = resp.data.data
     else if (resp?.data && Array.isArray(resp.data)) periodeList.value = resp.data
   } catch (err) {
-    console.error('Error loading periode list', err)
   }
 }
 
@@ -359,7 +358,6 @@ async function loadMkPeriode() {
     // Optionally, refresh global store list
     await nilaiMkStore.fetchMkPeriodeList()
   } catch (err) {
-    console.error('Error loading mk-periode:', err)
     mkPeriodeList.value = []
   } finally {
     isLoading.value = false
@@ -426,7 +424,6 @@ async function addMkPeriode() {
       alert('Gagal menambahkan MK-periode: ' + (resp.data?.message || 'Unknown'))
     }
   } catch (err) {
-    console.error('Error adding mk-periode:', err)
     alert('Terjadi kesalahan saat menambahkan MK-periode')
   }
 }
@@ -444,7 +441,6 @@ async function saveRow(mp) {
       alert('Gagal menyimpan perubahan: ' + (resp.data?.message || 'Unknown'))
     }
   } catch (err) {
-    console.error('Error updating mk-periode:', err)
     alert('Terjadi kesalahan saat menyimpan perubahan')
   }
 }
@@ -460,7 +456,6 @@ async function deleteRow(mp) {
       alert('Gagal menghapus: ' + (resp.data?.message || 'Unknown'))
     }
   } catch (err) {
-    console.error('Error deleting mk-periode:', err)
     alert('Terjadi kesalahan saat menghapus MK-periode')
   }
 }

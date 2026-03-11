@@ -199,7 +199,6 @@ const saveData = async () => {
     setTimeout(() => (successMessage.value = ''), 3000)
     resetForm()
   } catch (err) {
-    console.error('Error saving BK-MK:', err)
     popupError.value = isEditing.value
       ? 'Gagal memperbarui korelasi BK-MK'
       : 'Gagal menambahkan korelasi BK-MK'
@@ -219,7 +218,6 @@ const removeData = async (id_bk, id_mk) => {
       successMessage.value = 'Korelasi berhasil dihapus.'
       setTimeout(() => (successMessage.value = ''), 3000)
     } catch (err) {
-      console.error('Error removing BK-MK:', err)
       popupError.value = 'Gagal menghapus korelasi BK-MK'
     }
   }

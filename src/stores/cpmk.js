@@ -22,7 +22,6 @@ export const useCPMKStore = defineStore('cpmk', () => {
         cpmkList.value = response.data
       }
     } catch (err) {
-      console.error('Error fetching CPMK:', err)
       error.value = 'Gagal memuat data Capaian Pembelajaran Mata Kuliah'
       
       // Fallback data sesuai dengan format baru
@@ -67,7 +66,6 @@ export const useCPMKStore = defineStore('cpmk', () => {
       currentCPMK.value = response.data
       return response.data
     } catch (err) {
-      console.error(`Error fetching CPMK with id ${id}:`, err)
       error.value = 'Gagal memuat detail CPMK'
       return null
     } finally {
@@ -85,7 +83,6 @@ export const useCPMKStore = defineStore('cpmk', () => {
       await fetchAllCPMK()
       return response.data
     } catch (err) {
-      console.error('Error creating CPMK:', err)
       error.value = 'Gagal menambahkan CPMK'
       return null
     } finally {
@@ -103,7 +100,6 @@ export const useCPMKStore = defineStore('cpmk', () => {
       await fetchAllCPMK()
       return response.data
     } catch (err) {
-      console.error(`Error updating CPMK with id ${id}:`, err)
       error.value = 'Gagal memperbarui CPMK'
       return null
     } finally {
@@ -121,7 +117,6 @@ export const useCPMKStore = defineStore('cpmk', () => {
       cpmkList.value = cpmkList.value.filter(cpmk => cpmk.id_cpmk !== id)
       return { success: true }
     } catch (err) {
-      console.error(`Error deleting CPMK with id ${id}:`, err)
       error.value = 'Gagal menghapus CPMK'
       return { success: false, error: error.value }
     } finally {

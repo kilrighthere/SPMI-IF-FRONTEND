@@ -122,7 +122,6 @@ const clearRelation = async (cplId) => {
       }
     }
   } catch (err) {
-    console.error('Error clearing relation:', err)
   }
 }
 
@@ -146,7 +145,6 @@ const selectRelation = async (cplId, plId) => {
     // Then, check the selected PL
     await cplPlStore.toggleRelation(cplId, plId, true)
   } catch (err) {
-    console.error('Error selecting relation:', err)
   }
 }
 
@@ -157,11 +155,6 @@ const clearError = () => {
 // Load data saat komponen dimuat
 onMounted(async () => {
   await cplPlStore.fetchAllData()
-  console.log('CPL List:', cplList.value)
-  console.log('PL List:', plList.value)
-  console.log('Matrix Data:', matrixData.value)
-  console.log('isAdmin:', isAdmin.value)
-  console.log('isDosen:', isDosen.value)
 })
 
 watch(error, (newError) => {

@@ -28,7 +28,6 @@ export const useBKStore = defineStore('bk', () => {
         bkList.value = response.data
       }
     } catch (err) {
-      console.error('Error fetching BK:', err)
       error.value = 'Gagal memuat data Bahan Kajian'
 
       // Fallback data sesuai format API
@@ -68,7 +67,6 @@ export const useBKStore = defineStore('bk', () => {
       currentBK.value = response.data
       return response.data
     } catch (err) {
-      console.error(`Error fetching BK with id ${id}:`, err)
       error.value = 'Gagal memuat detail Bahan Kajian'
       return null
     } finally {
@@ -87,7 +85,6 @@ export const useBKStore = defineStore('bk', () => {
       await fetchAllBK()
       return response.data
     } catch (err) {
-      console.error('Error creating BK:', err)
       error.value = 'Gagal menambahkan Bahan Kajian'
       return null
     } finally {
@@ -106,7 +103,6 @@ export const useBKStore = defineStore('bk', () => {
       await fetchAllBK()
       return response.data
     } catch (err) {
-      console.error(`Error updating BK with id ${id}:`, err)
       error.value = 'Gagal memperbarui Bahan Kajian'
       return null
     } finally {
@@ -124,7 +120,6 @@ export const useBKStore = defineStore('bk', () => {
       bkList.value = bkList.value.filter((bk) => bk.id_bk !== id)
       return { success: true }
     } catch (err) {
-      console.error(`Error deleting BK with id ${id}:`, err)
       error.value = 'Gagal menghapus Bahan Kajian'
       return { success: false, error: error.value }
     } finally {

@@ -22,7 +22,6 @@ export const usePLStore = defineStore('profilLulusan', () => {
         profilLulusanList.value = response.data
       }
     } catch (err) {
-      console.error('Error fetching profil lulusan:', err)
       error.value = 'Gagal memuat data profil lulusan'
       
       // Fallback data jika API belum tersedia - sesuai format response baru
@@ -58,7 +57,6 @@ export const usePLStore = defineStore('profilLulusan', () => {
       currentPL.value = response.data
       return response.data
     } catch (err) {
-      console.error(`Error fetching profil lulusan with id ${id}:`, err)
       error.value = 'Gagal memuat detail profil lulusan'
       return null
     } finally {
@@ -76,7 +74,6 @@ export const usePLStore = defineStore('profilLulusan', () => {
       await fetchAllPL()
       return response.data
     } catch (err) {
-      console.error('Error creating profil lulusan:', err)
       error.value = 'Gagal menambahkan profil lulusan'
       return null
     } finally {
@@ -94,7 +91,6 @@ export const usePLStore = defineStore('profilLulusan', () => {
       await fetchAllPL()
       return response.data
     } catch (err) {
-      console.error(`Error updating profil lulusan with id ${id}:`, err)
       error.value = 'Gagal memperbarui profil lulusan'
       return null
     } finally {
@@ -112,7 +108,6 @@ export const usePLStore = defineStore('profilLulusan', () => {
       profilLulusanList.value = profilLulusanList.value.filter(pl => pl.id_pl !== id)
       return { success: true }
     } catch (err) {
-      console.error(`Error deleting profil lulusan with id ${id}:`, err)
       error.value = 'Gagal menghapus profil lulusan'
       return { success: false, error: error.value }
     } finally {

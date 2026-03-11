@@ -35,7 +35,6 @@ export const useBkMkStore = defineStore('bkMk', () => {
       bkList.value = bkResponse.data?.data || bkResponse.data || []
       mkList.value = mkResponse.data?.data || mkResponse.data || []
     } catch (err) {
-      console.error('Error fetching BK-MK data:', err)
       error.value = 'Gagal memuat data korelasi BK-MK.'
     } finally {
       isLoading.value = false
@@ -50,7 +49,6 @@ export const useBkMkStore = defineStore('bkMk', () => {
       await fetchAll() // Refresh all data
       return { success: true }
     } catch (err) {
-      console.error('Error creating BK-MK:', err)
       error.value = 'Gagal menambahkan korelasi.'
       return { success: false, error: err.response?.data?.message || error.value }
     } finally {
@@ -67,7 +65,6 @@ export const useBkMkStore = defineStore('bkMk', () => {
       items.value = items.value.filter((item) => !(item.id_bk === id_bk && item.id_mk === id_mk))
       return { success: true }
     } catch (err) {
-      console.error('Error deleting BK-MK:', err)
       error.value = 'Gagal menghapus korelasi.'
       return { success: false, error: err.response?.data?.message || error.value }
     } finally {

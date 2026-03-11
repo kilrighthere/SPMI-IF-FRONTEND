@@ -74,7 +74,6 @@ const saveCPL = async () => {
     }
     resetForm()
   } catch (err) {
-    console.error('Error saving CPL:', err)
     popupError.value = isEditing.value ? 'Gagal memperbarui CPL' : 'Gagal menambahkan CPL'
   }
 }

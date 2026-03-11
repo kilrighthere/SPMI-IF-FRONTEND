@@ -27,7 +27,6 @@ export const useCplBkStore = defineStore('cplBk', () => {
       const rawItems = cplBkResponse.data?.data || cplBkResponse.data || []
       items.value = rawItems.map((r) => ({ id_cpl: String(r.id_cpl), id_bk: String(r.id_bk) }))
     } catch (err) {
-      console.error('Error fetching CPL-BK data:', err)
       error.value = 'Gagal memuat data.'
     } finally {
       isLoading.value = false
@@ -44,7 +43,6 @@ export const useCplBkStore = defineStore('cplBk', () => {
       const rawItems2 = cplBkResponse.data?.data || cplBkResponse.data || []
       items.value = rawItems2.map((r) => ({ id_cpl: String(r.id_cpl), id_bk: String(r.id_bk) }))
     } catch (err) {
-      console.error('Error updating CPL-BK:', err)
       error.value = 'Gagal memperbarui korelasi.'
       throw err // re-throw error to be caught in component
     } finally {

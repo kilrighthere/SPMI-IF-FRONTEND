@@ -180,7 +180,6 @@ onMounted(() => {
     store.fetchAll()
   } else {
     store.error = 'ID Kurikulum tidak ditemukan di parameter URL.'
-    console.error('ID Kurikulum tidak ditemukan di URL.')
   }
 })
 
@@ -220,7 +219,6 @@ const saveChanges = async () => {
     }, 3000)
   } catch (err) {
     // error is already set by the store, so we just log it
-    console.error('Gagal menyimpan data:', err)
   }
 }
 

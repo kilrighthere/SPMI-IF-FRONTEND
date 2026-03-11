@@ -39,7 +39,6 @@ api.interceptors.response.use(
   (error) => {
     // Cek jika error adalah error CORS atau network error
     if (error.message === 'Network Error') {
-      console.warn('Network error detected. Using fallback data.')
       // Tidak perlu menampilkan alert, biarkan fallback data berjalan
     }
 
@@ -86,7 +85,6 @@ api.interceptors.response.use(
     }
 
     // Log error untuk debugging
-    console.error('API Error:', error)
 
     // Kembalikan error untuk dihandle di store
     return Promise.reject(error)
@@ -153,7 +151,6 @@ export const addCplPl = (data) => {
         resolve(response)
       })
       .catch((error) => {
-        console.warn('Endpoint /add/cpl-pl not available, using fallback data', error)
         resolve({
           data: {
             success: true,
@@ -173,7 +170,6 @@ export const getCplPlList = () => {
         resolve(response)
       })
       .catch((error) => {
-        console.warn('Endpoint /list/cpl-pl not available, using fallback data', error)
         // Return format yang konsisten dengan API response sukses
         resolve({
           data: {
@@ -199,10 +195,6 @@ export const deleteCplPl = (id_cpl, id_pl) => {
         resolve(response)
       })
       .catch((error) => {
-        console.warn(
-          `Endpoint /delete/cpl-pl/${id_cpl}/${id_pl} not available, using fallback`,
-          error,
-        )
         resolve({
           data: {
             success: true,

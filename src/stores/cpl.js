@@ -22,7 +22,6 @@ export const useCPLStore = defineStore('cpl', () => {
         cplList.value = response.data
       }
     } catch (err) {
-      console.error('Error fetching CPL:', err)
       error.value = 'Gagal memuat data Capaian Pembelajaran Lulusan'
       
       // Fallback data sesuai format API
@@ -67,7 +66,6 @@ export const useCPLStore = defineStore('cpl', () => {
       currentCPL.value = response.data
       return response.data
     } catch (err) {
-      console.error(`Error fetching CPL with id ${id}:`, err)
       error.value = 'Gagal memuat detail CPL'
       return null
     } finally {
@@ -85,7 +83,6 @@ export const useCPLStore = defineStore('cpl', () => {
       await fetchAllCPL()
       return response.data
     } catch (err) {
-      console.error('Error creating CPL:', err)
       error.value = 'Gagal menambahkan CPL'
       return null
     } finally {
@@ -103,7 +100,6 @@ export const useCPLStore = defineStore('cpl', () => {
       await fetchAllCPL()
       return response.data
     } catch (err) {
-      console.error(`Error updating CPL with id ${id}:`, err)
       error.value = 'Gagal memperbarui CPL'
       return null
     } finally {
@@ -121,7 +117,6 @@ export const useCPLStore = defineStore('cpl', () => {
       cplList.value = cplList.value.filter(cpl => cpl.id_cpl !== id)
       return { success: true }
     } catch (err) {
-      console.error(`Error deleting CPL with id ${id}:`, err)
       error.value = 'Gagal menghapus CPL'
       return { success: false, error: error.value }
     } finally {

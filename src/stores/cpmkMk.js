@@ -20,7 +20,6 @@ export const useCpmkMkStore = defineStore('cpmkMk', () => {
         items.value = response.data
       }
     } catch (err) {
-      console.error('Error fetching CPMK-MK list:', err)
       error.value = 'Gagal memuat data korelasi CPMK-MK.'
     } finally {
       isLoading.value = false
@@ -36,7 +35,6 @@ export const useCpmkMkStore = defineStore('cpmkMk', () => {
         cpmkList.value = response.data
       }
     } catch (err) {
-      console.error('Error fetching CPMK list:', err)
     }
   }
 
@@ -49,7 +47,6 @@ export const useCpmkMkStore = defineStore('cpmkMk', () => {
         mkList.value = response.data
       }
     } catch (err) {
-      console.error('Error fetching MK list:', err)
     }
   }
 
@@ -60,7 +57,6 @@ export const useCpmkMkStore = defineStore('cpmkMk', () => {
       await addCpmkMk(data)
       await fetchAll() // Refresh list
     } catch (err) {
-      console.error('Error creating CPMK-MK:', err)
       error.value = 'Gagal menambahkan korelasi.'
     } finally {
       isLoading.value = false
@@ -74,7 +70,6 @@ export const useCpmkMkStore = defineStore('cpmkMk', () => {
       await updateCpmkMk(id_cpmk, id_mk, data)
       await fetchAll() // Refresh list
     } catch (err) {
-      console.error(`Error updating CPMK-MK:`, err)
       error.value = 'Gagal memperbarui korelasi.'
     } finally {
       isLoading.value = false
@@ -88,7 +83,6 @@ export const useCpmkMkStore = defineStore('cpmkMk', () => {
       await deleteCpmkMk(id_cpmk, id_mk)
       items.value = items.value.filter(item => !(item.id_cpmk === id_cpmk && item.id_mk === id_mk))
     } catch (err) {
-      console.error(`Error deleting CPMK-MK:`, err)
       error.value = 'Gagal menghapus korelasi.'
     } finally {
       isLoading.value = false

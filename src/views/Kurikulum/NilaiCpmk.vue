@@ -686,7 +686,6 @@ async function submitAddNilaiCpmk() {
     })
     closeModal()
   } catch (err) {
-    console.error('Error saving nilai CPMK bulk', err)
     alert('Terjadi kesalahan saat menyimpan beberapa nilai. Periksa konsol dan coba lagi.')
   }
 }
