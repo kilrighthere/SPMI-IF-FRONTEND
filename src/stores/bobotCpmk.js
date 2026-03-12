@@ -1,6 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { getBobotCpmkList, getMkPeriodeList, getMKList, getPeriodeList, addBobotCpmk, updateBobotCpmk, deleteBobotCpmk } from '@/api'
+import {
+  getBobotCpmkList,
+  getMkPeriodeList,
+  getMKList,
+  getPeriodeList,
+  addBobotCpmk,
+  updateBobotCpmk,
+  deleteBobotCpmk,
+} from '@/api'
 
 export const useBobotCpmkStore = defineStore('bobotCpmk', () => {
   const bobotCpmkList = ref([])
@@ -31,7 +39,7 @@ export const useBobotCpmkStore = defineStore('bobotCpmk', () => {
   async function fetchAllBobotCpmk(selectedPeriode = null) {
     isLoading.value = true
     error.value = null
-    
+
     try {
       // Load all data with partial-failure tolerance so filter options stay available.
       const [mkPeriodeRes, mkRes, bobotRes, periodeRes] = await Promise.allSettled([
@@ -75,8 +83,13 @@ export const useBobotCpmkStore = defineStore('bobotCpmk', () => {
         }
       })
 
-      if (mkPeriodeRes.status === 'rejected' || mkRes.status === 'rejected' || bobotRes.status === 'rejected') {
-        error.value = 'Sebagian data Bobot CPMK gagal dimuat. Coba muat ulang jika data belum lengkap.'
+      if (
+        mkPeriodeRes.status === 'rejected' ||
+        mkRes.status === 'rejected' ||
+        bobotRes.status === 'rejected'
+      ) {
+        error.value =
+          'Sebagian data Bobot CPMK gagal dimuat. Coba muat ulang jika data belum lengkap.'
       }
     } catch (err) {
       error.value = 'Gagal memuat data Bobot CPMK'

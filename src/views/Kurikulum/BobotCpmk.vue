@@ -1016,12 +1016,12 @@ function formatBobotValue(v) {
 }
 
 .head-kode,
-.head-nama{
+.head-nama {
   justify-content: flex-start;
   text-align: left;
 }
 
-.head-bobot{
+.head-bobot {
   justify-content: center;
   text-align: center;
 }
