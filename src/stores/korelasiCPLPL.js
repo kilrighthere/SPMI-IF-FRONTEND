@@ -38,8 +38,11 @@ export const useKorelasiCPLPLStore = defineStore('korelasiCPLPL', () => {
   })
 
   // Actions
-  async function fetchAllData() {
-    isLoading.value = true
+  async function fetchAllData(options = {}) {
+    const { silentLoading = false } = options
+    if (!silentLoading) {
+      isLoading.value = true
+    }
     error.value = null
 
     try {
@@ -115,13 +118,18 @@ export const useKorelasiCPLPLStore = defineStore('korelasiCPLPL', () => {
         { id_cpl: 'CPL-03', id_pl: 'PL-03' },
       ]
     } finally {
-      isLoading.value = false
+      if (!silentLoading) {
+        isLoading.value = false
+      }
     }
   }
 
   // Toggle relation akan memperbarui relasi di server dan juga di state lokal
-  async function toggleRelation(cplId, plId, isChecked) {
-    isLoading.value = true
+  async function toggleRelation(cplId, plId, isChecked, options = {}) {
+    const { skipReload = false, silentLoading = false } = options
+    if (!silentLoading) {
+      isLoading.value = true
+    }
     error.value = null
 
     try {
@@ -156,15 +164,19 @@ export const useKorelasiCPLPLStore = defineStore('korelasiCPLPL', () => {
         )
       }
 
-      // Setelah berhasil update di server, reload data untuk memastikan konsistensi
-      await fetchAllData()
+      // Reload data hanya jika diperlukan.
+      if (!skipReload) {
+        await fetchAllData()
+      }
 
       return true
     } catch (err) {
       error.value = `Gagal ${isChecked ? 'menambahkan' : 'menghapus'} relasi CPL-PL`
       return false
     } finally {
-      isLoading.value = false
+      if (!silentLoading) {
+        isLoading.value = false
+      }
     }
   }
 

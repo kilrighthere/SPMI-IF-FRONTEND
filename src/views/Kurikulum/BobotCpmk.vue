@@ -2,10 +2,7 @@
   <div class="bobot-cpmk-container">
     <!-- Page Header -->
     <div class="page-title">
-      <h2>Manajemen Bobot CPMK</h2>
-      <p class="subtitle">
-        Kelola dan atur bobot penilaian untuk setiap Capaian Pembelajaran Mata Kuliah
-      </p>
+      <h3>Bobot CPMK Program Studi</h3>
     </div>
 
     <!-- Filters Section -->
@@ -818,20 +815,13 @@ function formatBobotValue(v) {
 
 /* Page Title */
 .page-title {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
-.page-title h2 {
-  font-size: 28px;
+.page-title h3 {
+  font-size: 18px;
   font-weight: 700;
   color: var(--color-text);
-  margin: 0 0 8px 0;
-  font-family: 'Montserrat', sans-serif;
-}
-
-.subtitle {
-  font-size: 14px;
-  color: #6b7280;
   margin: 0;
   font-family: 'Montserrat', sans-serif;
 }
@@ -1644,8 +1634,8 @@ function formatBobotValue(v) {
 }
 
 @media (max-width: 768px) {
-  .page-title h2 {
-    font-size: 24px;
+  .page-title h3 {
+    font-size: 18px;
   }
 
   .modal-content {

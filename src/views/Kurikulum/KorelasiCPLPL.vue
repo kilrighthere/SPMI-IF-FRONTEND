@@ -3,6 +3,16 @@
     <div class="section-box">
       <div class="section-header">
         <h3>Korelasi CPL - Profil Lulusan</h3>
+        <div v-if="isAdmin" class="header-actions">
+          <button
+            class="btn-save-changes"
+            :disabled="!hasChanges || isLoading || isSaving"
+            @click="saveChanges"
+          >
+            <i :class="isSaving ? 'ri-loader-4-line spin-icon' : 'ri-save-line'"></i>
+            {{ isSaving ? 'Menyimpan...' : 'Simpan Perubahan' }}
+          </button>
+        </div>
       </div>
 
       <!-- Loading indicator -->
@@ -49,7 +59,7 @@
                     :name="`cpl-${cpl.id_cpl}`"
                     :checked="isRelated(cpl.id_cpl, pl.kode_pl)"
                     @change="selectRelation(cpl.id_cpl, pl.kode_pl)"
-                    :disabled="isLoading || (isDosen && !isAdmin)"
+                    :disabled="isLoading || isSaving || (isDosen && !isAdmin)"
                   />
                 </td>
                 <td class="matrix-cell none-cell">
@@ -58,7 +68,7 @@
                     :name="`cpl-${cpl.id_cpl}`"
                     :checked="!hasAnyRelation(cpl.id_cpl)"
                     @change="clearRelation(cpl.id_cpl)"
-                    :disabled="isLoading || (isDosen && !isAdmin)"
+                    :disabled="isLoading || isSaving || (isDosen && !isAdmin)"
                   />
                 </td>
               </tr>
@@ -91,60 +101,121 @@ const matrixData = computed(() => cplPlStore.matrixData)
 const isLoading = computed(() => cplPlStore.isLoading)
 const error = computed(() => cplPlStore.error)
 const popupError = ref('')
+const isSaving = ref(false)
+const baseSelection = ref({})
+const draftSelection = ref({})
+
+const hasChanges = computed(() => {
+  for (const cpl of cplList.value) {
+    const cplId = cpl.id_cpl
+    if (String(baseSelection.value[cplId] || '') !== String(draftSelection.value[cplId] || '')) {
+      return true
+    }
+  }
+  return false
+})
+
+const buildSelectionMap = () => {
+  const map = {}
+  for (const cpl of cplList.value) {
+    const cplId = cpl.id_cpl
+    map[cplId] = ''
+    for (const pl of plList.value) {
+      if (matrixData.value[cplId] && matrixData.value[cplId][pl.kode_pl] === true) {
+        map[cplId] = pl.kode_pl
+        break
+      }
+    }
+  }
+  return map
+}
+
+const initializeDraft = () => {
+  const current = buildSelectionMap()
+  baseSelection.value = { ...current }
+  draftSelection.value = { ...current }
+}
+
+const initializeDraftFromCurrentDraft = () => {
+  baseSelection.value = { ...draftSelection.value }
+}
 
 // Check if CPL and PL are related
 const isRelated = (cplId, plId) => {
-  // Pastikan kedua id valid dan matriks memiliki entri untuk mereka
-  return matrixData.value[cplId] && matrixData.value[cplId][plId] === true
+  return String(draftSelection.value[cplId] || '') === String(plId)
 }
 
 // Check if CPL has any relation to any PL
 const hasAnyRelation = (cplId) => {
-  if (!matrixData.value[cplId]) return false
-
-  return Object.values(matrixData.value[cplId]).some((value) => value === true)
+  return Boolean(draftSelection.value[cplId])
 }
 
 // Clear all relations for a CPL
-const clearRelation = async (cplId) => {
+const clearRelation = (cplId) => {
   // Only admin can change the relation
   if (isDosen.value && !isAdmin.value) {
     return
   }
 
-  try {
-    // Uncheck all PL for this CPL
-    if (matrixData.value[cplId]) {
-      for (const plId in matrixData.value[cplId]) {
-        if (matrixData.value[cplId][plId] === true) {
-          await cplPlStore.toggleRelation(cplId, plId, false)
-        }
-      }
-    }
-  } catch (err) {
+  draftSelection.value = {
+    ...draftSelection.value,
+    [cplId]: '',
   }
 }
 
 // Select relation between CPL and PL (radio button - only one PL per CPL)
-const selectRelation = async (cplId, plId) => {
+const selectRelation = (cplId, plId) => {
   // Only admin can change the relation
   if (isDosen.value && !isAdmin.value) {
     return
   }
 
+  draftSelection.value = {
+    ...draftSelection.value,
+    [cplId]: plId,
+  }
+}
+
+const saveChanges = async () => {
+  if (!hasChanges.value || isSaving.value) return
+
+  isSaving.value = true
   try {
-    // First, uncheck all PL for this CPL
-    if (matrixData.value[cplId]) {
-      for (const existingPlId in matrixData.value[cplId]) {
-        if (matrixData.value[cplId][existingPlId] === true && existingPlId !== plId) {
-          await cplPlStore.toggleRelation(cplId, existingPlId, false)
-        }
+    for (const cpl of cplList.value) {
+      const cplId = cpl.id_cpl
+      const oldPl = String(baseSelection.value[cplId] || '')
+      const newPl = String(draftSelection.value[cplId] || '')
+
+      if (oldPl === newPl) continue
+
+      if (oldPl) {
+        await cplPlStore.toggleRelation(cplId, oldPl, false, {
+          skipReload: true,
+          silentLoading: true,
+        })
+      }
+      if (newPl) {
+        await cplPlStore.toggleRelation(cplId, newPl, true, {
+          skipReload: true,
+          silentLoading: true,
+        })
       }
     }
 
-    // Then, check the selected PL
-    await cplPlStore.toggleRelation(cplId, plId, true)
+    // Stop blocking UI immediately after successful submit.
+    initializeDraftFromCurrentDraft()
+
+    // Sync latest data in background without flipping the page into loading state.
+    cplPlStore
+      .fetchAllData({ silentLoading: true })
+      .then(() => {
+        if (!isSaving.value) initializeDraft()
+      })
+      .catch(() => {})
   } catch (err) {
+    popupError.value = 'Gagal menyimpan perubahan korelasi CPL-PL'
+  } finally {
+    isSaving.value = false
   }
 }
 
@@ -155,11 +226,22 @@ const clearError = () => {
 // Load data saat komponen dimuat
 onMounted(async () => {
   await cplPlStore.fetchAllData()
+  initializeDraft()
 })
 
 watch(error, (newError) => {
   if (newError) popupError.value = newError
 })
+
+watch(
+  [cplList, plList, matrixData],
+  () => {
+    if (!hasChanges.value && !isSaving.value) {
+      initializeDraft()
+    }
+  },
+  { deep: true },
+)
 </script>
 
 <style scoped>
@@ -180,6 +262,51 @@ watch(error, (newError) => {
   margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 1px solid #f0f0f0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-save-changes {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1.5px solid;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  background: var(--color-button);
+  color: white;
+  border-color: var(--color-button);
+}
+
+.btn-save-changes:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
+}
+
+.btn-save-changes:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-save-changes i {
+  font-size: 16px;
+}
+
+.spin-icon {
+  animation: spin 1s linear infinite;
 }
 
 .section-box h3 {
@@ -432,6 +559,15 @@ input[type='radio']:disabled:checked {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .btn-save-changes {
+    width: 100%;
+    justify-content: center;
   }
 
   .readonly-notice {

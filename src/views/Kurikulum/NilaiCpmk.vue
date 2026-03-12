@@ -3,7 +3,7 @@
     <!-- Page Header -->
     <div class="page-header">
       <div class="page-title">
-        <h2>Nilai CPMK</h2>
+        <h3>Nilai CPMK Program Studi</h3>
       </div>
     </div>
 
@@ -841,16 +841,16 @@ const isNilaiFormValid = computed(() => {
 
 /* Page Header */
 .page-header {
-  padding-bottom: 20px;
-  border-bottom: 2px solid var(--color-border2);
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
-.page-title h2 {
-  font-size: 28px;
+.page-title h3 {
+  font-size: 18px;
   font-weight: 700;
   color: var(--color-text);
   font-family: 'Montserrat', sans-serif;
-  margin-bottom: 8px;
+  margin: 0;
 }
 
 .breadcrumb {
@@ -1730,8 +1730,8 @@ const isNilaiFormValid = computed(() => {
 }
 
 @media (max-width: 768px) {
-  .page-title h2 {
-    font-size: 24px;
+  .page-title h3 {
+    font-size: 18px;
   }
 
   .filter-item {
