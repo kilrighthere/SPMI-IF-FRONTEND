@@ -260,8 +260,7 @@ async function loadPeriode() {
     const resp = await getPeriodeList()
     if (resp?.data && resp.data.success) periodeList.value = resp.data.data
     else if (resp?.data && Array.isArray(resp.data)) periodeList.value = resp.data
-  } catch (err) {
-  }
+  } catch (err) {}
 }
 
 const mkPeriodeList = ref([])

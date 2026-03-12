@@ -52,7 +52,12 @@
               <i class="ri-calendar-line"></i>
               Periode Akademik
             </label>
-            <input type="text" class="form-input" :value="selectedPeriode" disabled />
+            <input
+              type="text"
+              class="form-input"
+              :value="formData.id_periode || selectedPeriode"
+              disabled
+            />
           </div>
           <div class="form-group">
             <label class="form-label">
@@ -161,10 +166,6 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-cancel" @click="closeModal">
-            <i class="ri-close-line"></i>
-            Batal
-          </button>
           <button
             class="btn-save"
             @click="submitForm"
@@ -197,16 +198,16 @@
           <thead>
             <tr>
               <th>
-                <div class="th-content">Kode MK</div>
+                <div class="th-content head-kode">Kode MK</div>
               </th>
               <th>
-                <div class="th-content">Nama Mata Kuliah</div>
+                <div class="th-content head-nama">Nama Mata Kuliah</div>
               </th>
               <th>
-                <div class="th-content">Bobot CPMK</div>
+                <div class="th-content head-bobot">Bobot CPMK</div>
               </th>
               <th v-if="isAdmin || isDosen">
-                <div class="th-content">Aksi</div>
+                <div class="th-content aksi-title">Aksi</div>
               </th>
             </tr>
           </thead>
@@ -233,7 +234,7 @@
                   </div>
                 </div>
               </td>
-              <td v-if="isAdmin || isDosen">
+              <td v-if="isAdmin || isDosen" class="action-cell">
                 <div class="td-content">
                   <div v-if="mk.bobots.length === 0" class="action-buttons">
                     <button class="btn-action btn-add-small" @click="openAddModal(mk.kode_mk)">
@@ -241,23 +242,15 @@
                       Tambah
                     </button>
                   </div>
-                  <div v-else class="action-list">
-                    <div v-for="b in mk.bobots" :key="b.id_cpmk" class="action-item">
-                      <div class="action-buttons">
-                        <button
-                          class="btn-action btn-edit"
-                          @click="openEditModal(mk.id_mk_periode, b.id_cpmk, b.bobot)"
-                        >
-                          <i class="ri-edit-line"></i>
-                        </button>
-                        <button
-                          class="btn-action btn-delete"
-                          @click="handleDelete(mk.id_mk_periode, b.id_cpmk)"
-                        >
-                          <i class="ri-delete-bin-line"></i>
-                        </button>
-                      </div>
-                    </div>
+                  <div v-else class="action-buttons">
+                    <button class="btn-action btn-edit" @click="openEditModal(mk.id_mk_periode)">
+                      <i class="ri-edit-line"></i>
+                      Edit
+                    </button>
+                    <button class="btn-action btn-delete" @click="handleDeleteByMk(mk)">
+                      <i class="ri-delete-bin-line"></i>
+                      Hapus
+                    </button>
                   </div>
                 </div>
               </td>
@@ -304,6 +297,7 @@ const mkStore = useMKStore()
 const route = useRoute()
 const cpmkMkStore = useCpmkMkStore()
 const cpmkStore = useCPMKStore()
+const FILTER_STORAGE_KEY = `bobotCpmk.selectedPeriode.${route.params.id || 'default'}`
 
 const bobotList = computed(() => store.bobotCpmkList)
 const mergedList = computed(() => store.mergedList)
@@ -341,11 +335,27 @@ const setShowAll = (value) => {
   showAll.value = value
 }
 
-const mkPeriodeOptions = computed(() =>
-  selectedPeriode.value ? nilaiMkStore.getMkPeriodeByPeriode(selectedPeriode.value) : [],
-)
+const mkPeriodeOptions = computed(() => {
+  if (selectedPeriode.value) {
+    return nilaiMkStore.getMkPeriodeByPeriode(selectedPeriode.value) || []
+  }
+  return nilaiMkStore.mkPeriodeList || []
+})
+
+const modalMkPeriodeOptions = computed(() => {
+  const periode = formData.value.id_periode || selectedPeriode.value
+  if (periode) {
+    return (nilaiMkStore.getMkPeriodeByPeriode(periode) || []).filter(
+      (mp) => String(mp.id_kurikulum) === String(route.params.id),
+    )
+  }
+  return (nilaiMkStore.mkPeriodeList || []).filter(
+    (mp) => String(mp.id_kurikulum) === String(route.params.id),
+  )
+})
+
 const mkOptions = computed(() => {
-  const mps = mkPeriodeOptions.value || []
+  const mps = modalMkPeriodeOptions.value || []
   const uniq = {}
   mps.forEach((mp) => {
     if (!uniq[mp.kode_mk]) uniq[mp.kode_mk] = mp
@@ -357,8 +367,8 @@ const mkOptions = computed(() => {
   })
 })
 const mkPeriodeOptionsFiltered = computed(() => {
-  if (!selectedPeriode.value || !formData.value.kode_mk) return []
-  return mkPeriodeOptions.value.filter((mp) => mp.kode_mk === formData.value.kode_mk)
+  if (!formData.value.kode_mk) return []
+  return modalMkPeriodeOptions.value.filter((mp) => mp.kode_mk === formData.value.kode_mk)
 })
 const availableCpmks = computed(() => {
   const kode = formData.value.kode_mk
@@ -477,17 +487,61 @@ const formSum = computed(() => {
 const epsilon = 0.01
 const isSumValid = computed(() => Math.abs(formSum.value - 100) <= epsilon)
 
-onMounted(async () => {
-  await store.fetchAllBobotCpmk()
-  await cpmkStore.fetchAllCPMK()
-  await cpmkMkStore.fetchAll()
-  await mkStore.fetchAllMK()
-  await nilaiMkStore.fetchInitialData()
-  // If there are periode options, default to the first one
-  if (periodeList.value && periodeList.value.length > 0) {
-    selectedPeriode.value = periodeList.value[0].id_periode
-    await store.fetchAllBobotCpmk(selectedPeriode.value)
+function getTopPeriodeId() {
+  const list = Array.isArray(periodeList.value) ? [...periodeList.value] : []
+  if (!list.length) return ''
+
+  list.sort((a, b) => {
+    const aId = String(a?.id_periode ?? '')
+    const bId = String(b?.id_periode ?? '')
+    const aNum = Number(aId)
+    const bNum = Number(bId)
+
+    if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) {
+      return bNum - aNum
+    }
+
+    return bId.localeCompare(aId)
+  })
+
+  return String(list[0]?.id_periode ?? '')
+}
+
+function getSavedPeriodeId() {
+  const raw = sessionStorage.getItem(FILTER_STORAGE_KEY)
+  return raw === null ? '' : raw
+}
+
+function getInitialPeriodeId() {
+  const saved = getSavedPeriodeId()
+  const ids = new Set((periodeList.value || []).map((p) => String(p.id_periode)))
+
+  // Allow empty string for "Semua Periode" and restore it if user chose it previously.
+  if (saved === '') return ''
+
+  if (saved && ids.has(String(saved))) {
+    return String(saved)
   }
+
+  return getTopPeriodeId()
+}
+
+onMounted(async () => {
+  // Load periode list first so filter options appear quickly.
+  await store.fetchPeriodeList()
+
+  // Restore last selected period; fallback to top/latest period.
+  const initialPeriode = getInitialPeriodeId()
+  selectedPeriode.value = initialPeriode || ''
+
+  // Fetch remaining data in parallel to reduce load time.
+  await Promise.all([
+    store.fetchAllBobotCpmk(selectedPeriode.value),
+    cpmkStore.fetchAllCPMK(),
+    cpmkMkStore.fetchAll(),
+    mkStore.fetchAllMK(),
+    nilaiMkStore.fetchInitialData(),
+  ])
 })
 
 // When kode_mk selected, auto-select mk-periode if single option available
@@ -498,7 +552,7 @@ watch(
       formData.value.id_mk_periode = ''
       return
     }
-    const filtered = mkPeriodeOptions.value.filter((mp) => mp.kode_mk === newVal)
+    const filtered = modalMkPeriodeOptions.value.filter((mp) => mp.kode_mk === newVal)
     if (filtered.length === 1) {
       formData.value.id_mk_periode = filtered[0].id_mk_periode
     }
@@ -553,6 +607,7 @@ function nextPage() {
 
 // Reset pagination when filters change
 watch([selectedPeriode], () => {
+  sessionStorage.setItem(FILTER_STORAGE_KEY, String(selectedPeriode.value || ''))
   currentPage.value = 1
 })
 
@@ -714,6 +769,19 @@ async function handleDelete(mkPeriodeId, id_cpmk) {
   }
   await store.removeBobotCpmk(mkPeriodeId, id_cpmk)
   await store.fetchAllBobotCpmk(selectedPeriode.value)
+}
+
+async function handleDeleteByMk(mk) {
+  if (!mk?.id_mk_periode) return
+  if (!mk.bobots?.length) return
+  if (!confirm(`Hapus semua bobot CPMK untuk ${mk.kode_mk}?`)) return
+
+  try {
+    await Promise.all(mk.bobots.map((b) => store.removeBobotCpmk(mk.id_mk_periode, b.id_cpmk)))
+    await store.fetchAllBobotCpmk(selectedPeriode.value)
+  } catch (err) {
+    alert('Terjadi kesalahan saat menghapus bobot CPMK.')
+  }
 }
 
 // compute cpmk options for a given mk
@@ -947,6 +1015,22 @@ function formatBobotValue(v) {
   font-size: 14px;
 }
 
+.head-kode,
+.head-nama{
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.head-bobot{
+  justify-content: center;
+  text-align: center;
+}
+
+.aksi-title {
+  justify-content: center;
+  text-align: center;
+}
+
 .data-table tbody tr {
   border-bottom: 1px solid #f3f4f6;
   transition: background-color 0.2s ease;
@@ -968,13 +1052,10 @@ function formatBobotValue(v) {
 }
 
 .mk-code {
-  display: inline-block;
-  padding: 6px 12px;
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #1e40af;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 13px;
+  text-align: left;
+  font-weight: 700;
+  color: var(--color-button);
+  width: 120px;
 }
 
 .mk-name {
@@ -1021,41 +1102,30 @@ function formatBobotValue(v) {
 }
 
 /* Actions */
-.action-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.action-item {
+.action-cell .td-content {
+  height: 100%;
+  min-height: 96px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px;
-  background: #f9fafb;
-  border-radius: 8px;
-}
-
-.action-label {
-  font-size: 13px;
-  color: var(--color-text);
-  font-weight: 500;
+  justify-content: center;
 }
 
 .action-buttons {
   display: flex;
   gap: 6px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .btn-action {
-  padding: 8px 12px;
+  padding: 6px 12px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   font-family: 'Montserrat', sans-serif;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1063,42 +1133,42 @@ function formatBobotValue(v) {
 }
 
 .btn-add-small {
-  border: 1.5px solid var(--color-text);
+  border: 1.5px solid var(--color-button);
   color: var(--color-text);
 }
 
 .btn-add-small:hover {
   background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
   border-color: var(--spmi-c-green2);
-  color: var(--spmi-c-dgray);
+  color: var(--color-text);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(166, 214, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 .btn-edit {
-  border: 1.5px solid var(--color-text);
+  border: 1.5px solid var(--color-button);
   color: var(--color-text);
-  padding: 6px 10px;
 }
 
 .btn-edit:hover {
   background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
   border-color: var(--spmi-c-green2);
-  color: var(--spmi-c-dgray);
-  transform: scale(1.05);
+  color: var(--color-text);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.25);
 }
 
 .btn-delete {
-  border: 1.5px solid var(--color-text);
-  color: var(--color-text);
-  padding: 6px 10px;
+  border: 1.5px solid #fca5a5;
+  color: #b91c1c;
 }
 
 .btn-delete:hover {
-  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
-  border-color: var(--spmi-c-green2);
-  color: var(--spmi-c-dgray);
-  transform: scale(1.05);
+  background: var(--color-button-hover);
+  border-color: var(--color-button-hover);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(218, 42, 45, 0.28);
 }
 
 /* Empty State */
@@ -1155,6 +1225,11 @@ function formatBobotValue(v) {
   font-family: 'Montserrat', sans-serif;
 }
 
+.modal-content,
+.modal-content * {
+  box-sizing: border-box;
+}
+
 .modal-header {
   padding: 20px 28px;
   border-bottom: 2px solid var(--color-border2);
@@ -1205,20 +1280,23 @@ function formatBobotValue(v) {
 }
 
 .modal-body {
-  padding: 24px 28px;
+  padding: 20px 24px;
   overflow-y: auto;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 
 .form-label {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   font-size: 14px;
   font-weight: 600;
   color: var(--color-text);
@@ -1232,6 +1310,7 @@ function formatBobotValue(v) {
 
 .form-input {
   width: 100%;
+  max-width: 100%;
   padding: 12px 16px;
   border: 1.5px solid #e5e7eb;
   border-radius: 10px;
@@ -1264,6 +1343,7 @@ function formatBobotValue(v) {
   flex-direction: column;
   gap: 2px;
   margin-top: 12px;
+  width: 100%;
   border-radius: 10px;
   overflow: hidden;
   border: 1.5px solid #e5e7eb;
@@ -1290,6 +1370,7 @@ function formatBobotValue(v) {
   background: white;
   border-top: 1px solid #f3f4f6;
   transition: background-color 0.2s ease;
+  align-items: center;
 }
 
 .cpmk-item:hover {
@@ -1315,8 +1396,7 @@ function formatBobotValue(v) {
 }
 
 .cpmk-bobot-col {
-  display: flex;
-  align-items: center;
+  text-align: center;
 }
 
 .bobot-input {
@@ -1329,9 +1409,9 @@ function formatBobotValue(v) {
 .bobot-summary {
   margin-top: 16px;
   padding: 16px;
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  background: #faffec;
   border-radius: 10px;
-  border: 1.5px solid #bbf7d0;
+  border: 1.5px solid #ebf0de;
 }
 
 .summary-row {
@@ -1343,7 +1423,7 @@ function formatBobotValue(v) {
 }
 
 .summary-label {
-  color: #15803d;
+  color: #374151;
   font-weight: 500;
 }
 
@@ -1364,8 +1444,8 @@ function formatBobotValue(v) {
 }
 
 .validation-result.valid {
-  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  color: #065f46;
+  background: var(--color-buttonsec);
+  color: #374151;
 }
 
 .validation-result.invalid {
@@ -1417,7 +1497,7 @@ function formatBobotValue(v) {
 
 /* Modal Footer */
 .modal-footer {
-  padding: 20px 28px;
+  padding: 16px 40px 16px 24px;
   border-top: 2px solid var(--color-border2);
   display: flex;
   justify-content: flex-end;
@@ -1425,47 +1505,29 @@ function formatBobotValue(v) {
   background: #f9fafb;
 }
 
-.btn-cancel {
-  padding: 12px 24px;
-  background: white;
-  color: var(--color-text);
-  border: 1.5px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: 'Montserrat', sans-serif;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.btn-cancel:hover {
-  background: #f3f4f6;
-  border-color: #d1d5db;
-}
-
 .btn-save {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
-  color: var(--color-text);
-  border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: 'Montserrat', sans-serif;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 12px rgba(166, 214, 0, 0.3);
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1.5px solid;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  background: var(--color-button);
+  color: white;
+  border-color: var(--color-button);
 }
 
 .btn-save:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(166, 214, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 .btn-save:disabled {

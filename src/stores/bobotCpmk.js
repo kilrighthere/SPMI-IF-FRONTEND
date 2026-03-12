@@ -11,28 +11,47 @@ export const useBobotCpmkStore = defineStore('bobotCpmk', () => {
   const isLoading = ref(false)
   const error = ref(null)
 
+  function normalizeListPayload(response) {
+    if (!response) return []
+    const payload = response.data?.data ?? response.data
+    if (Array.isArray(payload)) return payload
+    return payload ? [payload] : []
+  }
+
+  async function fetchPeriodeList() {
+    try {
+      const periodeRes = await getPeriodeList()
+      periodeList.value = normalizeListPayload(periodeRes)
+      return periodeList.value
+    } catch (err) {
+      return periodeList.value
+    }
+  }
+
   async function fetchAllBobotCpmk(selectedPeriode = null) {
     isLoading.value = true
     error.value = null
     
     try {
-      // Fetch all supporting data
-      const [mkPeriodeRes, mkRes, bobotRes, periodeRes] = await Promise.all([
+      // Load all data with partial-failure tolerance so filter options stay available.
+      const [mkPeriodeRes, mkRes, bobotRes, periodeRes] = await Promise.allSettled([
         getMkPeriodeList(),
         getMKList(),
         getBobotCpmkList(),
         getPeriodeList(),
       ])
 
-      // Normalize responses
-      mkPeriodeList.value = mkPeriodeRes.data?.data || mkPeriodeRes.data || []
-      mkList.value = mkRes.data?.data || mkRes.data || []
-      periodeList.value = periodeRes.data?.data || periodeRes.data || []
-      const response = bobotRes
-      if (response.data && response.data.success) {
-        bobotCpmkList.value = response.data.data
-      } else {
-        bobotCpmkList.value = response.data
+      if (mkPeriodeRes.status === 'fulfilled') {
+        mkPeriodeList.value = normalizeListPayload(mkPeriodeRes.value)
+      }
+      if (mkRes.status === 'fulfilled') {
+        mkList.value = normalizeListPayload(mkRes.value)
+      }
+      if (bobotRes.status === 'fulfilled') {
+        bobotCpmkList.value = normalizeListPayload(bobotRes.value)
+      }
+      if (periodeRes.status === 'fulfilled') {
+        periodeList.value = normalizeListPayload(periodeRes.value)
       }
 
       // Build mergedList combining mkPeriode, mkList, and bobotCpmkList
@@ -55,6 +74,10 @@ export const useBobotCpmkStore = defineStore('bobotCpmk', () => {
           bobots,
         }
       })
+
+      if (mkPeriodeRes.status === 'rejected' || mkRes.status === 'rejected' || bobotRes.status === 'rejected') {
+        error.value = 'Sebagian data Bobot CPMK gagal dimuat. Coba muat ulang jika data belum lengkap.'
+      }
     } catch (err) {
       error.value = 'Gagal memuat data Bobot CPMK'
       // Provide fallback data for development
@@ -124,6 +147,7 @@ export const useBobotCpmkStore = defineStore('bobotCpmk', () => {
     mergedList,
     isLoading,
     error,
+    fetchPeriodeList,
     fetchAllBobotCpmk,
     createBobotCpmk,
     editBobotCpmk,
