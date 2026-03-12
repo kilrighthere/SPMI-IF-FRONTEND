@@ -10,67 +10,71 @@
     <!-- Filters Section -->
     <div class="filters-container">
       <div class="filter-group">
-        <div class="filter-item">
-          <label for="periode" class="filter-label">
-            <i class="ri-calendar-line"></i>
-            Periode
-          </label>
-          <select id="periode" v-model="selectedPeriode" class="filter-select">
-            <option value="">Pilih periode</option>
-            <option v-for="p in periodeList" :key="p.id_periode" :value="p.id_periode">
-              {{ p.id_periode }}
-            </option>
-          </select>
-        </div>
+        <div class="filters-select">
+          <div class="filter-item">
+            <label for="periode" class="filter-label">
+              <i class="ri-calendar-line"></i>
+              Periode
+            </label>
+            <select id="periode" v-model="selectedPeriode" class="filter-select">
+              <option value="">Pilih periode</option>
+              <option v-for="p in periodeList" :key="p.id_periode" :value="p.id_periode">
+                {{ p.id_periode }}
+              </option>
+            </select>
+          </div>
 
-        <div class="filter-item">
-          <label for="mk-periode" class="filter-label">
-            <i class="ri-book-line"></i>
-            Mata Kuliah
-          </label>
-          <select
-            id="mk-periode"
-            v-model="selectedMataKuliah"
-            :disabled="!selectedPeriode"
-            class="filter-select"
-          >
-            <option value="">Pilih MK (Periode)</option>
-            <option v-for="mk in mkOptions" :key="mk.kode_mk" :value="mk.kode_mk">
-              {{ mk.kode_mk }} - {{ mk.nama_mk }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Show MK-periode variant selector if more than one variant exists for this MK-->
-        <div v-if="mkPeriodeOptionsFiltered.length > 1" class="filter-item">
-          <label for="mk-periode-variant" class="filter-label">
-            <i class="ri-stack-line"></i>
-            Varian MK
-          </label>
-          <select
-            id="mk-periode-variant"
-            v-model="selectedMkPeriode"
-            :disabled="!selectedPeriode"
-            class="filter-select"
-          >
-            <option value="">Pilih Varian MK (periode)</option>
-            <option
-              v-for="mp in mkPeriodeOptionsFiltered"
-              :key="mp.id_mk_periode"
-              :value="mp.id_mk_periode"
+          <div class="filter-item">
+            <label for="mk-periode" class="filter-label">
+              <i class="ri-book-line"></i>
+              Mata Kuliah
+            </label>
+            <select
+              id="mk-periode"
+              v-model="selectedMataKuliah"
+              :disabled="!selectedPeriode"
+              class="filter-select"
             >
-              {{ mp.kode_mk }} - {{ nilaiMkStore.getMataKuliahNama(mp.kode_mk) }} ({{ mp.sks }} sks)
-              - Kurikulum {{ mp.id_kurikulum }}
-            </option>
-          </select>
-        </div>
-      </div>
+              <option value="">Pilih MK (Periode)</option>
+              <option v-for="mk in mkOptions" :key="mk.kode_mk" :value="mk.kode_mk">
+                {{ mk.kode_mk }} - {{ mk.nama_mk }}
+              </option>
+            </select>
+          </div>
 
-      <div v-if="can('nilaiCpmk', 'create')" class="filter-actions">
-        <button class="btn-add" @click="openAddModal" :disabled="!selectedPeriode">
-          <i class="ri-add-line"></i>
-          Tambah Nilai CPMK
-        </button>
+          <!-- Show MK-periode variant selector if more than one variant exists for this MK-->
+          <div v-if="mkPeriodeOptionsFiltered.length > 1" class="filter-item">
+            <label for="mk-periode-variant" class="filter-label">
+              <i class="ri-stack-line"></i>
+              Varian MK
+            </label>
+            <select
+              id="mk-periode-variant"
+              v-model="selectedMkPeriode"
+              :disabled="!selectedPeriode"
+              class="filter-select"
+            >
+              <option value="">Pilih Varian MK (periode)</option>
+              <option
+                v-for="mp in mkPeriodeOptionsFiltered"
+                :key="mp.id_mk_periode"
+                :value="mp.id_mk_periode"
+              >
+                {{ mp.kode_mk }} - {{ nilaiMkStore.getMataKuliahNama(mp.kode_mk) }} ({{
+                  mp.sks
+                }}
+                sks) - Kurikulum {{ mp.id_kurikulum }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div v-if="can('nilaiCpmk', 'create')" class="filter-item filter-actions">
+          <button class="btn-add" @click="openAddModal" :disabled="!selectedPeriode">
+            <i class="ri-add-line"></i>
+            Tambah Nilai CPMK
+          </button>
+        </div>
       </div>
     </div>
 
@@ -115,7 +119,7 @@
                 <div class="th-content">NIM</div>
               </th>
               <th class="sticky-col-2">
-                <div class="th-content">Nama Mahasiswa</div>
+                <div class="th-content nama">Nama Mahasiswa</div>
               </th>
               <th v-for="c in cpmkIds" :key="c" class="cpmk-col">
                 <div class="th-content cpmk-header">
@@ -133,7 +137,7 @@
                 </div>
               </td>
               <td class="sticky-col-2">
-                <div class="td-content">
+                <div class="td-content td-nama">
                   <span class="student-name">{{ mahasiswaMap[nim] || '-' }}</span>
                 </div>
               </td>
@@ -167,153 +171,183 @@
         <div class="modal-header">
           <div class="modal-title">
             <i class="ri-file-add-line"></i>
-            <h3>Tambah Nilai CPMK</h3>
+            <h3>Input Nilai CPMK Mahasiswa</h3>
           </div>
           <button class="modal-close" @click="closeModal">
             <i class="ri-close-line"></i>
           </button>
         </div>
         <div class="modal-body">
-          <div class="form-group">
-            <label>Periode</label>
-            <input type="text" :value="selectedPeriode" disabled class="form-input" />
-          </div>
-          <div class="form-group">
-            <label>Mata Kuliah</label>
-            <select
-              v-model="formData.kode_mk"
-              class="form-input"
-              @change="
-                () => {
-                  if (!formData.id_mk_periode && formData.kode_mk) {
-                    const r = nilaiMkStore.resolveIdMkPeriode(
-                      formData.kode_mk,
-                      formData.id_periode || selectedPeriode,
-                    )
-                    if (r) formData.id_mk_periode = r
-                  }
-                }
-              "
-            >
-              <option value="">Pilih MK</option>
-              <option v-for="mk in mkOptions" :key="mk.kode_mk" :value="mk.kode_mk">
-                {{ mk.kode_mk }} - {{ mk.nama_mk }}
-              </option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>NIM</label>
-            <div class="autocomplete-wrapper">
-              <input
-                type="text"
-                class="form-input"
-                v-model="formData.nim"
-                @input="onMahasiswaInput"
-                @focus="onMahasiswaInput"
-              />
-              <div v-if="showMahasiswaDropdown" class="autocomplete-dropdown">
-                <div
-                  v-for="m in mahasiswaSuggestions"
-                  :key="m.nim"
-                  class="autocomplete-item"
-                  @mousedown.prevent="selectMahasiswaSuggestion(m)"
+          <section class="modal-section">
+            <h4 class="section-title">Informasi Mahasiswa</h4>
+            <div class="form-stack">
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="ri-calendar-line"></i>
+                  Periode
+                </label>
+                <input type="text" :value="selectedPeriode" disabled class="form-input" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="ri-book-line"></i>
+                  Mata Kuliah
+                </label>
+                <select
+                  v-model="formData.kode_mk"
+                  class="form-input"
+                  @change="
+                    () => {
+                      if (!formData.id_mk_periode && formData.kode_mk) {
+                        const r = nilaiMkStore.resolveIdMkPeriode(
+                          formData.kode_mk,
+                          formData.id_periode || selectedPeriode,
+                        )
+                        if (r) formData.id_mk_periode = r
+                      }
+                    }
+                  "
                 >
-                  <div class="nim">{{ m.nim }}</div>
-                  <div class="nama">{{ m.nama }}</div>
-                </div>
+                  <option value="">Pilih MK</option>
+                  <option v-for="mk in mkOptions" :key="mk.kode_mk" :value="mk.kode_mk">
+                    {{ mk.kode_mk }} - {{ mk.nama_mk }}
+                  </option>
+                </select>
               </div>
-            </div>
-            <div v-if="formData.nim && mahasiswaMap[formData.nim]" class="form-help">
-              Nama: {{ mahasiswaMap[formData.nim] }}
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">
-              <i class="ri-file-list-3-line"></i>
-              Nilai CPMK (masukkan nilai untuk setiap CPMK)
-            </label>
-            <div v-if="availableCpmks.length === 0" class="alert alert-error">
-              <i class="ri-error-warning-line"></i>
-              <span
-                >Tidak ada CPMK terkait untuk MK/Periode ini. Pastikan CPMK telah dihubungkan ke MK
-                melalui korelasi CPMK-MK.</span
-              >
-            </div>
-            <div v-else class="cpmk-list">
-              <div class="cpmk-table-header">
-                <div class="cpmk-label-col">CPMK</div>
-                <div class="cpmk-bobot-col">Bobot Maks</div>
-                <div class="cpmk-nilai-col">Nilai</div>
-                <div class="cpmk-status-col">Status</div>
-              </div>
-              <div v-if="!formData.nim" class="alert alert-warning">
-                <i class="ri-information-line"></i>
-                <span>Isi NIM terlebih dahulu untuk mengaktifkan input nilai CPMK.</span>
-              </div>
-              <div v-for="c in availableCpmks" :key="c.id_cpmk" class="cpmk-item">
-                <div class="cpmk-label-col">
-                  <span class="cpmk-code">{{ c.id_cpmk }}</span>
-                  <span class="cpmk-desc">{{ c.deskripsi || c.deskripsi_cpmk }}</span>
-                </div>
-                <div class="cpmk-bobot-col">
-                  <span class="bobot-badge">{{
-                    currentBobotFor(c.id_cpmk) != null
-                      ? currentBobotFor(c.id_cpmk).toFixed(2) + '%'
-                      : 'N/A'
-                  }}</span>
-                </div>
-                <div class="cpmk-nilai-col">
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="ri-user-line"></i>
+                  NIM
+                </label>
+                <div class="autocomplete-wrapper">
                   <input
-                    type="number"
-                    class="form-input nilai-input"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    :disabled="!formData.nim || currentBobotFor(c.id_cpmk) === null"
-                    :value="
-                      formData.nilaiMap[c.id_cpmk] ??
-                      getExistingNilaiFor(c.id_cpmk, formData.nim) ??
-                      ''
-                    "
-                    @input="
-                      (e) =>
-                        (formData.nilaiMap = {
-                          ...formData.nilaiMap,
-                          [c.id_cpmk]: e.target.value ? Number(e.target.value) : '',
-                        })
-                    "
+                    type="text"
+                    class="form-input"
+                    v-model="formData.nim"
+                    placeholder="Ketik NIM atau nama mahasiswa..."
+                    @input="onMahasiswaInput"
+                    @focus="onMahasiswaInput"
                   />
+                  <div v-if="showMahasiswaDropdown" class="autocomplete-dropdown">
+                    <div
+                      v-for="m in mahasiswaSuggestions"
+                      :key="m.nim"
+                      class="autocomplete-item"
+                      @mousedown.prevent="selectMahasiswaSuggestion(m)"
+                    >
+                      <div class="nim">{{ m.nim }}</div>
+                      <div class="nama">{{ m.nama }}</div>
+                    </div>
+                  </div>
                 </div>
-                <div class="cpmk-status-col">
-                  <span
-                    v-if="
-                      formData.nilaiMap[c.id_cpmk] !== undefined &&
-                      String(formData.nilaiMap[c.id_cpmk]) !== '' &&
-                      Number(formData.nilaiMap[c.id_cpmk]) > Number(currentBobotFor(c.id_cpmk))
-                    "
-                    class="status-badge error"
-                  >
-                    <i class="ri-error-warning-line"></i>
-                    Melebihi bobot
-                  </span>
-                  <span
-                    v-else-if="
-                      formData.nilaiMap[c.id_cpmk] !== undefined &&
-                      String(formData.nilaiMap[c.id_cpmk]) !== ''
-                    "
-                    class="status-badge success"
-                  >
-                    <i class="ri-checkbox-circle-line"></i>
-                    Valid
-                  </span>
-                  <span v-else class="status-badge pending">
-                    <i class="ri-time-line"></i>
-                    Belum diisi
-                  </span>
+                <div class="form-help">
+                  Pencarian dapat dilakukan berdasarkan NIM atau nama mahasiswa.
+                </div>
+                <!-- <div
+                  v-if="formData.nim && mahasiswaMap[formData.nim]"
+                  class="form-help student-name-help"
+                >
+                  Nama: {{ mahasiswaMap[formData.nim] }}
+                </div> -->
+              </div>
+            </div>
+          </section>
+
+          <section class="modal-section">
+            <h4 class="section-title">Input Nilai CPMK</h4>
+            <div class="form-group">
+              <label class="form-label">
+                <i class="ri-file-list-3-line"></i>
+                Nilai CPMK (masukkan nilai untuk setiap CPMK)
+              </label>
+              <div v-if="availableCpmks.length === 0" class="alert alert-error">
+                <i class="ri-error-warning-line"></i>
+                <span
+                  >Tidak ada CPMK terkait untuk MK/Periode ini. Pastikan CPMK telah dihubungkan ke
+                  MK melalui korelasi CPMK-MK.</span
+                >
+              </div>
+              <div v-else class="cpmk-list">
+                <div class="cpmk-table-header">
+                  <div class="cpmk-label-col">CPMK</div>
+                  <div class="cpmk-bobot-col">Bobot</div>
+                  <div class="cpmk-nilai-col">Nilai</div>
+                  <div class="cpmk-status-col">Status</div>
+                </div>
+                <div class="cpmk-table-body">
+                  <div v-if="!formData.nim" class="alert alert-warning">
+                    <i class="ri-information-line"></i>
+                    <span>Isi NIM terlebih dahulu untuk mengaktifkan input nilai CPMK.</span>
+                  </div>
+                  <div v-for="c in availableCpmks" :key="c.id_cpmk" class="cpmk-item">
+                    <div class="cpmk-label-col">
+                      <span class="cpmk-code">{{ c.id_cpmk }}</span>
+                      <span class="cpmk-desc" :title="c.deskripsi || c.deskripsi_cpmk">
+                        {{ c.deskripsi || c.deskripsi_cpmk }}
+                      </span>
+                    </div>
+                    <div class="cpmk-bobot-col">
+                      <span class="bobot-badge">{{
+                        currentBobotFor(c.id_cpmk) != null
+                          ? currentBobotFor(c.id_cpmk).toFixed(2) + '%'
+                          : 'N/A'
+                      }}</span>
+                    </div>
+                    <div class="cpmk-nilai-col">
+                      <div class="nilai-input-wrap">
+                        <input
+                          type="number"
+                          class="form-input nilai-input"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                          :disabled="!formData.nim || currentBobotFor(c.id_cpmk) === null"
+                          :value="
+                            formData.nilaiMap[c.id_cpmk] ??
+                            getExistingNilaiFor(c.id_cpmk, formData.nim) ??
+                            ''
+                          "
+                          @input="
+                            (e) =>
+                              (formData.nilaiMap = {
+                                ...formData.nilaiMap,
+                                [c.id_cpmk]: e.target.value ? Number(e.target.value) : '',
+                              })
+                          "
+                        />
+                        <span class="nilai-max-indicator">
+                          /
+                          {{
+                            currentBobotFor(c.id_cpmk) != null
+                              ? Number(currentBobotFor(c.id_cpmk)).toFixed(0)
+                              : '-'
+                          }}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="cpmk-status-col">
+                      <span
+                        v-if="
+                          isNilaiFilled(c.id_cpmk) &&
+                          Number(formData.nilaiMap[c.id_cpmk]) > Number(currentBobotFor(c.id_cpmk))
+                        "
+                        class="status-badge error"
+                      >
+                        <i class="ri-error-warning-line"></i>
+                        Melebihi bobot
+                      </span>
+                      <span v-else-if="isNilaiFilled(c.id_cpmk)" class="status-badge success">
+                        <i class="ri-checkbox-circle-line"></i>
+                        Valid
+                      </span>
+                      <span v-else class="status-placeholder">Belum diisi</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
+
           <div class="form-note">
             <i class="ri-information-line"></i>
             <span
@@ -323,22 +357,18 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-cancel" @click="closeModal">
-            <i class="ri-close-line"></i>
-            Batal
-          </button>
           <button
             class="btn-save"
             @click="submitAddNilaiCpmk"
-            :disabled="!isNilaiFormValid"
+            :disabled="!isNilaiFormValid || isSubmitting"
             :title="
               !isNilaiFormValid
                 ? 'Lengkapi NIM dan minimal satu nilai yang valid'
                 : 'Simpan Nilai CPMK'
             "
           >
-            <i class="ri-save-line"></i>
-            Simpan Nilai CPMK
+            <i :class="isSubmitting ? 'ri-loader-4-line spin-icon' : 'ri-save-line'"></i>
+            {{ isSubmitting ? 'Menyimpan...' : 'Simpan Nilai CPMK' }}
           </button>
         </div>
       </div>
@@ -371,6 +401,7 @@ const selectedPeriode = ref('')
 const selectedMataKuliah = ref('')
 const selectedMkPeriode = ref('')
 const showModal = ref(false)
+const isSubmitting = ref(false)
 const formData = ref({ id_periode: '', kode_mk: '', id_mk_periode: '', nilaiMap: {}, nim: '' })
 const currentPage = ref(1)
 const itemsPerPage = 10
@@ -545,14 +576,39 @@ async function openAddModal() {
   }
   // override with explicit variant selection if user already selected one
   if (selectedMkPeriode.value) formData.value.id_mk_periode = selectedMkPeriode.value
+  isSubmitting.value = false
   showModal.value = true
 }
 
-function closeModal() {
+const hasUnsavedChanges = computed(() => {
+  const hasNim = String(formData.value.nim || '').trim().length > 0
+  const hasFilledNilai = Object.values(formData.value.nilaiMap || {}).some(
+    (v) => v !== '' && v !== null && v !== undefined,
+  )
+  return hasNim || hasFilledNilai
+})
+
+function closeModal(force = false) {
+  if (
+    !force &&
+    showModal.value &&
+    hasUnsavedChanges.value &&
+    !isSubmitting.value &&
+    !confirm('Perubahan belum disimpan. Apakah Anda yakin ingin menutup form ini?')
+  ) {
+    return
+  }
+
   showModal.value = false
+  isSubmitting.value = false
   formData.value = { id_periode: '', kode_mk: '', id_mk_periode: '', nilaiMap: {}, nim: '' }
   mahasiswaSuggestions.value = []
   showMahasiswaDropdown.value = false
+}
+
+function isNilaiFilled(idCpmk) {
+  const val = formData.value.nilaiMap?.[idCpmk]
+  return val !== '' && val !== null && val !== undefined
 }
 
 function onMahasiswaInput() {
@@ -618,6 +674,8 @@ function prefillNilaiMapForNim(nim) {
 }
 
 async function submitAddNilaiCpmk() {
+  if (isSubmitting.value) return
+
   // Basic validation
   if (!formData.value.nim || !formData.value.kode_mk) {
     alert('Lengkapi semua field: NIM dan Mata Kuliah')
@@ -677,6 +735,7 @@ async function submitAddNilaiCpmk() {
     }
     tasks.push(store.createNilaiCpmk(p, { id_periode: formData.value.id_periode }))
   }
+  isSubmitting.value = true
   try {
     await Promise.all(tasks)
     alert('Nilai CPMK berhasil disimpan')
@@ -684,9 +743,11 @@ async function submitAddNilaiCpmk() {
       id_mk_periode: formData.value.id_mk_periode,
       id_periode: formData.value.id_periode,
     })
-    closeModal()
+    closeModal(true)
   } catch (err) {
     alert('Terjadi kesalahan saat menyimpan beberapa nilai. Periksa konsol dan coba lagi.')
+  } finally {
+    isSubmitting.value = false
   }
 }
 
@@ -834,6 +895,15 @@ const isNilaiFormValid = computed(() => {
 
 .filter-group {
   display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.filter-group .filters-select {
+  display: flex;
+  align-items: center;
   gap: 16px;
   flex-wrap: wrap;
   flex: 1;
@@ -862,8 +932,9 @@ const isNilaiFormValid = computed(() => {
 }
 
 .filter-select {
-  padding: 10px 14px;
-  border-radius: 10px;
+  padding: 12px 16px;
+  height: 48px;
+  border-radius: 12px;
   border: 1.5px solid #e5e7eb;
   background-color: white;
   font-size: 14px;
@@ -888,28 +959,37 @@ const isNilaiFormValid = computed(() => {
 .filter-actions {
   display: flex;
   gap: 12px;
+  justify-content: flex-end;
+  padding-top: 29px;
+  align-items: flex-end;
+  min-width: max-content;
 }
 
 .btn-add {
-  padding: 10px 20px;
-  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
-  color: var(--color-text);
-  border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: 'Montserrat', sans-serif;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 12px rgba(166, 214, 0, 0.3);
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 20px;
+  height: 48px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  background: var(--color-button);
+  color: white;
+  white-space: nowrap;
 }
 
 .btn-add:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(166, 214, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 .btn-add:disabled {
@@ -1076,9 +1156,16 @@ const isNilaiFormValid = computed(() => {
   gap: 8px;
 }
 
+.th-content.nama {
+  justify-content: flex-start;
+  text-align: left;
+}
+
 .cpmk-header {
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 4px;
 }
 
@@ -1127,21 +1214,30 @@ const isNilaiFormValid = computed(() => {
   gap: 12px;
 }
 
+.td-content.td-nama {
+  justify-content: flex-start;
+  text-align: left;
+}
+
 .nim-badge {
-  padding: 4px 12px;
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #1e40af;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-button);
+  width: 120px;
 }
 
 .student-name {
+  width: 100%;
+  text-align: left;
   font-weight: 500;
   color: var(--color-text);
 }
 
 .cpmk-value {
+  text-align: center;
+}
+
+.cpmk-value .td-content {
+  justify-content: center;
   text-align: center;
 }
 
@@ -1173,23 +1269,28 @@ const isNilaiFormValid = computed(() => {
 
 .modal-content {
   background: white;
-  border-radius: 20px;
+  border-radius: 16px;
   width: 90%;
-  max-width: 800px;
+  max-width: 700px;
   max-height: 90vh;
   overflow: hidden;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
 }
 
+.modal-content,
+.modal-content * {
+  box-sizing: border-box;
+}
+
 .modal-header {
-  padding: 24px 28px;
+  padding: 20px 28px;
   border-bottom: 2px solid var(--color-border2);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
 }
 
 .modal-title {
@@ -1199,23 +1300,24 @@ const isNilaiFormValid = computed(() => {
 }
 
 .modal-title i {
-  font-size: 24px;
+  font-size: 28px;
   color: var(--spmi-c-green2);
 }
 
 .modal-title h3 {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--color-text);
+  margin: 0;
   font-family: 'Montserrat', sans-serif;
 }
 
 .modal-close {
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: 10px;
   border: none;
-  background: #f3f4f6;
+  background: white;
   color: var(--color-text);
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1226,19 +1328,43 @@ const isNilaiFormValid = computed(() => {
 }
 
 .modal-close:hover {
-  background: var(--spmi-c-red);
-  color: white;
+  background: #fee2e2;
+  color: #dc2626;
   transform: rotate(90deg);
 }
 
 .modal-body {
-  padding: 24px 28px;
+  padding: 20px 24px;
   overflow-y: auto;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.modal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+  letter-spacing: 0.2px;
+}
+
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 
 .form-label {
@@ -1259,24 +1385,26 @@ const isNilaiFormValid = computed(() => {
 
 .form-input {
   width: 100%;
+  max-width: 100%;
   padding: 12px 16px;
-  border-radius: 10px;
   border: 1.5px solid #e5e7eb;
-  background-color: white;
-  font-size: 14px;
-  font-family: 'Montserrat', sans-serif;
-  color: var(--color-text);
-  transition: all 0.3s ease;
+  border-radius: 10px;
+  background: white;
+}
+
+.form-input:hover:not(:disabled) {
+  border-color: #d1d5db;
 }
 
 .form-input:focus {
   outline: none;
   border-color: var(--spmi-c-green2);
-  box-shadow: 0 0 0 4px rgba(166, 214, 0, 0.1);
+  box-shadow: 0 0 0 3px rgba(166, 214, 0, 0.1);
 }
 
 .form-input:disabled {
-  background-color: #f3f4f6;
+  background: #f9fafb;
+  color: #9ca3af;
   cursor: not-allowed;
 }
 
@@ -1335,6 +1463,11 @@ const isNilaiFormValid = computed(() => {
   font-family: 'Montserrat', sans-serif;
 }
 
+.student-name-help {
+  margin-top: 4px;
+  font-weight: 600;
+}
+
 .alert {
   padding: 14px 16px;
   border-radius: 10px;
@@ -1367,8 +1500,12 @@ const isNilaiFormValid = computed(() => {
 .cpmk-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 12px;
+  gap: 2px;
+  margin-top: 8px;
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1.5px solid #e5e7eb;
 }
 
 .cpmk-table-header {
@@ -1376,30 +1513,32 @@ const isNilaiFormValid = computed(() => {
   grid-template-columns: 2fr 140px 120px 140px;
   gap: 12px;
   padding: 12px 16px;
-  background: linear-gradient(135deg, var(--spmi-c-dgray) 0%, #3d3c42 100%);
-  border-radius: 10px;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
   font-weight: 700;
-  font-size: 12px;
-  color: white;
+  font-size: 13px;
+  color: var(--spmi-c-dgray);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.cpmk-table-body {
+  max-height: 320px;
+  overflow-y: auto;
 }
 
 .cpmk-item {
   display: grid;
   grid-template-columns: 2fr 140px 120px 140px;
-  gap: 12px;
+  gap: 14px;
   padding: 16px;
-  background: #f9fafb;
-  border-radius: 10px;
-  border: 1.5px solid #e5e7eb;
+  background: white;
+  border-top: 1px solid #f3f4f6;
   align-items: center;
-  transition: all 0.3s ease;
+  transition: background-color 0.2s ease;
 }
 
 .cpmk-item:hover {
-  border-color: var(--spmi-c-green2);
-  box-shadow: 0 4px 12px rgba(166, 214, 0, 0.15);
+  background: #f9fafb;
 }
 
 .cpmk-label-col {
@@ -1417,6 +1556,12 @@ const isNilaiFormValid = computed(() => {
 .cpmk-label-col .cpmk-desc {
   font-size: 12px;
   color: #6b7280;
+  line-height: 1.45;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .cpmk-bobot-col {
@@ -1426,8 +1571,8 @@ const isNilaiFormValid = computed(() => {
 .bobot-badge {
   display: inline-block;
   padding: 6px 12px;
-  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
-  color: #6b21a8;
+  /* background-color: var(--color-buttonsec); */
+  color: #065f46;
   border-radius: 8px;
   font-weight: 700;
   font-size: 13px;
@@ -1436,6 +1581,24 @@ const isNilaiFormValid = computed(() => {
 .nilai-input {
   text-align: center;
   font-weight: 600;
+}
+
+.nilai-input-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.nilai-input-wrap .nilai-input {
+  width: 92px;
+}
+
+.nilai-max-indicator {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  white-space: nowrap;
 }
 
 .cpmk-status-col {
@@ -1454,18 +1617,24 @@ const isNilaiFormValid = computed(() => {
 }
 
 .status-badge.success {
-  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  background-color: var(--color-buttonsec);
   color: #065f46;
 }
 
 .status-badge.error {
   background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  color: #991b1b;
+  color: var(--color-button-hover);
 }
 
 .status-badge.pending {
   background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
   color: #4b5563;
+}
+
+.status-placeholder {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
 }
 
 .form-note {
@@ -1476,7 +1645,7 @@ const isNilaiFormValid = computed(() => {
   background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
   border-radius: 10px;
   border: 1.5px solid #bbf7d0;
-  margin-top: 12px;
+  margin-top: 0;
   font-size: 13px;
   color: #15803d;
   font-family: 'Montserrat', sans-serif;
@@ -1489,28 +1658,12 @@ const isNilaiFormValid = computed(() => {
 }
 
 .modal-footer {
-  padding: 20px 28px;
+  padding: 20px 24px;
   border-top: 2px solid var(--color-border2);
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   background: #f9fafb;
-}
-
-.btn-cancel {
-  padding: 12px 24px;
-  background: white;
-  color: var(--color-text);
-  border: 1.5px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: 'Montserrat', sans-serif;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .btn-cancel:hover {
@@ -1520,24 +1673,26 @@ const isNilaiFormValid = computed(() => {
 
 .btn-save {
   padding: 12px 24px;
-  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
-  color: var(--color-text);
-  border: none;
-  border-radius: 10px;
+  background: var(--color-button);
+  color: white;
+  border: 1.5px solid var(--color-button);
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   font-family: 'Montserrat', sans-serif;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   display: flex;
   align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 12px rgba(166, 214, 0, 0.3);
+  gap: 6px;
 }
 
 .btn-save:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(166, 214, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 .btn-save:disabled {
@@ -1552,10 +1707,19 @@ const isNilaiFormValid = computed(() => {
     flex-direction: column;
   }
 
+  .filter-actions {
+    padding-top: 0;
+    justify-content: flex-start;
+  }
+
   .cpmk-item,
   .cpmk-table-header {
     grid-template-columns: 1fr;
     gap: 8px;
+  }
+
+  .cpmk-table-body {
+    max-height: 360px;
   }
 
   .cpmk-bobot-col,
