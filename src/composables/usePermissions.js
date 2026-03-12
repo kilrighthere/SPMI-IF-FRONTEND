@@ -210,7 +210,6 @@ export function usePermissions() {
    */
   function can(module, action = 'view') {
     if (!permissions.value[module]) {
-      console.warn(`Module '${module}' not found in permissions`)
       return false
     }
     return permissions.value[module][action] || false

@@ -527,21 +527,6 @@ watch(
   },
 )
 
-// Log available CPMK changes for debug
-watch(availableCpmks, (newVal) => {
-  if (!newVal || newVal.length === 0) {
-    console.warn('No CPMK found for this MK. Check CPMK-MK correlations and MK-periode mapping.', {
-      kode: formData.value.kode_mk,
-      id_mk_periode: formData.value.id_mk_periode,
-    })
-  } else {
-    console.info(
-      'Available CPMKs for this MK:',
-      newVal.map((c) => c.id_cpmk),
-    )
-  }
-})
-
 const onPeriodeChange = async () => {
   await store.fetchAllBobotCpmk(selectedPeriode.value)
   currentPage.value = 1
@@ -657,7 +642,6 @@ async function submitForm() {
   const epsilon = 0.01
   if (Math.abs(sum - 100) > epsilon) {
     alert(`Total bobot untuk semua CPMK harus 100%. Saat ini total: ${sum.toFixed(2)}%`)
-    console.warn('Bobot validation failed; sum != 100', { sum, finalMap })
     return
   }
   // Build async tasks to perform create/edit/remove where necessary
@@ -698,7 +682,6 @@ async function submitForm() {
     try {
       await Promise.all(tasks)
     } catch (err) {
-      console.error('Error saving bobot CPMK bulk update', err)
       alert('Terjadi kesalahan saat menyimpan bobot CPMK. Silakan coba lagi.')
       return
     }

@@ -197,7 +197,6 @@ async function loadData() {
       nilaiCplList.value = nilaiResponse.data.data
     }
   } catch (err) {
-    console.error('Error loading data:', err)
     // Fallback to dummy data in development
     mahasiswaInfo.value = {
       name: nim.value === '24060120140005' ? 'Galih Nanda Wibowo' : 'Gibran Mahasiswa',

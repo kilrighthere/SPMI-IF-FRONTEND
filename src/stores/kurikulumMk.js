@@ -25,7 +25,6 @@ export const useKurikulumMkStore = defineStore('kurikulumMk', () => {
       kurikulumMkList.value = response.data.data || response.data || []
     } catch (err) {
       error.value = err.response?.data?.message || 'Gagal memuat data kurikulum mata kuliah'
-      console.error('Error fetching kurikulum mk:', err)
     } finally {
       loading.value = false
     }
@@ -42,7 +41,6 @@ export const useKurikulumMkStore = defineStore('kurikulumMk', () => {
       return { success: true, data: newKurikulumMk }
     } catch (err) {
       error.value = err.response?.data?.message || 'Gagal menambah kurikulum mata kuliah'
-      console.error('Error adding kurikulum mk:', err)
       return { success: false, error: error.value }
     } finally {
       loading.value = false
@@ -65,7 +63,6 @@ export const useKurikulumMkStore = defineStore('kurikulumMk', () => {
       return { success: true, data: updatedKurikulumMk }
     } catch (err) {
       error.value = err.response?.data?.message || 'Gagal mengubah kurikulum mata kuliah'
-      console.error('Error updating kurikulum mk:', err)
       return { success: false, error: error.value }
     } finally {
       loading.value = false
@@ -82,7 +79,6 @@ export const useKurikulumMkStore = defineStore('kurikulumMk', () => {
       return { success: true }
     } catch (err) {
       error.value = err.response?.data?.message || 'Gagal menghapus kurikulum mata kuliah'
-      console.error('Error deleting kurikulum mk:', err)
       return { success: false, error: error.value }
     } finally {
       loading.value = false

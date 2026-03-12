@@ -146,7 +146,6 @@ async function submitForm() {
     // Format nilai dengan 2 desimal
     formData.value.nilai_akhir = nilai.toFixed(2)
 
-    console.log('Submitting nilai:', formData.value)
 
     const result = await nilaiMkStore.createNilai(formData.value)
 
@@ -159,7 +158,6 @@ async function submitForm() {
       alert('Gagal menambahkan nilai')
     }
   } catch (err) {
-    console.error('Error submitting nilai:', err)
     alert('Terjadi kesalahan saat menyimpan nilai: ' + (err.message || err))
   }
 }

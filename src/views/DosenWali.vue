@@ -325,7 +325,6 @@ const loadData = async () => {
       selectedNip.value = dosenList.value[0].nip
     }
   } catch (err) {
-    console.error(err)
     error.value = err?.response?.data?.message || 'Gagal memuat data'
   } finally {
     loading.value = false
@@ -337,7 +336,6 @@ const reloadAssignments = async () => {
     const res = await getDosenWaliList()
     assignments.value = res.data?.data || []
   } catch (err) {
-    console.error(err)
     error.value = err?.response?.data?.message || 'Gagal memuat ulang data'
   }
 }
@@ -358,7 +356,6 @@ const handleAdd = async () => {
     selectedMahasiswa.value = []
     await reloadAssignments()
   } catch (err) {
-    console.error(err)
     error.value = err?.response?.data?.message || 'Gagal menambahkan mahasiswa'
   } finally {
     saving.value = false
@@ -373,7 +370,6 @@ const handleDelete = async (nim) => {
     await deleteDosenWali(selectedNip.value, nim)
     await reloadAssignments()
   } catch (err) {
-    console.error(err)
     error.value = err?.response?.data?.message || 'Gagal menghapus relasi'
   } finally {
     saving.value = false

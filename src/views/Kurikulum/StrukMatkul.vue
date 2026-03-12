@@ -168,7 +168,6 @@ const saveMK = async () => {
       formSubmitError.value = storeError.value || 'Gagal menyimpan mata kuliah'
     }
   } catch (err) {
-    console.error('Error saving mata kuliah:', err)
     formSubmitError.value = 'Terjadi kesalahan saat menyimpan data mata kuliah'
   }
 }
@@ -189,7 +188,6 @@ const deleteMK = async (mk) => {
         pageError.value = result.error || storeError.value || 'Gagal menghapus mata kuliah'
       }
     } catch (err) {
-      console.error('Error deleting mata kuliah:', err)
       pageError.value = 'Terjadi kesalahan saat menghapus mata kuliah'
     }
   }
@@ -219,7 +217,6 @@ watch(storeError, (newError) => {
 
 // Load data when component is mounted
 onMounted(async () => {
-  console.log('StrukMatkul component mounted, fetching data...')
   try {
     // Fetch kurikulum data by ID from route params
     const kurikulumId = route.params.id
@@ -227,9 +224,7 @@ onMounted(async () => {
       await kurikulumStore.fetchKurikulumById(kurikulumId)
     }
     await fetchData()
-    console.log('Data fetched successfully, found', mataKuliahList.value.length, 'mata kuliah')
   } catch (err) {
-    console.error('Failed to fetch data:', err)
     pageError.value = 'Gagal memuat data mata kuliah'
   }
 })

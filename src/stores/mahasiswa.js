@@ -20,7 +20,6 @@ export const useMahasiswaStore = defineStore('mahasiswa', () => {
         mahasiswaList.value = response.data
       }
     } catch (err) {
-      console.error('Error fetching mahasiswa:', err)
       
       // Extract specific error message from API response
       let errorMessage = 'Gagal memuat data mahasiswa'
@@ -76,7 +75,6 @@ export const useMahasiswaStore = defineStore('mahasiswa', () => {
       await fetchMahasiswa()
       return { success: true, data: response.data }
     } catch (err) {
-      console.error('Error creating mahasiswa:', err)
       
       // Extract specific error message from API response
       let errorMessage = 'Gagal menambahkan mahasiswa'
@@ -131,7 +129,6 @@ export const useMahasiswaStore = defineStore('mahasiswa', () => {
       await fetchMahasiswa()
       return { success: true, data: response.data }
     } catch (err) {
-      console.error(`Error updating mahasiswa with nim ${nim}:`, err)
       
       // Extract specific error message from API response
       let errorMessage = 'Gagal memperbarui mahasiswa'
@@ -186,7 +183,6 @@ export const useMahasiswaStore = defineStore('mahasiswa', () => {
       mahasiswaList.value = mahasiswaList.value.filter((m) => m.nim !== nim)
       return { success: true }
     } catch (err) {
-      console.error(`Error deleting mahasiswa with nim ${nim}:`, err)
       
       // Extract specific error message from API response
       let errorMessage = 'Gagal menghapus mahasiswa'

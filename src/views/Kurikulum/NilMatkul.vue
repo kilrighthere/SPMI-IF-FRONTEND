@@ -87,17 +87,11 @@ const selectedPeriode = computed({
 
 // Data nilai yang difilter berdasarkan periode yang dipilih
 const filteredNilaiList = computed(() => {
-  console.log('=== filteredNilaiList computed ===')
-  console.log('nilaiMkStore.filteredNilaiByPeriode:', nilaiMkStore.filteredNilaiByPeriode)
-  console.log('isMahasiswa:', isMahasiswa.value)
-  console.log('currentUserNim:', currentUserNim.value)
-  console.log('selectedKurikulum:', selectedKurikulum.value)
 
   let filtered = nilaiMkStore.filteredNilaiByPeriode
 
   // Log sample data untuk debugging
   if (filtered.length > 0) {
-    console.log('Sample nilai data structure:', filtered[0])
   }
 
   // Filter berdasarkan kurikulum jika ada - SKIP untuk mahasiswa karena tidak relevan
@@ -106,15 +100,12 @@ const filteredNilaiList = computed(() => {
     filtered = filtered.filter(
       (nilai) => String(nilai.id_kurikulum) === String(selectedKurikulum.value),
     )
-    console.log('After kurikulum filter:', filtered)
   } else {
-    console.log('Skipping kurikulum filter (mahasiswa or no kurikulum selected)')
   }
 
   // Filter berdasarkan mata kuliah yang dipilih
   if (selectedMataKuliah.value) {
     filtered = filtered.filter((nilai) => nilai.kode_mk === selectedMataKuliah.value)
-    console.log('After mata kuliah filter:', filtered)
   }
 
   // Filter berdasarkan pencarian
@@ -127,30 +118,18 @@ const filteredNilaiList = computed(() => {
         nilaiMkStore.getMataKuliahNama(nilai.kode_mk).toLowerCase().includes(query) ||
         nilaiMkStore.getMahasiswaNama(nilai.nim).toLowerCase().includes(query),
     )
-    console.log('After search filter:', filtered)
   }
 
   // Filter untuk mahasiswa (hanya tampilkan nilai mereka sendiri)
   if (isMahasiswa.value && currentUserNim.value) {
-    console.log('Filtering for mahasiswa, NIM:', currentUserNim.value)
     filtered = filtered.filter((nilai) => {
       // Convert both to string for comparison to handle type mismatch
       const nilaiNimStr = String(nilai.nim).trim()
       const currentNimStr = String(currentUserNim.value).trim()
-      console.log(
-        'Comparing nilai.nim:',
-        nilaiNimStr,
-        'with currentUserNim:',
-        currentNimStr,
-        'match:',
-        nilaiNimStr === currentNimStr,
-      )
       return nilaiNimStr === currentNimStr
     })
-    console.log('After mahasiswa filter:', filtered)
   }
 
-  console.log('Final filtered result:', filtered)
   return filtered
 })
 
@@ -445,13 +424,11 @@ async function submitForm() {
       payload.kode_mk = formData.value.kode_mk
     }
 
-    console.log('Submitting nilai:', payload)
 
     const refreshFilters = { id_periode: formData.value.id_periode }
     if (selectedKurikulum.value) refreshFilters.id_kurikulum = selectedKurikulum.value
     const result = await nilaiMkStore.createNilai(payload, refreshFilters)
 
-    console.log('Create nilai result:', result)
 
     if (result && (result.success === true || result.success === undefined)) {
       alert(
@@ -462,7 +439,6 @@ async function submitForm() {
       alert('Gagal menambahkan nilai: ' + (result?.message || 'Unknown error'))
     }
   } catch (err) {
-    console.error('Error submitting nilai:', err)
     alert('Terjadi kesalahan saat menyimpan nilai: ' + (err.message || err))
   }
 }
@@ -484,13 +460,9 @@ async function loadPeriodeOnly() {
 
 // Load nilai berdasarkan filter dan data yang diperlukan
 async function loadNilaiData() {
-  console.log('=== loadNilaiData called ===')
-  console.log('selectedPeriode:', selectedPeriode.value)
-  console.log('isMahasiswa:', isMahasiswa.value)
 
   // Untuk mahasiswa, load semua data nilai mereka tanpa filter periode
   if (isMahasiswa.value && currentUserNim.value) {
-    console.log('Loading all data for mahasiswa with NIM:', currentUserNim.value)
     const filters = { nim: currentUserNim.value }
 
     await Promise.all([
@@ -504,7 +476,6 @@ async function loadNilaiData() {
 
   // Untuk admin/dosen, tetap gunakan filter periode
   if (!selectedPeriode.value) {
-    console.log('No periode selected, returning')
     return
   }
 
@@ -514,7 +485,6 @@ async function loadNilaiData() {
     filters.kode_mk = selectedMataKuliah.value
   }
 
-  console.log('Fetching with filters:', filters)
 
   // Load data yang diperlukan secara bersamaan hanya ketika dibutuhkan
   await Promise.all([
@@ -524,8 +494,6 @@ async function loadNilaiData() {
     nilaiMkStore.fetchMahasiswaData(), // untuk nama mahasiswa di tabel
   ])
 
-  console.log('After fetch - nilaiList:', nilaiMkStore.nilaiList)
-  console.log('After fetch - mahasiswaMap:', nilaiMkStore.mahasiswaMap)
 }
 
 // Fungsi untuk memproses file Excel
@@ -548,9 +516,6 @@ async function processExcelFile(file) {
       throw new Error('Format Excel tidak sesuai dengan template SIAP')
     }
 
-    console.log('Debug - Mata Kuliah Row:', mataKuliahRow)
-    console.log('Debug - Tahun Ajaran Row:', tahunAjaranRow)
-    console.log('Debug - Semester Row:', semesterRow)
 
     // Extract kode_mk from ": MKK231 - Kompilator"
     let kodeMK = ''
@@ -581,7 +546,6 @@ async function processExcelFile(file) {
       }
     }
 
-    console.log('Debug - Extracted values:', { kodeMK, tahun, semester })
 
     if (!kodeMK || !tahun || !semester) {
       throw new Error('Tidak dapat membaca informasi Mata Kuliah, Tahun Ajaran, atau Semester')
@@ -599,9 +563,7 @@ async function processExcelFile(file) {
     let nilaiAkhirIndex = 0
 
     // Debug: Print all rows for inspection
-    console.log('Debug - All Rows:')
     worksheet.eachRow((row, rowNumber) => {
-      console.log(`Row ${rowNumber}:`, row.values)
     })
 
     // Find the header row first
@@ -609,18 +571,15 @@ async function processExcelFile(file) {
       const values = row.values
       if (!headerRow && values) {
         // Debug: Print each row being checked for headers
-        console.log(`Checking row ${rowNumber} for headers:`, values)
 
         for (let i = 1; i < values.length; i++) {
           const cellValue = values[i]?.toString().toLowerCase() || ''
           if (cellValue.includes('nim')) {
             nimIndex = i
-            console.log('Found NIM column at index:', i)
           }
           if (cellValue.includes('nilai akhir angka')) {
             nilaiAkhirIndex = i
             headerRow = rowNumber
-            console.log('Found Nilai Akhir Angka column at index:', i)
           }
         }
       }
@@ -632,34 +591,22 @@ async function processExcelFile(file) {
       )
     }
 
-    console.log('Debug - Header found:', { headerRow, nimIndex, nilaiAkhirIndex })
 
     // Read data rows
     worksheet.eachRow((row, rowNumber) => {
       if (rowNumber <= headerRow) return
 
       const values = row.values
-      console.log(`Processing row ${rowNumber}:`, values)
 
       if (!values || values.length <= Math.max(nimIndex, nilaiAkhirIndex)) {
-        console.log(`Skipping row ${rowNumber} - insufficient columns`)
         return
       }
 
       const nim = values[nimIndex]
       const nilaiAkhirCell = values[nilaiAkhirIndex]
 
-      console.log(`Row ${rowNumber} values:`, { nim, nilaiAkhirCell })
 
       if (nim) {
-        // Debug nilai akhir cell details
-        console.log(`Row ${rowNumber} nilaiAkhirCell detail:`, {
-          value: nilaiAkhirCell,
-          type: typeof nilaiAkhirCell,
-          keys: nilaiAkhirCell ? Object.keys(nilaiAkhirCell) : [],
-          text: nilaiAkhirCell?.text,
-          result: nilaiAkhirCell?.result,
-        })
 
         // Convert nilai to number and handle any formatting
         let nilaiAkhir = 0
@@ -697,7 +644,6 @@ async function processExcelFile(file) {
           nilaiAkhir = parseFloat(nilaiStr)
         }
 
-        console.log(`Row ${rowNumber} parsed nilai:`, { nilaiAkhir })
 
         if (!isNaN(nilaiAkhir) && nilaiAkhir >= 0) {
           const dataItem = {
@@ -707,13 +653,11 @@ async function processExcelFile(file) {
             nilai_akhir: Number(nilaiAkhir.toFixed(2)),
           }
           // id_mk_periode will be resolved later in batch to avoid many API calls and async issues
-          console.log(`Adding data item:`, dataItem)
           nilaiData.push(dataItem)
         }
       }
     })
 
-    console.log('Debug - Nilai Data:', nilaiData)
 
     // Resolve id_mk_periode for any entries that don't have it
     try {
@@ -728,17 +672,13 @@ async function processExcelFile(file) {
 
       for (const [key, { kode_mk, id_periode }] of combos) {
         // Prefer local resolution first
-        console.log('Resolving mk-periode combo:', { kode_mk, id_periode })
         let resolved = nilaiMkStore.resolveIdMkPeriode(kode_mk, id_periode)
         if (!resolved) {
-          console.log('Local resolve failed for', { kode_mk, id_periode })
           // Try to use store helper if available, otherwise fallback to direct API call
           if (typeof nilaiMkStore.fetchMkPeriodeByKodeAndPeriode === 'function') {
             try {
               resolved = await nilaiMkStore.fetchMkPeriodeByKodeAndPeriode(kode_mk, id_periode)
-              console.log('Store fetch result for', { kode_mk, id_periode, resolved })
             } catch (err) {
-              console.warn('Store fetchMkPeriodeByKodeAndPeriode failed', err)
               resolved = null
             }
           }
@@ -746,7 +686,6 @@ async function processExcelFile(file) {
           if (!resolved) {
             try {
               const resp = await getMkPeriodeList({ kode_mk, id_periode })
-              console.log('Direct API /list/mk-periode response for', { kode_mk, id_periode, resp })
               let data = null
               if (resp?.data && resp.data.success) data = resp.data.data
               else if (resp?.data && Array.isArray(resp.data)) data = resp.data
@@ -757,21 +696,15 @@ async function processExcelFile(file) {
                 try {
                   await nilaiMkStore.fetchMkPeriodeList()
                 } catch (refreshErr) {
-                  console.warn('Error refreshing mk-periode list after fallback fetch:', refreshErr)
                 }
               }
             } catch (err) {
-              console.warn('Direct API call to getMkPeriodeList failed', err)
             }
           }
           // Extra fallback: try fetching mk-periode by kode only and filter client-side by id_periode
           if (!resolved) {
             try {
               const resp2 = await getMkPeriodeList({ kode_mk })
-              console.log('Direct API /list/mk-periode (kode only) response for', {
-                kode_mk,
-                resp2,
-              })
               let data2 = null
               if (resp2?.data && resp2.data.success) data2 = resp2.data.data
               else if (resp2?.data && Array.isArray(resp2.data)) data2 = resp2.data
@@ -782,14 +715,9 @@ async function processExcelFile(file) {
                 try {
                   await nilaiMkStore.fetchMkPeriodeList()
                 } catch (refreshErr) {
-                  console.warn(
-                    'Error refreshing mk-periode list after kode-only fetch:',
-                    refreshErr,
-                  )
                 }
               }
             } catch (err) {
-              console.warn('Direct API call to getMkPeriodeList (kode only) failed', err)
             }
           }
         }
@@ -801,11 +729,9 @@ async function processExcelFile(file) {
             }
           })
         } else {
-          console.warn('Could not resolve id_mk_periode for combo', { kode_mk, id_periode })
         }
       }
     } catch (err) {
-      console.warn('Error resolving mk-periode combos during import:', err)
     }
 
     // Filter out rows with invalid NIM
@@ -856,7 +782,6 @@ async function processExcelFile(file) {
           failedCount++
         }
       } catch (err) {
-        console.error('Error submitting nilai:', err)
         failedCount++
       }
     }
@@ -870,7 +795,6 @@ async function processExcelFile(file) {
     // Reload data
     await loadNilaiData()
   } catch (err) {
-    console.error('Error processing Excel file:', err)
     alert('Terjadi kesalahan saat memproses file Excel: ' + err.message)
   }
 }
@@ -923,32 +847,23 @@ watch(selectedPeriode, async (newValue, oldValue) => {
 
 // Load data saat komponen dimuat
 onMounted(async () => {
-  console.log('=== NilMatkul onMounted ===')
-  console.log('isMahasiswa:', isMahasiswa.value)
-  console.log('isDosen:', isDosen.value)
-  console.log('isAdmin:', isAdmin.value)
-  console.log('currentUserNim:', currentUserNim.value)
 
   // Load periode dan mk-periode terlebih dahulu
   await loadPeriodeOnly()
   await nilaiMkStore.fetchMkPeriodeList()
-  console.log('periodeList after load:', periodeList.value)
 
   // Jika mahasiswa, load semua data nilai mereka tanpa filter periode
   if (isMahasiswa.value && currentUserNim.value) {
-    console.log('Loading all data for mahasiswa...')
 
     // Load data mahasiswa untuk mendapatkan nama
     await nilaiMkStore.fetchMahasiswaData()
 
     // Load semua data nilai untuk mahasiswa ini (tanpa filter periode)
     await nilaiMkStore.fetchNilaiByFilter({ nim: currentUserNim.value })
-    console.log('All nilai data for mahasiswa loaded:', nilaiMkStore.nilaiList)
 
     // Load mata kuliah untuk filter
     await mkStore.fetchAllMK()
   } else {
-    console.log('Loading data for admin/dosen...')
     // Untuk admin/dosen, load data seperti biasa
     await Promise.all([
       mkStore.fetchAllMK(), // Load data mata kuliah

@@ -21,7 +21,6 @@ export const useNilaiCpmkStore = defineStore('nilaiCpmk', () => {
         nilaiCpmkList.value = response.data
       }
     } catch (err) {
-      console.error('Error fetching Nilai CPMK:', err)
       error.value = 'Gagal memuat data Nilai CPMK'
       // Provide fallback data for development
       nilaiCpmkList.value = [
@@ -94,11 +93,6 @@ export const useNilaiCpmkStore = defineStore('nilaiCpmk', () => {
         data = data.filter((r) => allowedIds.has(Number(r.id_mk_periode)))
         const filteredCount = Array.isArray(data) ? data.length : 0
         if (filteredCount !== returnedCount) {
-          console.warn('Server returned rows outside requested id_mk_periode. Filtering on client to show only requested entries.', {
-            requested: paramsToSend.id_mk_periode,
-            returnedCount,
-            filteredCount,
-          })
         }
       }
 
@@ -121,7 +115,6 @@ export const useNilaiCpmkStore = defineStore('nilaiCpmk', () => {
 
       nilaiCpmkList.value = enriched
     } catch (err) {
-      console.error('Error fetching Nilai CPMK:', err)
       error.value = 'Gagal memuat data Nilai CPMK'
       nilaiCpmkList.value = []
     } finally {
@@ -156,7 +149,6 @@ export const useNilaiCpmkStore = defineStore('nilaiCpmk', () => {
         const status = err.response?.status
         if (status === 409) {
           // try to update existing record
-          console.warn('409 Conflict when adding nilai-cpmk, attempting to update')
           const idPeriode = nilaiData.id_periode || null
           let idMkPeriode = nilaiData.id_mk_periode
           if (!idMkPeriode && idPeriode && nilaiData.kode_mk) {
@@ -168,7 +160,6 @@ export const useNilaiCpmkStore = defineStore('nilaiCpmk', () => {
               const upd = await updateNilaiCpmk(idMkPeriode, nilaiData.id_cpmk, nilaiData.nim, { nilai: apiData.nilai })
               response = upd
             } catch (updateErr) {
-              console.error('Update after conflict failed for nilai-cpmk:', updateErr)
               throw updateErr
             }
           } else {
@@ -191,7 +182,6 @@ export const useNilaiCpmkStore = defineStore('nilaiCpmk', () => {
       }
       return { success: false, message: 'Unexpected response format' }
     } catch (err) {
-      console.error('Error creating nilai CPMK:', err)
       error.value = err.response?.data?.message || 'Gagal menambahkan nilai CPMK'
       return null
     } finally {

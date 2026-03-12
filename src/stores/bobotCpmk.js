@@ -56,7 +56,6 @@ export const useBobotCpmkStore = defineStore('bobotCpmk', () => {
         }
       })
     } catch (err) {
-      console.error('Error fetching Bobot CPMK:', err)
       error.value = 'Gagal memuat data Bobot CPMK'
       // Provide fallback data for development
       // Provide fallback data for development
@@ -80,7 +79,6 @@ export const useBobotCpmkStore = defineStore('bobotCpmk', () => {
       await fetchAllBobotCpmk(data.id_periode || data.id_periode)
       return resp.data
     } catch (err) {
-      console.error('Error adding bobot CPMK:', err)
       error.value = err.response?.data?.message || 'Gagal menambahkan bobot CPMK'
       return null
     } finally {
@@ -96,7 +94,6 @@ export const useBobotCpmkStore = defineStore('bobotCpmk', () => {
       await fetchAllBobotCpmk()
       return resp.data
     } catch (err) {
-      console.error('Error updating bobot CPMK:', err)
       error.value = err.response?.data?.message || 'Gagal memperbarui bobot CPMK'
       return null
     } finally {
@@ -112,7 +109,6 @@ export const useBobotCpmkStore = defineStore('bobotCpmk', () => {
       await fetchAllBobotCpmk()
       return resp.data
     } catch (err) {
-      console.error('Error deleting bobot CPMK:', err)
       error.value = err.response?.data?.message || 'Gagal menghapus bobot CPMK'
       return null
     } finally {

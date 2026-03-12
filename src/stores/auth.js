@@ -82,7 +82,6 @@ export const useAuthStore = defineStore('auth', () => {
 
       return { success: true }
     } catch (err) {
-      console.error('Login failed:', err?.response?.data || err)
       // Prefer server-provided message when available to aid debugging
       const serverMsg = err?.response?.data?.message || err?.response?.data?.error || null
       error.value = serverMsg || 'Username atau password salah'
@@ -117,7 +116,6 @@ export const useAuthStore = defineStore('auth', () => {
       }
       return false
     } catch (err) {
-      console.error('Refresh failed:', err)
       return false
     }
   
@@ -145,7 +143,6 @@ export const useAuthStore = defineStore('auth', () => {
       // Attempt to notify server to revoke refresh token & clear cookie
       await apiLogout()
     } catch (err) {
-      console.error('Logout error:', err)
     } finally {
       // Clear regardless of API call success
       token.value = null
@@ -175,7 +172,6 @@ export const useAuthStore = defineStore('auth', () => {
         // You can add token validation endpoint here if needed
         return true
       } catch (error) {
-        console.error('Error loading stored auth:', error)
         // Clear invalid stored data
         token.value = null
         user.value = null

@@ -139,7 +139,6 @@ const fetchMahasiswa = async () => {
       showNotification('warning', mahasiswaStore.error)
     }
   } catch (err) {
-    console.error('Error fetching mahasiswa:', err)
     const errorMessage =
       mahasiswaStore.error || 'Gagal memuat data mahasiswa. Silakan refresh halaman.'
     showNotification('error', errorMessage)
@@ -223,7 +222,6 @@ const saveMahasiswa = async () => {
       }
     }
   } catch (err) {
-    console.error('Error saving mahasiswa:', err)
     showNotification('error', 'Gagal menyimpan data mahasiswa. Silakan coba lagi.')
   }
 }
@@ -259,7 +257,6 @@ const removeMahasiswa = async (nim) => {
         showNotification('error', 'Gagal menghapus data mahasiswa.')
       }
     } catch (err) {
-      console.error('Error removing mahasiswa:', err)
       showNotification('error', 'Gagal menghapus data mahasiswa. Silakan coba lagi.')
     }
   }
@@ -396,7 +393,6 @@ const downloadTemplate = async () => {
 
     showNotification('success', 'Template berhasil didownload!')
   } catch (error) {
-    console.error('Error generating template:', error)
     showNotification('error', 'Gagal mendownload template')
   }
 }
@@ -507,7 +503,6 @@ const handleFileUpload = async (event) => {
       totalRows: mahasiswaData.length + errors.length,
     }
   } catch (error) {
-    console.error('Error processing Excel file:', error)
     showNotification('error', 'Gagal memproses file Excel. Pastikan format file benar.')
   } finally {
     isUploading.value = false
@@ -565,7 +560,6 @@ const confirmUpload = async () => {
       failedItems,
     }
   } catch (error) {
-    console.error('Error during bulk upload:', error)
     showNotification('error', 'Terjadi kesalahan saat upload data')
   } finally {
     isUploading.value = false

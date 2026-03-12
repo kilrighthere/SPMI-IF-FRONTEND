@@ -125,7 +125,6 @@ const saveCplSndikti = async () => {
     }
     resetForm()
   } catch (err) {
-    console.error('Error saving CPL SNDIKTI:', err)
     popupError.value = isEditing.value ? 'Gagal mengupdate data' : 'Gagal menambah data'
   }
 }

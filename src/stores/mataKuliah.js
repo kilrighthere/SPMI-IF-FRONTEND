@@ -31,13 +31,11 @@ export const useMKStore = defineStore('mataKuliah', () => {
       if (Array.isArray(payload)) {
         mataKuliahList.value = payload.map(normalizeMK)
       } else {
-        console.warn('Unexpected response format:', response.data)
+        // Handle unexpected format, use fallback data
         useFallbackData()
       }
 
-      console.log('Mata Kuliah loaded:', mataKuliahList.value)
     } catch (err) {
-      console.error('Error fetching Mata Kuliah:', err)
       error.value = 'Gagal memuat data Mata Kuliah'
       useFallbackData()
     } finally {
@@ -47,7 +45,6 @@ export const useMKStore = defineStore('mataKuliah', () => {
 
   // Helper function to use fallback data
   function useFallbackData() {
-    console.log('Using fallback data for Mata Kuliah')
     mataKuliahList.value = [
       normalizeMK({ kode_mk: 'MKE401', nama_mk: 'Sistem Informasi Manajemen', deskripsi: '-' }),
       normalizeMK({
@@ -83,7 +80,6 @@ export const useMKStore = defineStore('mataKuliah', () => {
       currentMK.value = normalizeMK(payload)
       return currentMK.value
     } catch (err) {
-      console.error(`Error fetching Mata Kuliah with id ${id}:`, err)
       error.value = 'Gagal memuat detail Mata Kuliah'
       return null
     } finally {
@@ -98,7 +94,6 @@ export const useMKStore = defineStore('mataKuliah', () => {
     try {
       const apiData = normalizeMKPayload(mkData)
       const response = await addMK(apiData)
-      console.log('API response:', response)
 
       // Refresh list after adding
       await fetchAllMK()
@@ -106,8 +101,6 @@ export const useMKStore = defineStore('mataKuliah', () => {
       // Return the success response
       return response?.data || { success: true }
     } catch (err) {
-      console.error('Error creating Mata Kuliah:', err)
-      console.error('Error details:', err.response?.data || err.message)
       error.value = 'Gagal menambahkan Mata Kuliah: ' + (err.response?.data?.message || err.message)
 
       // Add to local list if in development/offline mode
@@ -134,7 +127,6 @@ export const useMKStore = defineStore('mataKuliah', () => {
       await fetchAllMK()
       return response.data
     } catch (err) {
-      console.error(`Error updating Mata Kuliah with id ${id}:`, err)
       error.value = 'Gagal memperbarui Mata Kuliah'
 
       // Update local list if in development/offline mode
@@ -162,7 +154,6 @@ export const useMKStore = defineStore('mataKuliah', () => {
       mataKuliahList.value = mataKuliahList.value.filter((mk) => mk.kode_mk !== id)
       return { success: true }
     } catch (err) {
-      console.error(`Error deleting Mata Kuliah with id ${id}:`, err)
       error.value = 'Gagal menghapus Mata Kuliah'
 
       // Still remove from local list if in development/offline mode

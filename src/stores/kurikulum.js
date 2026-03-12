@@ -35,7 +35,6 @@ export const useKurikulumStore = defineStore('kurikulum', () => {
         kurikulumList.value = response.data
       }
     } catch (err) {
-      console.error('Error fetching kurikulum:', err)
       error.value = 'Gagal memuat data kurikulum'
 
       // Fallback data sesuai format API yang benar
@@ -65,7 +64,6 @@ export const useKurikulumStore = defineStore('kurikulum', () => {
       }
       return currentKurikulum.value
     } catch (err) {
-      console.error(`Error fetching kurikulum with id ${id}:`, err)
       error.value = 'Gagal memuat detail kurikulum'
 
       // Fallback data sesuai format API yang benar
@@ -91,7 +89,6 @@ export const useKurikulumStore = defineStore('kurikulum', () => {
       await fetchAllKurikulum()
       return response.data
     } catch (err) {
-      console.error('Error creating kurikulum:', err)
       error.value = 'Gagal menambahkan kurikulum'
       return null
     } finally {
@@ -109,7 +106,6 @@ export const useKurikulumStore = defineStore('kurikulum', () => {
       await fetchAllKurikulum()
       return response.data
     } catch (err) {
-      console.error(`Error updating kurikulum with id ${id}:`, err)
       error.value = 'Gagal memperbarui kurikulum'
       return null
     } finally {
@@ -127,7 +123,6 @@ export const useKurikulumStore = defineStore('kurikulum', () => {
       kurikulumList.value = kurikulumList.value.filter((k) => k.id_kurikulum !== id)
       return { success: true }
     } catch (err) {
-      console.error(`Error deleting kurikulum with id ${id}:`, err)
       error.value = 'Gagal menghapus kurikulum'
       return { success: false, error: error.value }
     } finally {
