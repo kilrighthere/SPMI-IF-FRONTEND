@@ -971,109 +971,110 @@ onMounted(async () => {
       <p v-else class="page-subtitle">{{ getCurrentKurikulumName() }}</p>
     </div>
 
-    <!-- Period & Mata Kuliah Selection -->
-    <div class="filter-section">
-      <div class="filters-panel">
-        <!-- Untuk dosen/admin, tampilkan kedua filter -->
-        <template v-if="!isMahasiswa">
-          <div class="filter-group">
-            <label for="periode" class="filter-label">Periode:</label>
-            <select id="periode" v-model="selectedPeriode" class="filter-select">
-              <option value="">Pilih Periode</option>
-              <option
-                v-for="periode in periodeList"
-                :key="periode.id_periode"
-                :value="periode.id_periode"
-              >
-                {{ periode.id_periode }}
-              </option>
-            </select>
-          </div>
-
-          <div class="filter-group">
-            <label for="matakuliah" class="filter-label">Mata Kuliah:</label>
-            <div class="filter-combobox-wrapper">
-              <input
-                id="matakuliah"
-                v-model="filterMkQuery"
-                type="text"
-                class="filter-select filter-combobox-input"
-                :disabled="!selectedPeriode"
-                placeholder="Cari kode / nama mata kuliah..."
-                @focus="onFilterMkInput"
-                @input="onFilterMkInput"
-                @blur="hideFilterMkDropdown"
-              />
-              <button
-                v-if="selectedMataKuliah"
-                type="button"
-                class="clear-filter-btn"
-                @click="clearFilterMataKuliah"
-                title="Reset mata kuliah"
-              >
-                <i class="ri-close-line"></i>
-              </button>
-
-              <div
-                v-if="
-                  showFilterMkDropdown && selectedPeriode && filteredFilterMataKuliah.length > 0
-                "
-                class="filter-combobox-dropdown"
-              >
-                <div
-                  v-for="mk in filteredFilterMataKuliah"
-                  :key="mk.kode_mk"
-                  class="filter-combobox-option"
-                  @mousedown.prevent="selectFilterMataKuliah(mk)"
+    <template v-if="!isMahasiswa">
+      <div class="filter-section">
+        <div class="filters-panel">
+          <!-- Untuk dosen/admin, tampilkan kedua filter -->
+            <div class="filter-group">
+              <label for="periode" class="filter-label">Periode:</label>
+              <select id="periode" v-model="selectedPeriode" class="filter-select">
+                <option value="">Pilih Periode</option>
+                <option
+                  v-for="periode in periodeList"
+                  :key="periode.id_periode"
+                  :value="periode.id_periode"
                 >
-                  <span class="filter-mk-code">{{ mk.kode_mk }}</span>
-                  <span class="filter-mk-name">{{ mk.nama_mk }}</span>
+                  {{ periode.id_periode }}
+                </option>
+              </select>
+            </div>
+  
+            <div class="filter-group">
+              <label for="matakuliah" class="filter-label">Mata Kuliah:</label>
+              <div class="filter-combobox-wrapper">
+                <input
+                  id="matakuliah"
+                  v-model="filterMkQuery"
+                  type="text"
+                  class="filter-select filter-combobox-input"
+                  :disabled="!selectedPeriode"
+                  placeholder="Cari kode / nama mata kuliah..."
+                  @focus="onFilterMkInput"
+                  @input="onFilterMkInput"
+                  @blur="hideFilterMkDropdown"
+                />
+                <button
+                  v-if="selectedMataKuliah"
+                  type="button"
+                  class="clear-filter-btn"
+                  @click="clearFilterMataKuliah"
+                  title="Reset mata kuliah"
+                >
+                  <i class="ri-close-line"></i>
+                </button>
+  
+                <div
+                  v-if="
+                    showFilterMkDropdown && selectedPeriode && filteredFilterMataKuliah.length > 0
+                  "
+                  class="filter-combobox-dropdown"
+                >
+                  <div
+                    v-for="mk in filteredFilterMataKuliah"
+                    :key="mk.kode_mk"
+                    class="filter-combobox-option"
+                    @mousedown.prevent="selectFilterMataKuliah(mk)"
+                  >
+                    <span class="filter-mk-code">{{ mk.kode_mk }}</span>
+                    <span class="filter-mk-name">{{ mk.nama_mk }}</span>
+                  </div>
+                </div>
+  
+                <div
+                  v-if="
+                    showFilterMkDropdown && selectedPeriode && filteredFilterMataKuliah.length === 0
+                  "
+                  class="filter-combobox-empty"
+                >
+                  Mata kuliah tidak ditemukan
                 </div>
               </div>
-
-              <div
-                v-if="
-                  showFilterMkDropdown && selectedPeriode && filteredFilterMataKuliah.length === 0
-                "
-                class="filter-combobox-empty"
-              >
-                Mata kuliah tidak ditemukan
-              </div>
             </div>
-          </div>
-        </template>
+        </div>
+  
+        <!-- Action Button -->
+        <div class="action-panel" v-if="canManageKurikulumMk || isDosen">
+          <input
+            type="file"
+            id="excelUpload"
+            ref="excelUpload"
+            accept=".xlsx,.xls"
+            class="hidden-input"
+            @change="handleFileUpload"
+          />
+          <button
+            @click="triggerFileInput"
+            class="btn-upload"
+            :disabled="isLoading"
+            :title="isLoading ? 'Sedang memproses...' : 'Upload nilai dari Excel SIAP'"
+          >
+            <i class="ri-file-excel-2-line"></i>
+            Upload SIAP
+          </button>
+          <button
+            @click="openAddModal"
+            class="btn-primary"
+            :disabled="!selectedPeriode"
+            :title="!selectedPeriode ? 'Pilih periode terlebih dahulu' : 'Tambah nilai baru'"
+          >
+            <i class="ri-add-line"></i>
+            Tambah Nilai
+          </button>
+        </div>
       </div>
 
-      <!-- Action Button -->
-      <div class="action-panel" v-if="canManageKurikulumMk || isDosen">
-        <input
-          type="file"
-          id="excelUpload"
-          ref="excelUpload"
-          accept=".xlsx,.xls"
-          class="hidden-input"
-          @change="handleFileUpload"
-        />
-        <button
-          @click="triggerFileInput"
-          class="btn-upload"
-          :disabled="isLoading"
-          :title="isLoading ? 'Sedang memproses...' : 'Upload nilai dari Excel SIAP'"
-        >
-          <i class="ri-file-excel-2-line"></i>
-          Upload SIAP
-        </button>
-        <button
-          @click="openAddModal"
-          class="btn-primary"
-          :disabled="!selectedPeriode"
-          :title="!selectedPeriode ? 'Pilih periode terlebih dahulu' : 'Tambah nilai baru'"
-        >
-          <i class="ri-add-line"></i>
-          Tambah Nilai
-        </button>
-      </div>
-    </div>
+    </template>
+    <!-- Period & Mata Kuliah Selection -->
 
     <!-- Loading -->
     <div v-if="isLoading" class="loading-container">

@@ -1,12 +1,9 @@
 <template>
   <div class="mk-periode-container">
-    <!-- Page Header -->
     <div class="page-title">
-      <h2>Manajemen MK - Periode</h2>
-      <p class="subtitle">Kelola mata kuliah per periode untuk Kurikulum: {{ idKurikulum }}</p>
+      <h3>Manajemen MK - Periode</h3>
     </div>
 
-    <!-- Filters Section -->
     <div class="filters-container">
       <div class="filter-item">
         <label class="filter-label">
@@ -15,111 +12,163 @@
         </label>
         <select v-model="selectedPeriode" @change="loadMkPeriode" class="filter-select">
           <option value="">Pilih Periode</option>
-          <option v-for="p in periodeList" :key="p.id_periode" :value="p.id_periode">
-            {{ p.id_periode }}
+          <option
+            v-for="periode in periodeList"
+            :key="periode.id_periode"
+            :value="periode.id_periode"
+          >
+            {{ periode.nama_periode }}
           </option>
         </select>
       </div>
-      <div class="filter-actions">
+
+      <div class="filter-actions" v-if="canManageKurikulumMk">
         <button
-          v-if="canManageKurikulumMk"
           class="btn-add"
-          @click="openAddModal"
-          :disabled="!selectedPeriode"
+          :class="{ 'is-cancel': showForm }"
+          @click="showForm ? resetForm() : openAddForm()"
+          :disabled="!selectedPeriode && !showForm"
         >
-          <i class="ri-add-circle-line"></i>
-          Tambah MK
+          <i class="ri-add-line"></i>
+          {{ showForm ? 'Batal' : 'Tambah MK-Periode' }}
         </button>
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="isLoading" class="loading-state">
-      <i class="ri-loader-4-line spin-icon"></i>
-      <span>Memuat data MK-Periode...</span>
+    <div v-if="showForm" class="form-container inline-form-container">
+      <div class="form-group">
+        <label>Kode dan Nama Mata Kuliah</label>
+        <div ref="mkComboboxRef" class="combobox mk-combobox" :class="{ disabled: isEditing }">
+          <input
+            v-model="mkQuery"
+            type="text"
+            class="form-input field-box"
+            :disabled="isEditing"
+            autocomplete="off"
+            role="combobox"
+            aria-autocomplete="list"
+            :aria-expanded="showMkOptions"
+            aria-label="Cari mata kuliah"
+            placeholder="Ketik kode/nama atau pilih dari daftar"
+            @focus="showMkOptions = true"
+            @input="handleMkInput"
+          />
+          <ul v-if="showMkOptions && !isEditing" class="combobox-options" role="listbox">
+            <li
+              v-for="mk in filteredMkOptions"
+              :key="mk.kode_mk"
+              class="combobox-option"
+              role="option"
+              @mousedown.prevent="selectMkOption(mk)"
+            >
+              {{ formatMkLabel(mk) }}
+            </li>
+            <li v-if="!filteredMkOptions.length" class="combobox-empty">
+              Mata kuliah tidak ditemukan
+            </li>
+          </ul>
+        </div>
+        <div v-if="!isEditing && !availableMKForAdd.length" class="form-help">
+          <i class="ri-information-line"></i>
+          Semua mata kuliah sudah terdaftar di periode ini atau tidak ada MK tersedia.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>SKS</label>
+        <input class="form-input field-box" type="number" v-model.number="formMK.sks" min="0" />
+      </div>
+
+      <div class="form-group">
+        <label>Jenis MK</label>
+        <select class="form-input" v-model="formMK.jenis_mk">
+          <option value="Wajib">Wajib</option>
+          <option value="Pilihan">Pilihan</option>
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-save" @click="saveForm">
+          {{ isEditing ? 'Perbarui' : 'Simpan' }}
+        </button>
+      </div>
     </div>
 
-    <!-- Table Section -->
-    <div v-else-if="filteredList.length > 0" class="table-section">
-      <div class="table-wrapper">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>
-                <div class="th-content">No.</div>
-              </th>
-              <th>
-                <div class="th-content">Kode MK</div>
-              </th>
-              <th>
-                <div class="th-content">Nama Mata Kuliah</div>
-              </th>
-              <th>
-                <div class="th-content">SKS</div>
-              </th>
-              <th>
-                <div class="th-content">Jenis MK</div>
-              </th>
-              <th v-if="canManageKurikulumMk">
-                <div class="th-content">Aksi</div>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(mp, idx) in paginatedList" :key="mp.id_mk_periode" class="table-row">
-              <td>
-                <div class="td-content">
-                  <span class="row-number">{{ (currentPage - 1) * itemsPerPage + idx + 1 }}</span>
-                </div>
-              </td>
-              <td>
-                <div class="td-content">
-                  <span class="mk-code">{{ mp.kode_mk }}</span>
-                </div>
-              </td>
-              <td>
-                <div class="td-content">
-                  <span class="mk-name">{{ getMataKuliahNama(mp.kode_mk) }}</span>
-                </div>
-              </td>
-              <td>
-                <div class="td-content">
-                  <input
-                    type="number"
-                    class="input-sks"
-                    v-model.number="mp._editable_sks"
-                    min="0"
-                    :disabled="!canManageKurikulumMk"
-                  />
-                </div>
-              </td>
-              <td>
-                <div class="td-content">
-                  <select
-                    class="select-jenis"
-                    v-model="mp._editable_jenis"
-                    :disabled="!canManageKurikulumMk"
-                  >
-                    <option value="Wajib">Wajib</option>
-                    <option value="Pilihan">Pilihan</option>
-                  </select>
-                </div>
-              </td>
-              <td v-if="canManageKurikulumMk">
-                <div class="td-content">
-                  <div class="action-buttons">
-                    <button class="btn-action btn-save" @click="saveRow(mp)">
-                      <i class="ri-save-line"></i>
-                    </button>
-                    <button class="btn-action btn-delete" @click="deleteRow(mp)">
-                      <i class="ri-delete-bin-line"></i>
-                    </button>
+    <div v-if="isLoading" class="loading-state">
+      <i class="ri-loader-4-line spin-icon"></i>
+      <span>Memuat data MK-periode...</span>
+    </div>
+
+    <template v-else-if="filteredList.length">
+      <div class="table-section">
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>
+                  <div class="th-content">No</div>
+                </th>
+                <th>
+                  <div class="th-content th-kode">Kode MK</div>
+                </th>
+                <th>
+                  <div class="th-content th-nama">Nama Mata Kuliah</div>
+                </th>
+                <th>
+                  <div class="th-content th-sks">SKS</div>
+                </th>
+                <th>
+                  <div class="th-content th-jenis">Jenis MK</div>
+                </th>
+                <th>
+                  <div class="th-content">Aksi</div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(mp, index) in paginatedList" :key="mp.id_mk_periode">
+                <td>
+                  <div class="td-content row-number">
+                    {{ (currentPage - 1) * itemsPerPage + index + 1 }}
                   </div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                </td>
+                <td>
+                  <div class="td-content td-kode">
+                    <span class="mk-code">{{ mp.kode_mk }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="td-content td-nama mk-name">{{ getMataKuliahNama(mp.kode_mk) }}</div>
+                </td>
+                <td>
+                  <div class="td-content td-sks">
+                    <span class="sks-value">{{ mp.sks ?? 0 }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="td-content td-jenis">
+                    <span class="jenis-badge">{{ mp.jenis_mk || '-' }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="td-content">
+                    <div class="action-buttons" v-if="canManageKurikulumMk">
+                      <button class="btn-action btn-edit" @click="startEdit(mp)">
+                        <i class="ri-edit-line"></i>
+                        Edit
+                      </button>
+                      <button class="btn-action btn-delete" @click="deleteRow(mp)">
+                        <i class="ri-delete-bin-line"></i>
+                        Hapus
+                      </button>
+                    </div>
+                    <span v-else>-</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <TablePagination
@@ -131,101 +180,18 @@
         @update:current-page="setCurrentPage"
         @update:show-all="setShowAll"
       />
-    </div>
+    </template>
 
-    <!-- Empty State -->
-    <div v-else-if="!isLoading" class="empty-state">
+    <div v-else class="empty-state">
       <i class="ri-inbox-line"></i>
       <h3>Belum Ada Data</h3>
       <p>Belum ada MK-periode untuk periode ini.</p>
-    </div>
-
-    <!-- Modal for add MK-periode -->
-    <div v-if="showAddModal" class="modal-overlay" @click="closeAddModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <div class="modal-title">
-            <i class="ri-add-circle-line"></i>
-            <h3>Tambah MK-Periode</h3>
-          </div>
-          <button class="modal-close" @click="closeAddModal">
-            <i class="ri-close-line"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label class="form-label">
-              <i class="ri-book-line"></i>
-              Kode Mata Kuliah
-            </label>
-            <input
-              class="form-input"
-              v-model="newMK.kode_mk"
-              placeholder="Masukkan kode MK atau pilih dari list"
-            />
-            <select
-              v-if="availableMKForAdd.length"
-              class="form-input"
-              v-model="selectedNewKodeMk"
-              @change="onSelectNewKode"
-              style="margin-top: 8px"
-            >
-              <option value="">Pilih MK yang belum terdaftar di periode ini</option>
-              <option v-for="mk in availableMKForAdd" :key="mk.kode_mk" :value="mk.kode_mk">
-                {{ mk.kode_mk }} - {{ mk.nama_mk }}
-              </option>
-            </select>
-            <div v-else class="form-help">
-              <i class="ri-information-line"></i>
-              Semua mata kuliah sudah terdaftar di periode ini atau tidak ada MK tersedia.
-            </div>
-          </div>
-          <div v-if="!mkStore.getMKByKode(newMK.kode_mk)" class="form-group">
-            <label class="form-label">
-              <i class="ri-text"></i>
-              Nama MK (baru)
-            </label>
-            <input
-              class="form-input"
-              v-model="newMK.nama_mk"
-              placeholder="Masukkan nama mata kuliah jika kode baru"
-            />
-          </div>
-          <div class="form-group">
-            <label class="form-label">
-              <i class="ri-numbers-line"></i>
-              SKS
-            </label>
-            <input class="form-input" type="number" v-model.number="newMK.sks" min="0" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">
-              <i class="ri-list-check"></i>
-              Jenis MK
-            </label>
-            <select class="form-input" v-model="newMK.jenis_mk">
-              <option value="Wajib">Wajib</option>
-              <option value="Pilihan">Pilihan</option>
-            </select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-cancel" @click="closeAddModal">
-            <i class="ri-close-line"></i>
-            Batal
-          </button>
-          <button class="btn-save" @click="addMkPeriode">
-            <i class="ri-add-line"></i>
-            Tambah MK
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { useNilaiMkStore } from '@/stores/nilaiMk'
 import { usePermissions } from '@/composables/usePermissions'
@@ -245,10 +211,19 @@ const nilaiMkStore = useNilaiMkStore()
 const mkStore = useMKStore()
 
 const isLoading = ref(false)
-const showAddModal = ref(false)
+const showForm = ref(false)
+const isEditing = ref(false)
 const selectedPeriode = ref('')
-const newMK = ref({ kode_mk: '', nama_mk: '', sks: 3, jenis_mk: 'Wajib' })
-const selectedNewKodeMk = ref('')
+const formMK = ref({
+  id_mk_periode: null,
+  kode_mk: '',
+  nama_mk: '',
+  sks: 3,
+  jenis_mk: 'Wajib',
+})
+const mkQuery = ref('')
+const showMkOptions = ref(false)
+const mkComboboxRef = ref(null)
 
 const periodeList = ref([])
 
@@ -264,6 +239,19 @@ const availableMKForAdd = computed(() => {
       .trim()
       .toUpperCase()
     return !existingKode.has(kode)
+  })
+})
+
+const formatMkLabel = (mk) => `${mk.kode_mk} - ${mk.nama_mk || 'Tanpa nama'}`
+
+const filteredMkOptions = computed(() => {
+  const term = mkQuery.value.trim().toLowerCase()
+  if (!term) return availableMKForAdd.value
+  return availableMKForAdd.value.filter((mk) => {
+    const kode = String(mk.kode_mk || '').toLowerCase()
+    const nama = String(mk.nama_mk || '').toLowerCase()
+    const label = formatMkLabel(mk).toLowerCase()
+    return kode.includes(term) || nama.includes(term) || label.includes(term)
   })
 })
 
@@ -292,10 +280,6 @@ const itemsPerPage = 10
 const showAll = ref(false)
 const totalItems = computed(() => filteredList.value.length)
 
-const totalPages = computed(() =>
-  showAll.value ? 1 : Math.max(1, Math.ceil(totalItems.value / itemsPerPage)),
-)
-
 const paginatedList = computed(() => {
   if (showAll.value) return filteredList.value
   const start = (currentPage.value - 1) * itemsPerPage
@@ -309,25 +293,6 @@ const setCurrentPage = (page) => {
 
 const setShowAll = (value) => {
   showAll.value = value
-}
-
-// Pagination functions
-function goToPage(page) {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page
-  }
-}
-
-function previousPage() {
-  if (currentPage.value > 1) {
-    currentPage.value--
-  }
-}
-
-function nextPage() {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++
-  }
 }
 
 function getMataKuliahNama(kode_mk) {
@@ -351,11 +316,6 @@ async function loadMkPeriode() {
     if (resp?.data && resp.data.success) data = resp.data.data
     else if (resp?.data && Array.isArray(resp.data)) data = resp.data
     mkPeriodeList.value = Array.isArray(data) ? data : data ? [data] : []
-    // Prepare editable fields
-    mkPeriodeList.value.forEach((mp) => {
-      mp._editable_sks = mp.sks || 0
-      mp._editable_jenis = mp.jenis_mk || 'Wajib'
-    })
     // Optionally, refresh global store list
     await nilaiMkStore.fetchMkPeriodeList()
   } catch (err) {
@@ -366,53 +326,127 @@ async function loadMkPeriode() {
   }
 }
 
-function openAddModal() {
-  showAddModal.value = true
-  newMK.value = { kode_mk: '', nama_mk: '', sks: 3, jenis_mk: 'Wajib' }
+function openAddForm() {
+  if (!selectedPeriode.value) return
+  showForm.value = true
+  isEditing.value = false
+  formMK.value = {
+    id_mk_periode: null,
+    kode_mk: '',
+    nama_mk: '',
+    sks: 3,
+    jenis_mk: 'Wajib',
+  }
+  mkQuery.value = ''
+  showMkOptions.value = false
 }
 
-function closeAddModal() {
-  showAddModal.value = false
-  selectedNewKodeMk.value = ''
+function resetForm() {
+  showForm.value = false
+  isEditing.value = false
+  formMK.value = {
+    id_mk_periode: null,
+    kode_mk: '',
+    nama_mk: '',
+    sks: 3,
+    jenis_mk: 'Wajib',
+  }
+  mkQuery.value = ''
+  showMkOptions.value = false
 }
 
-function onSelectNewKode() {
-  if (selectedNewKodeMk.value) newMK.value.kode_mk = selectedNewKodeMk.value
+function startEdit(mp) {
+  formMK.value = {
+    id_mk_periode: mp.id_mk_periode,
+    kode_mk: mp.kode_mk,
+    nama_mk: getMataKuliahNama(mp.kode_mk),
+    sks: Number(mp.sks || 0),
+    jenis_mk: mp.jenis_mk || 'Wajib',
+  }
+  isEditing.value = true
+  showForm.value = true
+  mkQuery.value = formMK.value.kode_mk
+  showMkOptions.value = false
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth',
+  })
+  const existing = mkStore.getMKByKode(formMK.value.kode_mk)
+  if (existing) {
+    mkQuery.value = formatMkLabel(existing)
+  }
 }
 
-async function addMkPeriode() {
+function selectMkOption(mk) {
+  formMK.value.kode_mk = mk.kode_mk
+  formMK.value.nama_mk = mk.nama_mk || ''
+  mkQuery.value = formatMkLabel(mk)
+  showMkOptions.value = false
+}
+
+function handleMkInput() {
+  const term = mkQuery.value.trim()
+  showMkOptions.value = true
+
+  const lower = term.toLowerCase()
+  const exact = availableMKForAdd.value.find((mk) => {
+    const kode = String(mk.kode_mk || '').toLowerCase()
+    const nama = String(mk.nama_mk || '').toLowerCase()
+    const label = formatMkLabel(mk).toLowerCase()
+    return kode === lower || nama === lower || label === lower
+  })
+
+  if (exact) {
+    formMK.value.kode_mk = exact.kode_mk
+    formMK.value.nama_mk = exact.nama_mk || ''
+    return
+  }
+
+  formMK.value.kode_mk = term
+}
+
+function handleOutsideComboboxClick(event) {
+  if (!showMkOptions.value) return
+  const root = mkComboboxRef.value
+  if (!root) return
+  if (!root.contains(event.target)) {
+    showMkOptions.value = false
+  }
+}
+
+async function saveForm() {
+  if (isEditing.value) {
+    await saveEditInline()
+    return
+  }
+
   if (!selectedPeriode.value) {
     alert('Pilih periode terlebih dahulu')
     return
   }
-  if (!newMK.value.kode_mk) {
+  if (!formMK.value.kode_mk) {
     alert('Masukkan kode MK')
     return
   }
   try {
     const payload = {
       id_kurikulum: idKurikulum,
-      kode_mk: newMK.value.kode_mk,
+      kode_mk: formMK.value.kode_mk,
       id_periode: selectedPeriode.value,
-      sks: Number(newMK.value.sks),
-      jenis_mk: newMK.value.jenis_mk,
+      sks: Number(formMK.value.sks),
+      jenis_mk: formMK.value.jenis_mk,
     }
     // If MK not found in MK store, optionally create MK first
-    const existingMk = mkStore.getMKByKode(newMK.value.kode_mk)
+    const existingMk = mkStore.getMKByKode(formMK.value.kode_mk)
     if (!existingMk) {
-      if (!newMK.value.nama_mk) {
-        if (
-          !confirm(
-            'MK dengan kode ini tidak ditemukan. Apakah Anda ingin membuat MK baru tanpa nama?',
-          )
-        ) {
-          return
-        }
+      if (!confirm('MK dengan kode ini tidak ditemukan. Lanjutkan membuat data MK baru?')) {
+        return
       }
       // Create MK in MK store to register it
       await mkStore.createMK({
-        kode_mk: newMK.value.kode_mk,
-        nama_mk: newMK.value.nama_mk || newMK.value.kode_mk,
+        kode_mk: formMK.value.kode_mk,
+        nama_mk: formMK.value.kode_mk,
       })
       // Refresh MK list so it is available in dropdowns
       await mkStore.fetchAllMK()
@@ -420,7 +454,7 @@ async function addMkPeriode() {
     const resp = await apiAddMkPeriode(payload)
     if (resp.data && resp.data.success) {
       await loadMkPeriode()
-      closeAddModal()
+      resetForm()
       alert('MK-periode berhasil ditambahkan')
     } else {
       alert('Gagal menambahkan MK-periode: ' + (resp.data?.message || 'Unknown'))
@@ -431,14 +465,24 @@ async function addMkPeriode() {
   }
 }
 
-async function saveRow(mp) {
+async function saveEditInline() {
+  if (!formMK.value.id_mk_periode) return
   try {
-    const payload = { sks: Number(mp._editable_sks), jenis_mk: mp._editable_jenis }
-    const resp = await updateMkPeriode(mp.id_mk_periode, payload)
+    const payload = {
+      sks: Number(formMK.value.sks || 0),
+      jenis_mk: formMK.value.jenis_mk,
+    }
+    const resp = await updateMkPeriode(formMK.value.id_mk_periode, payload)
     if (resp.data && resp.data.success) {
-      mp.sks = payload.sks
-      mp.jenis_mk = payload.jenis_mk
+      const row = mkPeriodeList.value.find(
+        (item) => item.id_mk_periode === formMK.value.id_mk_periode,
+      )
+      if (row) {
+        row.sks = payload.sks
+        row.jenis_mk = payload.jenis_mk
+      }
       alert('Perubahan disimpan')
+      resetForm()
       await loadMkPeriode()
     } else {
       alert('Gagal menyimpan perubahan: ' + (resp.data?.message || 'Unknown'))
@@ -466,12 +510,17 @@ async function deleteRow(mp) {
 }
 
 onMounted(async () => {
+  document.addEventListener('mousedown', handleOutsideComboboxClick)
   await loadPeriode()
   await mkStore.fetchAllMK()
   await nilaiMkStore.fetchMkPeriodeList()
 })
 
-const { canManageKurikulumMk, isAdmin, isDosen } = usePermissions()
+onBeforeUnmount(() => {
+  document.removeEventListener('mousedown', handleOutsideComboboxClick)
+})
+
+const { canManageKurikulumMk } = usePermissions()
 </script>
 
 <style scoped>
@@ -486,21 +535,23 @@ const { canManageKurikulumMk, isAdmin, isDosen } = usePermissions()
 /* Page Title */
 .page-title {
   margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.page-title h2 {
-  font-size: 28px;
+.page-title h3 {
+  font-size: 18px;
   font-weight: 700;
+  margin-bottom: 0;
   color: var(--color-text);
-  margin: 0 0 8px 0;
   font-family: 'Montserrat', sans-serif;
 }
 
 .subtitle {
-  font-size: 14px;
+  margin-bottom: 16px;
   color: #6b7280;
-  margin: 0;
   font-family: 'Montserrat', sans-serif;
+  line-height: 1.6;
 }
 
 /* Filters */
@@ -561,6 +612,24 @@ const { canManageKurikulumMk, isAdmin, isDosen } = usePermissions()
   box-shadow: 0 0 0 3px rgba(166, 214, 0, 0.1);
 }
 
+/* .filter-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+} */
+
+.filter-select {
+  position: relative;
+  z-index: 20;
+}
+
+/* Memastikan teks di dalam option selalu terlihat */
+.filter-select option,
+.form-input option {
+  background-color: #ffffff; /* Background putih */
+  color: var(--color-text); /* Teks abu gelap/hitam agar terbaca */
+}
+
 .filter-actions {
   display: flex;
   gap: 12px;
@@ -569,8 +638,8 @@ const { canManageKurikulumMk, isAdmin, isDosen } = usePermissions()
 
 .btn-add {
   padding: 12px 24px;
-  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
-  color: var(--color-text);
+  background: var(--color-button);
+  color: white;
   border: none;
   border-radius: 12px;
   font-size: 14px;
@@ -581,12 +650,21 @@ const { canManageKurikulumMk, isAdmin, isDosen } = usePermissions()
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 12px rgba(166, 214, 0, 0.3);
 }
 
 .btn-add:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(166, 214, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
+}
+
+.btn-add.is-cancel:hover {
+  background: var(--color-button-hover);
+  border-color: var(--color-button-hover);
+  color: white;
+  box-shadow: 0 4px 12px rgba(218, 42, 45, 0.3);
 }
 
 .btn-add:disabled {
@@ -677,13 +755,33 @@ const { canManageKurikulumMk, isAdmin, isDosen } = usePermissions()
   font-size: 13px;
 }
 
+.data-table thead .th-kode,
+.data-table thead .th-sks {
+  justify-content: center;
+  text-align: center;
+}
+
+.data-table thead .th-nama,
+.data-table thead .th-jenis {
+  justify-content: flex-start;
+  text-align: left;
+}
+
 .data-table tbody tr {
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid #edf1e4;
   transition: all 0.2s ease;
 }
 
+/* .data-table tbody tr:nth-child(odd) {
+  background: #ffffff;
+}
+
+.data-table tbody tr:nth-child(even) {
+  background: #fafcf4;
+} */
+
 .data-table tbody tr:hover {
-  background-color: #faffec;
+  background: #faffec;
   transform: scale(1.001);
 }
 
@@ -694,26 +792,54 @@ const { canManageKurikulumMk, isAdmin, isDosen } = usePermissions()
 
 .td-content {
   padding: 16px 14px;
-  font-size: 14px;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: top;
   color: #4b5563;
+  font-size: 14px;
+}
+
+.data-table tbody .td-kode,
+.data-table tbody .td-sks {
+  text-align: center !important;
+}
+
+.data-table tbody .td-nama,
+.data-table tbody .td-jenis {
+  text-align: left !important;
 }
 
 .row-number {
   font-weight: 600;
   color: #6b7280;
+  text-align: center;
 }
 
-.mk-code {
+.td-content .mk-code {
   display: inline-block;
-  padding: 6px 12px;
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #1e40af;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-button);
+  width: 120px;
+  text-align: center;
 }
 
 .mk-name {
+  display: block;
+  width: 100%;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.sks-value {
+  display: inline-block;
+  font-weight: 600;
+  color: var(--color-button);
+  width: 120px;
+  text-align: center;
+}
+
+.jenis-badge {
+  display: block;
+  width: 100%;
   font-weight: 500;
   color: var(--color-text);
 }
@@ -730,6 +856,85 @@ const { canManageKurikulumMk, isAdmin, isDosen } = usePermissions()
   color: var(--color-text);
   background: white;
   transition: all 0.3s ease;
+}
+
+.inline-form-container {
+  margin-bottom: 24px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.field-box {
+  box-sizing: border-box;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.mk-combobox {
+  position: relative;
+}
+
+.mk-combobox.disabled {
+  cursor: not-allowed;
+}
+
+.combobox-options {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+}
+
+.combobox-option,
+.combobox-empty {
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.combobox-option {
+  cursor: pointer;
+}
+
+.combobox-option:hover {
+  background: #f3f9df;
+}
+
+.combobox-empty {
+  color: #6b7280;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 .input-sks:hover:not(:disabled),
@@ -759,33 +964,54 @@ const { canManageKurikulumMk, isAdmin, isDosen } = usePermissions()
 .action-buttons {
   display: flex;
   gap: 6px;
+  justify-content: center;
 }
 
 .btn-action {
-  padding: 8px 12px;
+  padding: 6px 12px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   font-family: 'Montserrat', sans-serif;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   display: flex;
   align-items: center;
   gap: 6px;
   background: white;
-  border: 1.5px solid var(--color-text);
-  color: var(--color-text);
+  border: 1.5px solid;
 }
 
 .btn-action:hover {
-  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
-  border-color: var(--spmi-c-green2);
-  color: var(--spmi-c-dgray);
-  transform: scale(1.05);
+  transform: translateY(-1px);
 }
 
 .btn-action i {
   font-size: 16px;
+}
+
+.btn-edit {
+  border-color: var(--color-button);
+  color: var(--color-text);
+}
+
+.btn-edit:hover {
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.25);
+}
+
+.btn-delete {
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.btn-delete:hover {
+  background: var(--color-button-hover);
+  color: white;
+  border-color: var(--color-button-hover);
+  box-shadow: 0 4px 12px rgba(218, 42, 45, 0.28);
 }
 
 /* Empty State */
@@ -987,11 +1213,11 @@ const { canManageKurikulumMk, isAdmin, isDosen } = usePermissions()
 }
 
 .btn-save {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
-  color: var(--color-text);
-  border: none;
-  border-radius: 10px;
+  padding: 8px 16px;
+  background: var(--color-button);
+  color: white;
+  border: 1.5px solid var(--color-button);
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   font-family: 'Montserrat', sans-serif;
@@ -1000,12 +1226,15 @@ const { canManageKurikulumMk, isAdmin, isDosen } = usePermissions()
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 12px rgba(166, 214, 0, 0.3);
+  box-shadow: none;
 }
 
 .btn-save:hover {
+  background: linear-gradient(135deg, var(--spmi-c-green2) 0%, var(--color-buttonsec) 100%);
+  color: var(--color-text);
+  border-color: var(--spmi-c-green2);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(166, 214, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(116, 183, 8, 0.3);
 }
 
 /* Pagination */
