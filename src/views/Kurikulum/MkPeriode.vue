@@ -17,7 +17,7 @@
             :key="periode.id_periode"
             :value="periode.id_periode"
           >
-            {{ periode.nama_periode }}
+            {{ periode.id_periode}}
           </option>
         </select>
       </div>

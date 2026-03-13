@@ -321,8 +321,13 @@ const loadData = async () => {
 
     if (isDosen.value) {
       selectedNip.value = auth.user?.nip || ''
-    } else if (!selectedNip.value && dosenList.value.length) {
-      selectedNip.value = dosenList.value[0].nip
+    } else {
+      // Admin default should stay unselected so combobox keeps placeholder.
+      // Keep previous selection only if it still exists in latest dosen list.
+      const stillExists = dosenList.value.some((d) => d.nip === selectedNip.value)
+      if (!stillExists) {
+        selectedNip.value = ''
+      }
     }
   } catch (err) {
     error.value = err?.response?.data?.message || 'Gagal memuat data'
