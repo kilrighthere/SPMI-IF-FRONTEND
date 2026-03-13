@@ -17,7 +17,7 @@
             :key="periode.id_periode"
             :value="periode.id_periode"
           >
-            {{ periode.id_periode}}
+            {{ periode.id_periode }}
           </option>
         </select>
       </div>
@@ -230,10 +230,25 @@ const periodeList = ref([])
 const mataKuliahList = computed(() => mkStore.mataKuliahList)
 const availableMKForAdd = computed(() => {
   if (!mataKuliahList.value || mataKuliahList.value.length === 0) return []
+  if (!selectedPeriode.value || !idKurikulum) return []
+
+  // Ambil seluruh data mk-periode, lalu batasi duplikasi hanya untuk kombinasi
+  // kurikulum + periode aktif.
+  const allMkPeriode = nilaiMkStore.mkPeriodeList?.length
+    ? nilaiMkStore.mkPeriodeList
+    : mkPeriodeList.value
+
   const existingKode = new Set(
-    mkPeriodeList.value.map((mp) => String(mp.kode_mk).trim().toUpperCase()),
+    allMkPeriode
+      .filter(
+        (mp) =>
+          String(mp.id_kurikulum) === String(idKurikulum) &&
+          String(mp.id_periode) === String(selectedPeriode.value),
+      )
+      .map((mp) => String(mp.kode_mk).trim().toUpperCase()),
   )
-  // Filter mataKuliahList to those not already in mkPeriode for selectedPeriode (and same kurikulum)
+
+  // MK yang sama tetap boleh dipakai di periode/kurikulum lain.
   return mataKuliahList.value.filter((mk) => {
     const kode = String(mk.kode_mk || mk.kode || mk.id)
       .trim()
